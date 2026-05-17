@@ -1,0 +1,54 @@
+.PHONY: run build test infra-up infra-down migrate-up migrate-down seed reset-db sqlc docker-build
+
+# Variabel Konfigurasi Database (Sesuaikan dengan .env)
+DB_URL="postgres://postgres:postgres@localhost:5432/pramukacat?sslmode=disable"
+MIGRATION_PATH="backend/sql/migrations"
+
+# --- Aplikasi Backend ---
+run:
+	@echo "Menjalankan Backend API..."
+	cd backend && go run cmd/api/main.go
+
+build:
+	@echo "Membangun Binary Backend..."
+	cd backend && go build -o bin/api cmd/api/main.go
+	@echo "Build sukses! Binary ada di backend/bin/api"
+
+test:
+	@echo "Menjalankan Unit Test..."
+	cd backend && go test -v ./...
+
+# --- Infrastruktur (Docker Compose) ---
+infra-up:
+	@echo "Menyalakan PostgreSQL & Redis via Docker Compose..."
+	docker-compose up -d
+
+infra-down:
+	@echo "Mematikan Infrastruktur..."
+	docker-compose down
+
+# --- Database Migrations ---
+migrate-up:
+	@echo "Menjalankan Migrasi Up..."
+	migrate -path $(MIGRATION_PATH) -database $(DB_URL) -verbose up
+
+migrate-down:
+	@echo "Menjalankan Migrasi Down (Hati-hati: Menghapus Tabel!)..."
+	migrate -path $(MIGRATION_PATH) -database $(DB_URL) -verbose down -all
+
+sqlc:
+	@echo "Generate kode SQLC..."
+	cd backend && sqlc generate
+
+# --- Data Seeding ---
+seed:
+	@echo "Memasukkan Dummy Data ke Database..."
+	cd backend && go run cmd/seeder/main.go
+
+reset-db: migrate-down migrate-up seed
+	@echo "Database telah di-reset dan di-seed dengan sukses!"
+
+# --- Docker Build ---
+docker-build:
+	@echo "Membangun Docker Image untuk Production..."
+	docker build -t pramukacat-backend ./backend
