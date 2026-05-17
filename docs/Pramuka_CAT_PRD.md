@@ -54,5 +54,26 @@ Aplikasi memiliki 2 jenis peran utama:
 
 ---
 
+## 4. Kebutuhan Pengujian Sistem (Testing Requirements)
+Untuk menjamin stabilitas aplikasi dan akurasi logika penilaian (scoring), sistem diwajibkan untuk mengimplementasikan pengujian otomatis (_Automated Testing_):
+1. **Unit Test:** Menguji secara mandiri fungsi-fungsi inti secara terisolasi. Fokus pada logika kalkulasi bobot soal, mekanisme pengacakan soal, dan konversi batas waktu (timer).
+2. **Integration Test:** Menguji integrasi alur keseluruhan dari _Backend_ ke _Database_ (PostgreSQL) dan _Cache_ (Redis). Tujuannya memastikan _endpoint HTTP_, _middleware_ (Auth), dan _query_ database (SQLC) bekerja sinkron.
+
+**Struktur Folder Pengujian (Go Backend):**
+```text
+backend/
+├── internal/
+│   └── core/services/     # Unit Tests diletakkan bersebelahan dengan file yang diuji
+│       ├── exam_service.go
+│       └── exam_service_test.go
+├── tests/                 # Folder terpisah khusus untuk Integration Tests
+│   ├── integration/
+│   │   ├── auth_flow_test.go
+│   │   ├── exam_flow_test.go
+│   │   └── setup_test.go  # Inisialisasi mock database/Redis untuk testing
+```
+
+---
+
 ## 5. Keputusan Teknis (Technical Decisions)
-Untuk detail arsitektur, teknologi yang akan digunakan (_Tech Stack_), dan mekanisme sistem di belakang layar, silakan merujuk ke dokumen **[Implementation Decisions](file:///home/aliube/Workspace/Prd/PramukaCAT/implementation-decisions.md)**.
+Untuk detail arsitektur, teknologi yang akan digunakan (_Tech Stack_), dan mekanisme sistem di belakang layar, silakan merujuk ke dokumen **[Implementation Decisions](docs/implementation-decisions.md)**.

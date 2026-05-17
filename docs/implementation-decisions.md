@@ -25,6 +25,10 @@ Aplikasi akan menggunakan arsitektur **Client-Server** berbasis web (Web Applica
 - **Sistem:** Redis
 - **Alasan:** Sangat krusial untuk fitur **Auto-Resume** dan penyimpanan jawaban sementara secara _real-time_. Setiap kali peserta menjawab 1 soal, jawaban disimpan cepat di Redis sebelum disinkronisasikan secara *bulk* ke PostgreSQL saat _Submit_ atau waktu habis. Ini akan mengurangi beban *query* ke database utama.
 
+### 2.5. Framework Pengujian (Testing Stack)
+- **Unit Testing:** Go standard library `testing` dipadukan dengan **`github.com/stretchr/testify`** (untuk *assertions* dan *mocking*).
+- **Integration Testing:** **`testcontainers-go`** (Direkomendasikan) untuk men-*spin-up* *container* PostgreSQL & Redis secara otomatis dan terisolasi khusus untuk *testing*, guna mencegah tumpang-tindih data dengan database *development*/*production*.
+
 ## 3. Mekanisme Inti (Core Mechanisms)
 
 ### 3.1. Autentikasi dan Keamanan
@@ -79,6 +83,8 @@ PramukaCAT/
 │   │   ├── schema.sql        # Skema tabel database (DDL) untuk referensi SQLC
 │   │   └── query.sql         # Raw SQL queries (DML) untuk SQLC
 │   ├── sqlc.yaml             # Konfigurasi generator SQLC
+│   ├── tests/                # Folder terpisah khusus Integration Tests
+│   │   └── integration/      # Test integrasi DB, Redis, dan Endpoint API
 │   ├── go.mod                # Dependency manager Go
 │   └── .env.example          # Template environment variables
 │
