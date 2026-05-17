@@ -13,8 +13,8 @@ Aplikasi akan menggunakan arsitektur **Client-Server** berbasis web (Web Applica
 - **Styling:** Tailwind CSS (untuk desain yang rapi, _responsive_, dan pengerjaan cepat).
 
 ### 2.2. Backend (Server & API)
-- **Bahasa / Framework:** Go (Golang) menggunakan framework ringan seperti Gin atau Fiber.
-- **Alasan:** Go sangat ringan, performanya luar biasa cepat, dan memiliki arsitektur _concurrency_ bawaan yang sangat handal (Goroutines). Ini menjadikannya pilihan sempurna untuk skenario ujian CAT di mana ribuan peserta ujian mungkin menekan tombol submit (atau Auto-Submit) secara bersamaan di menit-menit akhir sesi ujian.
+- **Bahasa / Framework:** Go (Golang) menggunakan framework **Echo**.
+- **Alasan:** Go sangat ringan, kinerjanya sangat cepat, dan tangguh dengan _concurrency_ (Goroutines). **Echo** dipilih sebagai _best practice_ karena menyajikan _router_ HTTP berkinerja tinggi, manajemen _middleware_ yang elegan, dan sangat solid untuk membangun REST API berskala besar secara terstruktur.
 
 ### 2.3. Database Utama (RDBMS)
 - **Database:** PostgreSQL
@@ -41,3 +41,41 @@ Aplikasi akan menggunakan arsitektur **Client-Server** berbasis web (Web Applica
 ## 4. Infrastruktur dan Deployment
 - Aplikasi akan di-containerisasi menggunakan **Docker** agar mudah dideploy di berbagai server (VPS atau Cloud).
 - Menggunakan NGINX sebagai _Reverse Proxy_ dan pengelola sertifikat HTTPS (SSL) agar transmisi data ujian aman.
+
+## 5. Struktur Direktori Proyek
+Mengingat frontend dan backend menggunakan teknologi yang berbeda (Next.js dan Go), struktur direktori utama akan memisahkan keduanya secara jelas:
+
+```text
+PramukaCAT/
+├── frontend/                 # Aplikasi Next.js (React)
+│   ├── src/
+│   │   ├── app/              # App Router (Pages, Layouts, Routing)
+│   │   ├── components/       # Reusable UI components (Tombol, Modal, Card)
+│   │   ├── hooks/            # Custom React hooks (useTimer, useAuth)
+│   │   ├── services/         # Fungsi fetcher HTTP ke Backend API
+│   │   └── utils/            # Helper functions
+│   ├── public/               # Asset statis (Logo Pramuka, Icons)
+│   ├── package.json          # Dependency frontend
+│   └── tailwind.config.ts    # Konfigurasi Tailwind CSS
+│
+├── backend/                  # Aplikasi Go (REST API dengan Echo Framework)
+│   ├── cmd/
+│   │   └── api/              # Entry point aplikasi (main.go - Inisialisasi Echo Server)
+│   ├── internal/             # Kode aplikasi privat (Menggunakan standar Clean Architecture)
+│   │   ├── delivery/         # Presentation layer (HTTP handlers/routes Echo)
+│   │   ├── models/           # Domain models & Structs (Entitas Database & DTO)
+│   │   ├── repository/       # Data Access Layer (Query ke Postgres & Redis)
+│   │   ├── usecase/          # Business Logic Layer (Logika Auth, Ujian, Penilaian)
+│   │   └── middleware/       # Echo custom middleware (JWT, CORS, Error Handler)
+│   ├── pkg/                  # Utilities eksternal/publik (Bisa di-share antar project)
+│   │   └── database/         # Konfigurasi koneksi Postgres & Redis
+│   ├── go.mod                # Dependency manager Go
+│   └── .env.example          # Template environment variables
+│
+├── docs/                     # Dokumentasi Sistem
+│   ├── Pramuka_CAT_PRD.md
+│   └── implementation-decisions.md
+│
+├── docker-compose.yml        # Orchestration untuk Local Development
+└── README.md                 # Petunjuk instalasi utama
+```
