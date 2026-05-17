@@ -85,7 +85,8 @@ PramukaCAT/
 ├── docs/                     # Dokumentasi Sistem
 │   ├── Pramuka_CAT_PRD.md
 │   ├── implementation-decisions.md
-│   └── sequence-diagrams.md
+│   ├── sequence-diagrams.md
+│   └── database-erd.md
 │
 ├── docker-compose.yml        # Orchestration untuk Local Development
 └── README.md                 # Petunjuk instalasi utama
