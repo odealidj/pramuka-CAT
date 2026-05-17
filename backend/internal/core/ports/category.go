@@ -10,7 +10,7 @@ import (
 type CategoryRepository interface {
 	CreateCategory(ctx context.Context, name string) (domain.Category, error)
 	GetCategoryById(ctx context.Context, id int32) (domain.Category, error)
-	ListCategories(ctx context.Context) ([]domain.Category, error)
+	ListCategories(ctx context.Context, page int32, limit int32) ([]domain.Category, int64, error)
 	UpdateCategory(ctx context.Context, id int32, name string) (domain.Category, error)
 	DeleteCategory(ctx context.Context, id int32) error
 }
@@ -19,7 +19,7 @@ type CategoryRepository interface {
 type CategoryService interface {
 	CreateCategory(ctx context.Context, req domain.CreateCategoryRequest) (domain.Category, error)
 	GetCategoryById(ctx context.Context, id int32) (domain.Category, error)
-	ListCategories(ctx context.Context) ([]domain.Category, error)
+	ListCategories(ctx context.Context, page int32, limit int32) ([]domain.Category, int64, error)
 	UpdateCategory(ctx context.Context, id int32, req domain.UpdateCategoryRequest) (domain.Category, error)
 	DeleteCategory(ctx context.Context, id int32) error
 }

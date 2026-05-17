@@ -22,7 +22,11 @@ WHERE id = $1 LIMIT 1;
 
 -- name: ListCategories :many
 SELECT * FROM categories
-ORDER BY name;
+ORDER BY name
+LIMIT $1 OFFSET $2;
+
+-- name: CountCategories :one
+SELECT COUNT(*) FROM categories;
 
 -- name: UpdateCategory :one
 UPDATE categories
@@ -45,7 +49,11 @@ WHERE id = $1 LIMIT 1;
 
 -- name: ListQuestions :many
 SELECT * FROM questions
-ORDER BY created_at DESC;
+ORDER BY created_at DESC
+LIMIT $1 OFFSET $2;
+
+-- name: CountQuestions :one
+SELECT COUNT(*) FROM questions;
 
 -- name: UpdateQuestion :one
 UPDATE questions
@@ -68,7 +76,11 @@ WHERE id = $1 LIMIT 1;
 
 -- name: ListEvents :many
 SELECT * FROM events
-ORDER BY created_at DESC;
+ORDER BY created_at DESC
+LIMIT $1 OFFSET $2;
+
+-- name: CountEvents :one
+SELECT COUNT(*) FROM events;
 
 -- name: UpdateEvent :one
 UPDATE events
@@ -122,7 +134,12 @@ VALUES ($1, $2);
 SELECT q.* FROM questions q
 JOIN event_questions eq ON q.id = eq.question_id
 WHERE eq.event_id = $1
-ORDER BY q.created_at ASC;
+ORDER BY q.created_at ASC
+LIMIT $2 OFFSET $3;
+
+-- name: CountEventQuestions :one
+SELECT COUNT(*) FROM event_questions
+WHERE event_id = $1;
 
 -- name: DeleteEventQuestion :exec
 DELETE FROM event_questions
@@ -133,12 +150,22 @@ SELECT u.id, u.username, u.full_name, uea.status, uea.is_completed, uea.score, u
 FROM users u
 JOIN user_event_approvals uea ON u.id = uea.user_id
 WHERE uea.event_id = $1
-ORDER BY u.full_name ASC;
+ORDER BY u.full_name ASC
+LIMIT $2 OFFSET $3;
+
+-- name: CountEventParticipants :one
+SELECT COUNT(*) FROM user_event_approvals
+WHERE event_id = $1;
 
 -- name: ListUpcomingEvents :many
 SELECT * FROM events
 WHERE end_time > NOW()
-ORDER BY start_time ASC;
+ORDER BY start_time ASC
+LIMIT $1 OFFSET $2;
+
+-- name: CountUpcomingEvents :one
+SELECT COUNT(*) FROM events
+WHERE end_time > NOW();
 
 -- name: ListUserApprovals :many
 SELECT e.id, e.name, e.start_time, e.end_time, e.duration_minutes, e.passing_grade, 
@@ -146,7 +173,12 @@ SELECT e.id, e.name, e.start_time, e.end_time, e.duration_minutes, e.passing_gra
 FROM events e
 JOIN user_event_approvals uea ON e.id = uea.event_id
 WHERE uea.user_id = $1
-ORDER BY e.start_time DESC;
+ORDER BY e.start_time DESC
+LIMIT $2 OFFSET $3;
+
+-- name: CountUserApprovals :one
+SELECT COUNT(*) FROM user_event_approvals
+WHERE user_id = $1;
 
 -- name: GetApprovalStatus :one
 SELECT * FROM user_event_approvals

@@ -18,12 +18,12 @@ func NewExamService(repo ports.ExamRepository) ports.ExamService {
 	return &examService{repo: repo}
 }
 
-func (s *examService) ListUpcomingEvents(ctx context.Context) ([]domain.UpcomingEvent, error) {
-	return s.repo.ListUpcomingEvents(ctx)
+func (s *examService) ListUpcomingEvents(ctx context.Context, page int32, limit int32) ([]domain.UpcomingEvent, int64, error) {
+	return s.repo.ListUpcomingEvents(ctx, page, limit)
 }
 
-func (s *examService) ListMyExams(ctx context.Context, userID uuid.UUID) ([]domain.UserApproval, error) {
-	return s.repo.ListUserApprovals(ctx, userID)
+func (s *examService) ListMyExams(ctx context.Context, userID uuid.UUID, page int32, limit int32) ([]domain.UserApproval, int64, error) {
+	return s.repo.ListUserApprovals(ctx, userID, page, limit)
 }
 
 func (s *examService) Enroll(ctx context.Context, userID uuid.UUID, eventID uuid.UUID) error {

@@ -62,16 +62,26 @@ func (r *eventRepository) GetEventById(ctx context.Context, id uuid.UUID) (domai
 	return mapSqlcToDomainEvent(res), nil
 }
 
-func (r *eventRepository) ListEvents(ctx context.Context) ([]domain.Event, error) {
-	rows, err := r.queries.ListEvents(ctx)
+func (r *eventRepository) ListEvents(ctx context.Context, page int32, limit int32) ([]domain.Event, int64, error) {
+	offset := (page - 1) * limit
+	rows, err := r.queries.ListEvents(ctx, sqlcgen.ListEventsParams{
+		Limit:  limit,
+		Offset: offset,
+	})
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
+
+	total, err := r.queries.CountEvents(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
 	var events []domain.Event
 	for _, row := range rows {
 		events = append(events, mapSqlcToDomainEvent(row))
 	}
-	return events, nil
+	return events, total, nil
 }
 
 func (r *eventRepository) UpdateEvent(ctx context.Context, id uuid.UUID, e domain.Event) (domain.Event, error) {
@@ -101,17 +111,27 @@ func (r *eventRepository) AddEventQuestion(ctx context.Context, eventID uuid.UUI
 	})
 }
 
-func (r *eventRepository) ListEventQuestions(ctx context.Context, eventID uuid.UUID) ([]domain.Question, error) {
-	rows, err := r.queries.ListEventQuestions(ctx, eventID)
+func (r *eventRepository) ListEventQuestions(ctx context.Context, eventID uuid.UUID, page int32, limit int32) ([]domain.Question, int64, error) {
+	offset := (page - 1) * limit
+	rows, err := r.queries.ListEventQuestions(ctx, sqlcgen.ListEventQuestionsParams{
+		EventID: eventID,
+		Limit:   limit,
+		Offset:  offset,
+	})
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
+
+	total, err := r.queries.CountEventQuestions(ctx, eventID)
+	if err != nil {
+		return nil, 0, err
+	}
+
 	var questions []domain.Question
 	for _, row := range rows {
-		// Menggunakan mapper yang kita buat di question_repository.go
 		questions = append(questions, mapSqlcToDomainQuestion(sqlcgen.Question(row)))
 	}
-	return questions, nil
+	return questions, total, nil
 }
 
 func (r *eventRepository) RemoveEventQuestion(ctx context.Context, eventID uuid.UUID, questionID uuid.UUID) error {
@@ -121,10 +141,20 @@ func (r *eventRepository) RemoveEventQuestion(ctx context.Context, eventID uuid.
 	})
 }
 
-func (r *eventRepository) ListEventParticipants(ctx context.Context, eventID uuid.UUID) ([]domain.EventParticipant, error) {
-	rows, err := r.queries.ListEventParticipants(ctx, uuid.NullUUID{UUID: eventID, Valid: true})
+func (r *eventRepository) ListEventParticipants(ctx context.Context, eventID uuid.UUID, page int32, limit int32) ([]domain.EventParticipant, int64, error) {
+	offset := (page - 1) * limit
+	rows, err := r.queries.ListEventParticipants(ctx, sqlcgen.ListEventParticipantsParams{
+		EventID: uuid.NullUUID{UUID: eventID, Valid: true},
+		Limit:   limit,
+		Offset:  offset,
+	})
 	if err != nil {
-		return nil, err
+		return nil, 0, err
+	}
+
+	total, err := r.queries.CountEventParticipants(ctx, uuid.NullUUID{UUID: eventID, Valid: true})
+	if err != nil {
+		return nil, 0, err
 	}
 
 	var participants []domain.EventParticipant
@@ -140,7 +170,7 @@ func (r *eventRepository) ListEventParticipants(ctx context.Context, eventID uui
 			IsPassed:    row.IsPassed.Bool,
 		})
 	}
-	return participants, nil
+	return participants, total, nil
 }
 
 func (r *eventRepository) ApproveUserEvent(ctx context.Context, approvalID uuid.UUID) error {

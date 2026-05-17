@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/domain"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/ports"
+	"github.com/odealidj/pramuka-CAT/backend/pkg/response"
 )
 
 type EventHandler struct {
@@ -38,161 +39,167 @@ func (h *EventHandler) RegisterAdminRoutes(adminGroup *echo.Group) {
 func (h *EventHandler) CreateEvent(c echo.Context) error {
 	var req domain.CreateEventRequest
 	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Format request tidak valid"})
+		return response.Error(c, http.StatusBadRequest, "Format request tidak valid", nil)
 	}
 
 	e, err := h.service.CreateEvent(c.Request().Context(), req)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return response.Error(c, http.StatusInternalServerError, "Gagal membuat event", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}
 
-	return c.JSON(http.StatusCreated, e)
+	return response.Success(c, http.StatusCreated, "Event berhasil dibuat", e)
 }
 
 func (h *EventHandler) ListEvents(c echo.Context) error {
-	events, err := h.service.ListEvents(c.Request().Context())
+	page, limit := response.ParsePaginationParams(c)
+	events, total, err := h.service.ListEvents(c.Request().Context(), page, limit)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return response.Error(c, http.StatusInternalServerError, "Gagal mengambil daftar event", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}
 
 	if events == nil {
 		events = []domain.Event{}
 	}
 
-	return c.JSON(http.StatusOK, events)
+	meta := response.BuildMeta(page, limit, total)
+	return response.SuccessWithMeta(c, http.StatusOK, "Daftar event berhasil diambil", events, meta)
 }
 
 func (h *EventHandler) GetEvent(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID event tidak valid"})
+		return response.Error(c, http.StatusBadRequest, "ID event tidak valid", nil)
 	}
 
 	e, err := h.service.GetEventById(c.Request().Context(), id)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, map[string]string{"error": "Event tidak ditemukan"})
+		return response.Error(c, http.StatusNotFound, "Event tidak ditemukan", nil)
 	}
 
-	return c.JSON(http.StatusOK, e)
+	return response.Success(c, http.StatusOK, "Event berhasil diambil", e)
 }
 
 func (h *EventHandler) UpdateEvent(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID event tidak valid"})
+		return response.Error(c, http.StatusBadRequest, "ID event tidak valid", nil)
 	}
 
 	var req domain.UpdateEventRequest
 	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Format request tidak valid"})
+		return response.Error(c, http.StatusBadRequest, "Format request tidak valid", nil)
 	}
 
 	e, err := h.service.UpdateEvent(c.Request().Context(), id, req)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return response.Error(c, http.StatusInternalServerError, "Gagal memperbarui event", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}
 
-	return c.JSON(http.StatusOK, e)
+	return response.Success(c, http.StatusOK, "Event berhasil diperbarui", e)
 }
 
 func (h *EventHandler) DeleteEvent(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID event tidak valid"})
+		return response.Error(c, http.StatusBadRequest, "ID event tidak valid", nil)
 	}
 
 	err = h.service.DeleteEvent(c.Request().Context(), id)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return response.Error(c, http.StatusInternalServerError, "Gagal menghapus event", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}
 
-	return c.JSON(http.StatusOK, map[string]string{"message": "Event berhasil dihapus"})
+	return response.Success(c, http.StatusOK, "Event berhasil dihapus", nil)
 }
 
 func (h *EventHandler) AddEventQuestion(c echo.Context) error {
 	eventID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID event tidak valid"})
+		return response.Error(c, http.StatusBadRequest, "ID event tidak valid", nil)
 	}
 
 	var req domain.AddEventQuestionRequest
 	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Format request tidak valid"})
+		return response.Error(c, http.StatusBadRequest, "Format request tidak valid", nil)
 	}
 
 	err = h.service.AddEventQuestion(c.Request().Context(), eventID, req)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return response.Error(c, http.StatusInternalServerError, "Gagal menambahkan soal", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}
 
-	return c.JSON(http.StatusCreated, map[string]string{"message": "Soal berhasil ditambahkan ke Event"})
+	return response.Success(c, http.StatusCreated, "Soal berhasil ditambahkan ke Event", nil)
 }
 
 func (h *EventHandler) ListEventQuestions(c echo.Context) error {
 	eventID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID event tidak valid"})
+		return response.Error(c, http.StatusBadRequest, "ID event tidak valid", nil)
 	}
 
-	questions, err := h.service.ListEventQuestions(c.Request().Context(), eventID)
+	page, limit := response.ParsePaginationParams(c)
+	questions, total, err := h.service.ListEventQuestions(c.Request().Context(), eventID, page, limit)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return response.Error(c, http.StatusInternalServerError, "Gagal mengambil soal event", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}
 
 	if questions == nil {
 		questions = []domain.Question{}
 	}
 
-	return c.JSON(http.StatusOK, questions)
+	meta := response.BuildMeta(page, limit, total)
+	return response.SuccessWithMeta(c, http.StatusOK, "Daftar soal event berhasil diambil", questions, meta)
 }
 
 func (h *EventHandler) RemoveEventQuestion(c echo.Context) error {
 	eventID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID event tidak valid"})
+		return response.Error(c, http.StatusBadRequest, "ID event tidak valid", nil)
 	}
 
 	questionID, err := uuid.Parse(c.Param("question_id"))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID soal tidak valid"})
+		return response.Error(c, http.StatusBadRequest, "ID soal tidak valid", nil)
 	}
 
 	err = h.service.RemoveEventQuestion(c.Request().Context(), eventID, questionID)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return response.Error(c, http.StatusInternalServerError, "Gagal menghapus soal dari event", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}
 
-	return c.JSON(http.StatusOK, map[string]string{"message": "Soal berhasil dihapus dari Event"})
+	return response.Success(c, http.StatusOK, "Soal berhasil dihapus dari Event", nil)
 }
 
 func (h *EventHandler) ListEventParticipants(c echo.Context) error {
 	eventID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID event tidak valid"})
+		return response.Error(c, http.StatusBadRequest, "ID event tidak valid", nil)
 	}
 
-	participants, err := h.service.ListEventParticipants(c.Request().Context(), eventID)
+	page, limit := response.ParsePaginationParams(c)
+	participants, total, err := h.service.ListEventParticipants(c.Request().Context(), eventID, page, limit)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return response.Error(c, http.StatusInternalServerError, "Gagal mengambil daftar peserta", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}
 
 	if participants == nil {
 		participants = []domain.EventParticipant{}
 	}
 
-	return c.JSON(http.StatusOK, participants)
+	meta := response.BuildMeta(page, limit, total)
+	return response.SuccessWithMeta(c, http.StatusOK, "Daftar peserta event berhasil diambil", participants, meta)
 }
 
 func (h *EventHandler) ApproveParticipant(c echo.Context) error {
 	approvalID, err := uuid.Parse(c.Param("approval_id"))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID approval tidak valid"})
+		return response.Error(c, http.StatusBadRequest, "ID approval tidak valid", nil)
 	}
 
 	err = h.service.ApproveUserEvent(c.Request().Context(), approvalID)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return response.Error(c, http.StatusInternalServerError, "Gagal menyetujui peserta", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}
 
-	return c.JSON(http.StatusOK, map[string]string{"message": "Peserta berhasil disetujui (Approved)"})
+	return response.Success(c, http.StatusOK, "Peserta berhasil disetujui (Approved)", nil)
 }

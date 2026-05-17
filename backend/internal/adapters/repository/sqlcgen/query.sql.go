@@ -62,6 +62,87 @@ func (q *Queries) CalculateScore(ctx context.Context, approvalID uuid.NullUUID) 
 	return total_score, err
 }
 
+const countCategories = `-- name: CountCategories :one
+SELECT COUNT(*) FROM categories
+`
+
+func (q *Queries) CountCategories(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countCategories)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countEventParticipants = `-- name: CountEventParticipants :one
+SELECT COUNT(*) FROM user_event_approvals
+WHERE event_id = $1
+`
+
+func (q *Queries) CountEventParticipants(ctx context.Context, eventID uuid.NullUUID) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countEventParticipants, eventID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countEventQuestions = `-- name: CountEventQuestions :one
+SELECT COUNT(*) FROM event_questions
+WHERE event_id = $1
+`
+
+func (q *Queries) CountEventQuestions(ctx context.Context, eventID uuid.UUID) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countEventQuestions, eventID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countEvents = `-- name: CountEvents :one
+SELECT COUNT(*) FROM events
+`
+
+func (q *Queries) CountEvents(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countEvents)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countQuestions = `-- name: CountQuestions :one
+SELECT COUNT(*) FROM questions
+`
+
+func (q *Queries) CountQuestions(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countQuestions)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countUpcomingEvents = `-- name: CountUpcomingEvents :one
+SELECT COUNT(*) FROM events
+WHERE end_time > NOW()
+`
+
+func (q *Queries) CountUpcomingEvents(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countUpcomingEvents)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countUserApprovals = `-- name: CountUserApprovals :one
+SELECT COUNT(*) FROM user_event_approvals
+WHERE user_id = $1
+`
+
+func (q *Queries) CountUserApprovals(ctx context.Context, userID uuid.NullUUID) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countUserApprovals, userID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createCategory = `-- name: CreateCategory :one
 INSERT INTO categories (name)
 VALUES ($1)
@@ -475,10 +556,16 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 const listCategories = `-- name: ListCategories :many
 SELECT id, name FROM categories
 ORDER BY name
+LIMIT $1 OFFSET $2
 `
 
-func (q *Queries) ListCategories(ctx context.Context) ([]Category, error) {
-	rows, err := q.db.QueryContext(ctx, listCategories)
+type ListCategoriesParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) ListCategories(ctx context.Context, arg ListCategoriesParams) ([]Category, error) {
+	rows, err := q.db.QueryContext(ctx, listCategories, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -506,7 +593,14 @@ FROM users u
 JOIN user_event_approvals uea ON u.id = uea.user_id
 WHERE uea.event_id = $1
 ORDER BY u.full_name ASC
+LIMIT $2 OFFSET $3
 `
+
+type ListEventParticipantsParams struct {
+	EventID uuid.NullUUID `json:"event_id"`
+	Limit   int32         `json:"limit"`
+	Offset  int32         `json:"offset"`
+}
 
 type ListEventParticipantsRow struct {
 	ID          uuid.UUID      `json:"id"`
@@ -518,8 +612,8 @@ type ListEventParticipantsRow struct {
 	IsPassed    sql.NullBool   `json:"is_passed"`
 }
 
-func (q *Queries) ListEventParticipants(ctx context.Context, eventID uuid.NullUUID) ([]ListEventParticipantsRow, error) {
-	rows, err := q.db.QueryContext(ctx, listEventParticipants, eventID)
+func (q *Queries) ListEventParticipants(ctx context.Context, arg ListEventParticipantsParams) ([]ListEventParticipantsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listEventParticipants, arg.EventID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -554,10 +648,17 @@ SELECT q.id, q.category_id, q.question_text, q.option_a, q.option_b, q.option_c,
 JOIN event_questions eq ON q.id = eq.question_id
 WHERE eq.event_id = $1
 ORDER BY q.created_at ASC
+LIMIT $2 OFFSET $3
 `
 
-func (q *Queries) ListEventQuestions(ctx context.Context, eventID uuid.UUID) ([]Question, error) {
-	rows, err := q.db.QueryContext(ctx, listEventQuestions, eventID)
+type ListEventQuestionsParams struct {
+	EventID uuid.UUID `json:"event_id"`
+	Limit   int32     `json:"limit"`
+	Offset  int32     `json:"offset"`
+}
+
+func (q *Queries) ListEventQuestions(ctx context.Context, arg ListEventQuestionsParams) ([]Question, error) {
+	rows, err := q.db.QueryContext(ctx, listEventQuestions, arg.EventID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -593,10 +694,16 @@ func (q *Queries) ListEventQuestions(ctx context.Context, eventID uuid.UUID) ([]
 const listEvents = `-- name: ListEvents :many
 SELECT id, name, start_time, end_time, duration_minutes, passing_grade, created_at FROM events
 ORDER BY created_at DESC
+LIMIT $1 OFFSET $2
 `
 
-func (q *Queries) ListEvents(ctx context.Context) ([]Event, error) {
-	rows, err := q.db.QueryContext(ctx, listEvents)
+type ListEventsParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) ListEvents(ctx context.Context, arg ListEventsParams) ([]Event, error) {
+	rows, err := q.db.QueryContext(ctx, listEvents, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -629,10 +736,16 @@ func (q *Queries) ListEvents(ctx context.Context) ([]Event, error) {
 const listQuestions = `-- name: ListQuestions :many
 SELECT id, category_id, question_text, option_a, option_b, option_c, option_d, correct_answer, weight, created_at FROM questions
 ORDER BY created_at DESC
+LIMIT $1 OFFSET $2
 `
 
-func (q *Queries) ListQuestions(ctx context.Context) ([]Question, error) {
-	rows, err := q.db.QueryContext(ctx, listQuestions)
+type ListQuestionsParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) ListQuestions(ctx context.Context, arg ListQuestionsParams) ([]Question, error) {
+	rows, err := q.db.QueryContext(ctx, listQuestions, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -669,10 +782,16 @@ const listUpcomingEvents = `-- name: ListUpcomingEvents :many
 SELECT id, name, start_time, end_time, duration_minutes, passing_grade, created_at FROM events
 WHERE end_time > NOW()
 ORDER BY start_time ASC
+LIMIT $1 OFFSET $2
 `
 
-func (q *Queries) ListUpcomingEvents(ctx context.Context) ([]Event, error) {
-	rows, err := q.db.QueryContext(ctx, listUpcomingEvents)
+type ListUpcomingEventsParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) ListUpcomingEvents(ctx context.Context, arg ListUpcomingEventsParams) ([]Event, error) {
+	rows, err := q.db.QueryContext(ctx, listUpcomingEvents, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -709,7 +828,14 @@ FROM events e
 JOIN user_event_approvals uea ON e.id = uea.event_id
 WHERE uea.user_id = $1
 ORDER BY e.start_time DESC
+LIMIT $2 OFFSET $3
 `
+
+type ListUserApprovalsParams struct {
+	UserID uuid.NullUUID `json:"user_id"`
+	Limit  int32         `json:"limit"`
+	Offset int32         `json:"offset"`
+}
 
 type ListUserApprovalsRow struct {
 	ID              uuid.UUID      `json:"id"`
@@ -727,8 +853,8 @@ type ListUserApprovalsRow struct {
 	CompletedAt     sql.NullTime   `json:"completed_at"`
 }
 
-func (q *Queries) ListUserApprovals(ctx context.Context, userID uuid.NullUUID) ([]ListUserApprovalsRow, error) {
-	rows, err := q.db.QueryContext(ctx, listUserApprovals, userID)
+func (q *Queries) ListUserApprovals(ctx context.Context, arg ListUserApprovalsParams) ([]ListUserApprovalsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listUserApprovals, arg.UserID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

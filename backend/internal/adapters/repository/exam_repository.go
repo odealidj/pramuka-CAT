@@ -21,10 +21,19 @@ func NewExamRepository(queries *sqlcgen.Queries) ports.ExamRepository {
 	return &examRepository{queries: queries}
 }
 
-func (r *examRepository) ListUpcomingEvents(ctx context.Context) ([]domain.UpcomingEvent, error) {
-	rows, err := r.queries.ListUpcomingEvents(ctx)
+func (r *examRepository) ListUpcomingEvents(ctx context.Context, page int32, limit int32) ([]domain.UpcomingEvent, int64, error) {
+	offset := (page - 1) * limit
+	rows, err := r.queries.ListUpcomingEvents(ctx, sqlcgen.ListUpcomingEventsParams{
+		Limit:  limit,
+		Offset: offset,
+	})
 	if err != nil {
-		return nil, err
+		return nil, 0, err
+	}
+
+	total, err := r.queries.CountUpcomingEvents(ctx)
+	if err != nil {
+		return nil, 0, err
 	}
 
 	var events []domain.UpcomingEvent
@@ -39,13 +48,23 @@ func (r *examRepository) ListUpcomingEvents(ctx context.Context) ([]domain.Upcom
 			PassingGrade:    passingGrade,
 		})
 	}
-	return events, nil
+	return events, total, nil
 }
 
-func (r *examRepository) ListUserApprovals(ctx context.Context, userID uuid.UUID) ([]domain.UserApproval, error) {
-	rows, err := r.queries.ListUserApprovals(ctx, uuid.NullUUID{UUID: userID, Valid: true})
+func (r *examRepository) ListUserApprovals(ctx context.Context, userID uuid.UUID, page int32, limit int32) ([]domain.UserApproval, int64, error) {
+	offset := (page - 1) * limit
+	rows, err := r.queries.ListUserApprovals(ctx, sqlcgen.ListUserApprovalsParams{
+		UserID: uuid.NullUUID{UUID: userID, Valid: true},
+		Limit:  limit,
+		Offset: offset,
+	})
 	if err != nil {
-		return nil, err
+		return nil, 0, err
+	}
+
+	total, err := r.queries.CountUserApprovals(ctx, uuid.NullUUID{UUID: userID, Valid: true})
+	if err != nil {
+		return nil, 0, err
 	}
 
 	var approvals []domain.UserApproval
@@ -81,7 +100,7 @@ func (r *examRepository) ListUserApprovals(ctx context.Context, userID uuid.UUID
 			CompletedAt:     completedAt,
 		})
 	}
-	return approvals, nil
+	return approvals, total, nil
 }
 
 func (r *examRepository) GetApprovalStatus(ctx context.Context, userID uuid.UUID, eventID uuid.UUID) (domain.UserApproval, error) {
@@ -127,7 +146,13 @@ func (r *examRepository) EnrollToEvent(ctx context.Context, userID uuid.UUID, ev
 }
 
 func (r *examRepository) ListEventQuestionsForParticipant(ctx context.Context, eventID uuid.UUID) ([]domain.ParticipantQuestion, error) {
-	rows, err := r.queries.ListEventQuestions(ctx, eventID)
+	// For participant execution, we typically get all questions at once without pagination.
+	// We'll reuse ListEventQuestions query but without pagination limit (e.g. limit 1000).
+	rows, err := r.queries.ListEventQuestions(ctx, sqlcgen.ListEventQuestionsParams{
+		EventID: eventID,
+		Limit:   1000,
+		Offset:  0,
+	})
 	if err != nil {
 		return nil, err
 	}

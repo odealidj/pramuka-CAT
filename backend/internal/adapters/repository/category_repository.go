@@ -38,11 +38,21 @@ func (r *categoryRepository) GetCategoryById(ctx context.Context, id int32) (dom
 	}, nil
 }
 
-func (r *categoryRepository) ListCategories(ctx context.Context) ([]domain.Category, error) {
-	rows, err := r.queries.ListCategories(ctx)
+func (r *categoryRepository) ListCategories(ctx context.Context, page int32, limit int32) ([]domain.Category, int64, error) {
+	offset := (page - 1) * limit
+	rows, err := r.queries.ListCategories(ctx, sqlcgen.ListCategoriesParams{
+		Limit:  limit,
+		Offset: offset,
+	})
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
+
+	total, err := r.queries.CountCategories(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
 	var res []domain.Category
 	for _, c := range rows {
 		res = append(res, domain.Category{
@@ -50,7 +60,7 @@ func (r *categoryRepository) ListCategories(ctx context.Context) ([]domain.Categ
 			Name: c.Name,
 		})
 	}
-	return res, nil
+	return res, total, nil
 }
 
 func (r *categoryRepository) UpdateCategory(ctx context.Context, id int32, name string) (domain.Category, error) {

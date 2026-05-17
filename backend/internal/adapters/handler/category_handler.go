@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/domain"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/ports"
+	"github.com/odealidj/pramuka-CAT/backend/pkg/response"
 )
 
 type CategoryHandler struct {
@@ -28,62 +29,63 @@ func (h *CategoryHandler) RegisterAdminRoutes(adminGroup *echo.Group) {
 func (h *CategoryHandler) CreateCategory(c echo.Context) error {
 	var req domain.CreateCategoryRequest
 	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Format request tidak valid"})
+		return response.Error(c, http.StatusBadRequest, "Format request tidak valid", nil)
 	}
 
 	category, err := h.service.CreateCategory(c.Request().Context(), req)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return response.Error(c, http.StatusInternalServerError, "Gagal membuat kategori", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}
 
-	return c.JSON(http.StatusCreated, category)
+	return response.Success(c, http.StatusCreated, "Kategori berhasil dibuat", category)
 }
 
 func (h *CategoryHandler) ListCategories(c echo.Context) error {
-	categories, err := h.service.ListCategories(c.Request().Context())
+	page, limit := response.ParsePaginationParams(c)
+	categories, total, err := h.service.ListCategories(c.Request().Context(), page, limit)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return response.Error(c, http.StatusInternalServerError, "Gagal mengambil daftar kategori", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}
 	
-	// Jika kosong, kembalikan array kosong agar tidak null di JSON
 	if categories == nil {
 	    categories = []domain.Category{}
 	}
 
-	return c.JSON(http.StatusOK, categories)
+	meta := response.BuildMeta(page, limit, total)
+	return response.SuccessWithMeta(c, http.StatusOK, "Daftar kategori berhasil diambil", categories, meta)
 }
 
 func (h *CategoryHandler) UpdateCategory(c echo.Context) error {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID kategori tidak valid"})
+		return response.Error(c, http.StatusBadRequest, "ID kategori tidak valid", nil)
 	}
 
 	var req domain.UpdateCategoryRequest
 	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Format request tidak valid"})
+		return response.Error(c, http.StatusBadRequest, "Format request tidak valid", nil)
 	}
 
 	category, err := h.service.UpdateCategory(c.Request().Context(), int32(id), req)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return response.Error(c, http.StatusInternalServerError, "Gagal memperbarui kategori", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}
 
-	return c.JSON(http.StatusOK, category)
+	return response.Success(c, http.StatusOK, "Kategori berhasil diperbarui", category)
 }
 
 func (h *CategoryHandler) DeleteCategory(c echo.Context) error {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID kategori tidak valid"})
+		return response.Error(c, http.StatusBadRequest, "ID kategori tidak valid", nil)
 	}
 
 	err = h.service.DeleteCategory(c.Request().Context(), int32(id))
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return response.Error(c, http.StatusInternalServerError, "Gagal menghapus kategori", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}
 
-	return c.JSON(http.StatusOK, map[string]string{"message": "Kategori berhasil dihapus"})
+	return response.Success(c, http.StatusOK, "Kategori berhasil dihapus", nil)
 }

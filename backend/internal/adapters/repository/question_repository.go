@@ -76,16 +76,26 @@ func (r *questionRepository) GetQuestionById(ctx context.Context, id uuid.UUID) 
 	return mapSqlcToDomainQuestion(res), nil
 }
 
-func (r *questionRepository) ListQuestions(ctx context.Context) ([]domain.Question, error) {
-	rows, err := r.queries.ListQuestions(ctx)
+func (r *questionRepository) ListQuestions(ctx context.Context, page int32, limit int32) ([]domain.Question, int64, error) {
+	offset := (page - 1) * limit
+	rows, err := r.queries.ListQuestions(ctx, sqlcgen.ListQuestionsParams{
+		Limit:  limit,
+		Offset: offset,
+	})
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
+
+	total, err := r.queries.CountQuestions(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
 	var res []domain.Question
 	for _, row := range rows {
 		res = append(res, mapSqlcToDomainQuestion(row))
 	}
-	return res, nil
+	return res, total, nil
 }
 
 func (r *questionRepository) UpdateQuestion(ctx context.Context, id uuid.UUID, q domain.Question) (domain.Question, error) {

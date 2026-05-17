@@ -36,8 +36,8 @@ func (s *eventService) GetEventById(ctx context.Context, id uuid.UUID) (domain.E
 	return s.repo.GetEventById(ctx, id)
 }
 
-func (s *eventService) ListEvents(ctx context.Context) ([]domain.Event, error) {
-	return s.repo.ListEvents(ctx)
+func (s *eventService) ListEvents(ctx context.Context, page int32, limit int32) ([]domain.Event, int64, error) {
+	return s.repo.ListEvents(ctx, page, limit)
 }
 
 func (s *eventService) UpdateEvent(ctx context.Context, id uuid.UUID, req domain.UpdateEventRequest) (domain.Event, error) {
@@ -77,16 +77,16 @@ func (s *eventService) AddEventQuestion(ctx context.Context, eventID uuid.UUID, 
 	return s.repo.AddEventQuestion(ctx, eventID, req.QuestionID)
 }
 
-func (s *eventService) ListEventQuestions(ctx context.Context, eventID uuid.UUID) ([]domain.Question, error) {
-	return s.repo.ListEventQuestions(ctx, eventID)
+func (s *eventService) ListEventQuestions(ctx context.Context, eventID uuid.UUID, page int32, limit int32) ([]domain.Question, int64, error) {
+	return s.repo.ListEventQuestions(ctx, eventID, page, limit)
 }
 
 func (s *eventService) RemoveEventQuestion(ctx context.Context, eventID uuid.UUID, questionID uuid.UUID) error {
 	return s.repo.RemoveEventQuestion(ctx, eventID, questionID)
 }
 
-func (s *eventService) ListEventParticipants(ctx context.Context, eventID uuid.UUID) ([]domain.EventParticipant, error) {
-	return s.repo.ListEventParticipants(ctx, eventID)
+func (s *eventService) ListEventParticipants(ctx context.Context, eventID uuid.UUID, page int32, limit int32) ([]domain.EventParticipant, int64, error) {
+	return s.repo.ListEventParticipants(ctx, eventID, page, limit)
 }
 
 func (s *eventService) ApproveUserEvent(ctx context.Context, approvalID uuid.UUID) error {

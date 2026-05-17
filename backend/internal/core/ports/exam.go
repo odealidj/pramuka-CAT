@@ -8,8 +8,8 @@ import (
 )
 
 type ExamRepository interface {
-	ListUpcomingEvents(ctx context.Context) ([]domain.UpcomingEvent, error)
-	ListUserApprovals(ctx context.Context, userID uuid.UUID) ([]domain.UserApproval, error)
+	ListUpcomingEvents(ctx context.Context, page int32, limit int32) ([]domain.UpcomingEvent, int64, error)
+	ListUserApprovals(ctx context.Context, userID uuid.UUID, page int32, limit int32) ([]domain.UserApproval, int64, error)
 	GetApprovalStatus(ctx context.Context, userID uuid.UUID, eventID uuid.UUID) (domain.UserApproval, error)
 	EnrollToEvent(ctx context.Context, userID uuid.UUID, eventID uuid.UUID) error
 	
@@ -24,8 +24,8 @@ type ExamRepository interface {
 }
 
 type ExamService interface {
-	ListUpcomingEvents(ctx context.Context) ([]domain.UpcomingEvent, error)
-	ListMyExams(ctx context.Context, userID uuid.UUID) ([]domain.UserApproval, error)
+	ListUpcomingEvents(ctx context.Context, page int32, limit int32) ([]domain.UpcomingEvent, int64, error)
+	ListMyExams(ctx context.Context, userID uuid.UUID, page int32, limit int32) ([]domain.UserApproval, int64, error)
 	Enroll(ctx context.Context, userID uuid.UUID, eventID uuid.UUID) error
 	
 	StartExam(ctx context.Context, userID uuid.UUID, eventID uuid.UUID) ([]domain.ParticipantQuestion, error)
