@@ -75,11 +75,31 @@ func main() {
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
 
-	// Endpoint Health Check
-	e.GET("/ping", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, map[string]interface{}{
-			"success": true,
-			"message": "Pramuka CAT Backend API menyala dengan sempurna!",
+	// Endpoint Health Check (Liveness & Readiness)
+	e.GET("/health", func(c echo.Context) error {
+		status := "ok"
+		dbStatus := "ok"
+		redisStatus := "ok"
+		statusCode := http.StatusOK
+
+		// Check Postgres
+		if err := db.Ping(); err != nil {
+			status = "error"
+			dbStatus = "disconnected"
+			statusCode = http.StatusServiceUnavailable
+		}
+
+		// Check Redis
+		if err := rdb.Ping(c.Request().Context()).Err(); err != nil {
+			status = "error"
+			redisStatus = "disconnected"
+			statusCode = http.StatusServiceUnavailable
+		}
+
+		return c.JSON(statusCode, map[string]interface{}{
+			"status":   status,
+			"database": dbStatus,
+			"redis":    redisStatus,
 		})
 	})
 
