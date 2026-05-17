@@ -40,5 +40,6 @@ type EventService interface {
 
 	ListEventParticipants(ctx context.Context, eventID uuid.UUID, page int32, limit int32) ([]domain.EventParticipant, int64, error)
 	ApproveUserEvent(ctx context.Context, approvalID uuid.UUID) error
-	ExportEventParticipantsCSV(ctx context.Context, eventID uuid.UUID) ([]byte, error)
+	ExportEventParticipantsExcel(ctx context.Context, eventID uuid.UUID) ([]byte, error)
+	ExportEventParticipantsPDF(ctx context.Context, eventID uuid.UUID) ([]byte, error)
 }

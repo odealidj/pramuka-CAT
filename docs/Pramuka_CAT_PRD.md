@@ -50,7 +50,7 @@ Aplikasi memiliki 2 jenis peran utama:
 6. **Laporan & Review Jawaban (Monitoring & Export):**
    - Melihat daftar riwayat nilai dari semua peserta yang telah selesai mengerjakan.
    - Melihat rincian ujian per peserta: meninjau soal-soal apa saja yang dikerjakan peserta, apa jawaban yang dipilih peserta, dan mencocokkannya dengan kunci jawaban (via endpoint `GET /admin/exams/approvals/:approval_id/answers`).
-   - **Export Laporan (CSV):** Mengunduh rekap nilai seluruh peserta pada suatu event dalam format CSV untuk keperluan pelaporan kegiatan Gugus Depan/Kwartir (via endpoint `GET /admin/events/:id/export`).
+   - **Export Laporan (Excel & PDF):** Mengunduh rekap nilai seluruh peserta pada suatu event dalam format **Excel (.xlsx)** atau **PDF** untuk keperluan pelaporan kegiatan Gugus Depan/Kwartir (via endpoint `GET /admin/events/:id/export?format=excel` atau `?format=pdf`).
 
 ---
 
