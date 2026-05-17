@@ -69,6 +69,8 @@ services:
       # JWT Secrets
       - JWT_ACCESS_SECRET=supersecretaccess
       - JWT_REFRESH_SECRET=supersecretrefresh
+      # OpenTelemetry — kirim trace ke Jaeger
+      - OTEL_EXPORTER_OTLP_ENDPOINT=jaeger:4317
     depends_on:
       postgres:
         condition: service_healthy
@@ -76,6 +78,18 @@ services:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
+      jaeger:
+        condition: service_started
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: pramukacat_jaeger
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "4317:4317"    # OTLP gRPC (tempat Go app mengirim trace)
+      - "4318:4318"    # OTLP HTTP (alternatif)
 
 volumes:
   pramukacat_pgdata:

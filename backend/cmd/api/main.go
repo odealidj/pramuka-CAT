@@ -29,6 +29,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	echoSwagger "github.com/swaggo/echo-swagger"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 
 	_ "github.com/odealidj/pramuka-CAT/backend/docs"
 	"github.com/odealidj/pramuka-CAT/backend/internal/adapters/handler"
@@ -37,6 +38,7 @@ import (
 	"github.com/odealidj/pramuka-CAT/backend/internal/adapters/repository/sqlcgen"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/services"
 	"github.com/odealidj/pramuka-CAT/backend/pkg/database"
+	"github.com/odealidj/pramuka-CAT/backend/pkg/tracer"
 )
 
 func main() {
@@ -59,6 +61,20 @@ func main() {
 		log.Fatalf("Aplikasi berhenti: Gagal terhubung ke Redis. Error: %v", err)
 	}
 	defer rdb.Close()
+
+	// 4. Inisialisasi Distributed Tracing (OpenTelemetry → Jaeger)
+	otlpEndpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+	if otlpEndpoint == "" {
+		otlpEndpoint = "localhost:4317" // fallback untuk local dev
+	}
+	tracerShutdown, err := tracer.InitTracer(context.Background(), "pramuka-cat-api", otlpEndpoint)
+	if err != nil {
+		// Tidak fatal — app tetap jalan meski Jaeger tidak tersedia
+		log.Printf("Peringatan: Gagal menginisialisasi tracer Jaeger (%s): %v", otlpEndpoint, err)
+		tracerShutdown = func(ctx context.Context) error { return nil }
+	} else {
+		log.Printf("Distributed tracing aktif → mengirim trace ke %s", otlpEndpoint)
+	}
 
 	// 4. Setup Dependency Injection (Hexagonal Wiring)
 	queries := sqlcgen.New(db)
@@ -96,6 +112,9 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
+
+	// Distributed Tracing middleware — membuat span otomatis untuk setiap HTTP request
+	e.Use(otelecho.Middleware("pramuka-cat-api"))
 
 	// Root endpoint — mengembalikan informasi API (best practice)
 	e.GET("/", func(c echo.Context) error {
@@ -207,6 +226,11 @@ func main() {
 
 	if err := e.Shutdown(ctx); err != nil {
 		e.Logger.Fatal("Terjadi kesalahan saat mematikan server: ", err)
+	}
+
+	// Flush dan tutup tracer agar semua span terkirim ke Jaeger
+	if err := tracerShutdown(ctx); err != nil {
+		log.Printf("Peringatan: Gagal menutup tracer: %v", err)
 	}
 
 	log.Println("Server berhasil dimatikan dengan aman. Sampai jumpa!")

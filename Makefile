@@ -33,13 +33,15 @@ down:
 
 # --- Infrastruktur Khusus ---
 infra-up:
-	@echo "Menyalakan HANYA Infrastruktur (Postgres, Redis, Migrate)..."
-	docker-compose up -d postgres redis migrate
+	@echo "Menyalakan Infrastruktur (Postgres, Redis, Migrate, Jaeger)..."
+	docker-compose up -d postgres redis migrate jaeger
+	@echo ""
+	@echo "  Jaeger UI → http://localhost:16686"
 
 infra-down:
 	@echo "Mematikan Infrastruktur..."
-	docker-compose stop postgres redis migrate
-	docker-compose rm -f postgres redis migrate
+	docker-compose stop postgres redis migrate jaeger
+	docker-compose rm -f postgres redis migrate jaeger
 
 # --- Database Migrations ---
 migrate-up:
