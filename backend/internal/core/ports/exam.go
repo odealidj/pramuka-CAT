@@ -22,6 +22,7 @@ type ExamRepository interface {
 	FinishExam(ctx context.Context, approvalID uuid.UUID, score float64, isPassed bool) error
 	
 	GetEventById(ctx context.Context, id uuid.UUID) (domain.Event, error)
+	GetUserAnswersDetail(ctx context.Context, approvalID uuid.UUID) ([]domain.UserAnswerDetail, error)
 }
 
 type ExamService interface {
@@ -32,4 +33,6 @@ type ExamService interface {
 	StartExam(ctx context.Context, userID uuid.UUID, eventID uuid.UUID) ([]domain.ParticipantQuestion, error)
 	SubmitAnswer(ctx context.Context, userID uuid.UUID, eventID uuid.UUID, req domain.SubmitAnswerRequest) error
 	FinishExam(ctx context.Context, userID uuid.UUID, eventID uuid.UUID) (domain.FinishExamResponse, error)
+
+	ReviewParticipantAnswers(ctx context.Context, approvalID uuid.UUID) ([]domain.UserAnswerDetail, error)
 }

@@ -252,3 +252,27 @@ FROM questions
 WHERE id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1)
 ORDER BY RANDOM()
 LIMIT $2;
+
+-- name: GetUserAnswersDetail :many
+SELECT
+    ua.id as answer_id,
+    ua.selected_answer,
+    ua.is_correct,
+    q.id as question_id,
+    q.question_text,
+    q.option_a,
+    q.option_b,
+    q.option_c,
+    q.option_d,
+    q.correct_answer,
+    q.weight
+FROM user_answers ua
+JOIN questions q ON ua.question_id = q.id
+WHERE ua.approval_id = $1;
+
+-- name: GetAllEventParticipantsForExport :many
+SELECT u.username, u.full_name, uea.status, uea.is_completed, uea.score, uea.is_passed, uea.started_at, uea.completed_at
+FROM users u
+JOIN user_event_approvals uea ON u.id = uea.user_id
+WHERE uea.event_id = $1
+ORDER BY u.full_name ASC;

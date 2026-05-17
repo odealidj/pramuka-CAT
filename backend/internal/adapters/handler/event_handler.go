@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -35,6 +36,9 @@ func (h *EventHandler) RegisterAdminRoutes(adminGroup *echo.Group) {
 	// Event Participants (Persetujuan Peserta)
 	eventsGroup.GET("/:id/participants", h.ListEventParticipants)
 	eventsGroup.PUT("/:id/participants/:approval_id/approve", h.ApproveParticipant)
+
+	// Laporan & Export
+	eventsGroup.GET("/:id/export", h.ExportParticipantsCSV)
 }
 
 func (h *EventHandler) CreateEvent(c echo.Context) error {
@@ -222,4 +226,21 @@ func (h *EventHandler) ApproveParticipant(c echo.Context) error {
 	}
 
 	return response.Success(c, http.StatusOK, "Peserta berhasil disetujui (Approved)", nil)
+}
+
+func (h *EventHandler) ExportParticipantsCSV(c echo.Context) error {
+	eventID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		return response.Error(c, http.StatusBadRequest, "ID event tidak valid", nil)
+	}
+
+	csvData, err := h.service.ExportEventParticipantsCSV(c.Request().Context(), eventID)
+	if err != nil {
+		return response.Error(c, http.StatusInternalServerError, "Gagal mengekspor data peserta", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
+	}
+
+	// Kembalikan file CSV langsung ke browser untuk di-download
+	c.Response().Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"laporan_event_%s.csv\"", eventID.String()))
+	c.Response().Header().Set("Content-Type", "text/csv; charset=utf-8")
+	return c.Blob(http.StatusOK, "text/csv", csvData)
 }

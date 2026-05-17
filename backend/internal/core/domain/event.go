@@ -50,3 +50,14 @@ type AddRandomEventQuestionsRequest struct {
 	CategoryID *int32 `json:"category_id"`
 	Amount     int32  `json:"amount" validate:"required,min=1"`
 }
+
+type EventParticipantExport struct {
+	Username    string     `json:"username"`
+	FullName    string     `json:"full_name"`
+	Status      string     `json:"status"`
+	IsCompleted bool       `json:"is_completed"`
+	Score       float64    `json:"score"`
+	IsPassed    bool       `json:"is_passed"`
+	StartedAt   *time.Time `json:"started_at"`
+	CompletedAt *time.Time `json:"completed_at"`
+}

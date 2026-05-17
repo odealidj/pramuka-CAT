@@ -113,3 +113,7 @@ func (s *examService) FinishExam(ctx context.Context, userID uuid.UUID, eventID 
 		IsPassed: isPassed,
 	}, nil
 }
+
+func (s *examService) ReviewParticipantAnswers(ctx context.Context, approvalID uuid.UUID) ([]domain.UserAnswerDetail, error) {
+	return s.repo.GetUserAnswersDetail(ctx, approvalID)
+}

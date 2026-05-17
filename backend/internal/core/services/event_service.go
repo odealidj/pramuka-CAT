@@ -1,8 +1,12 @@
 package services
 
 import (
+	"bytes"
 	"context"
+	"encoding/csv"
 	"fmt"
+	"strconv"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/domain"
@@ -114,4 +118,59 @@ func (s *eventService) AddRandomEventQuestions(ctx context.Context, eventID uuid
 	}
 
 	return s.repo.AddRandomEventQuestions(ctx, eventID, req.CategoryID, req.Amount)
+}
+
+func (s *eventService) ExportEventParticipantsCSV(ctx context.Context, eventID uuid.UUID) ([]byte, error) {
+	_, err := s.repo.GetEventById(ctx, eventID)
+	if err != nil {
+		return nil, fmt.Errorf("event tidak ditemukan")
+	}
+
+	participants, err := s.repo.GetAllEventParticipantsForExport(ctx, eventID)
+	if err != nil {
+		return nil, fmt.Errorf("gagal mengambil data peserta: %w", err)
+	}
+
+	var buf bytes.Buffer
+	w := csv.NewWriter(&buf)
+
+	// Header
+	_ = w.Write([]string{"Username", "Nama Lengkap", "Status", "Sudah Submit", "Nilai", "Lulus", "Waktu Mulai", "Waktu Selesai"})
+
+	for _, p := range participants {
+		isCompleted := "Tidak"
+		if p.IsCompleted {
+			isCompleted = "Ya"
+		}
+		isPassed := "Tidak Lulus"
+		if p.IsPassed {
+			isPassed = "Lulus"
+		}
+		startedAt := "-"
+		if p.StartedAt != nil {
+			startedAt = p.StartedAt.In(time.Local).Format("2006-01-02 15:04:05")
+		}
+		completedAt := "-"
+		if p.CompletedAt != nil {
+			completedAt = p.CompletedAt.In(time.Local).Format("2006-01-02 15:04:05")
+		}
+
+		_ = w.Write([]string{
+			p.Username,
+			p.FullName,
+			p.Status,
+			isCompleted,
+			strconv.FormatFloat(p.Score, 'f', 2, 64),
+			isPassed,
+			startedAt,
+			completedAt,
+		})
+	}
+
+	w.Flush()
+	if err := w.Error(); err != nil {
+		return nil, fmt.Errorf("gagal menulis CSV: %w", err)
+	}
+
+	return buf.Bytes(), nil
 }

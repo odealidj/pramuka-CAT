@@ -65,3 +65,17 @@ type FinishExamResponse struct {
 	Score    float64 `json:"score"`
 	IsPassed bool    `json:"is_passed"`
 }
+
+type UserAnswerDetail struct {
+	AnswerID       uuid.UUID `json:"answer_id"`
+	SelectedAnswer string    `json:"selected_answer"`
+	IsCorrect      bool      `json:"is_correct"`
+	QuestionID     uuid.UUID `json:"question_id"`
+	QuestionText   string    `json:"question_text"`
+	OptionA        string    `json:"option_a"`
+	OptionB        string    `json:"option_b"`
+	OptionC        string    `json:"option_c"`
+	OptionD        string    `json:"option_d"`
+	CorrectAnswer  string    `json:"correct_answer"`
+	Weight         int32     `json:"weight"`
+}

@@ -30,6 +30,11 @@ func (h *ExamHandler) RegisterParticipantRoutes(protectedGroup *echo.Group) {
 	examsGroup.POST("/:id/finish", h.FinishExam)
 }
 
+func (h *ExamHandler) RegisterAdminRoutes(adminGroup *echo.Group) {
+	// Review detail jawaban peserta berdasarkan approval_id
+	adminGroup.GET("/exams/approvals/:approval_id/answers", h.ReviewAnswers)
+}
+
 func getUserIDFromContext(c echo.Context) (uuid.UUID, error) {
 	userIDStr := c.Get("user_id").(string)
 	return uuid.Parse(userIDStr)
@@ -153,4 +158,18 @@ func (h *ExamHandler) FinishExam(c echo.Context) error {
 	}
 
 	return response.Success(c, http.StatusOK, "Ujian selesai", res)
+}
+
+func (h *ExamHandler) ReviewAnswers(c echo.Context) error {
+	approvalID, err := uuid.Parse(c.Param("approval_id"))
+	if err != nil {
+		return response.Error(c, http.StatusBadRequest, "ID approval tidak valid", nil)
+	}
+
+	answers, err := h.service.ReviewParticipantAnswers(c.Request().Context(), approvalID)
+	if err != nil {
+		return response.Error(c, http.StatusInternalServerError, "Gagal mengambil data jawaban peserta", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
+	}
+
+	return response.Success(c, http.StatusOK, "Detail jawaban peserta berhasil diambil", answers)
 }

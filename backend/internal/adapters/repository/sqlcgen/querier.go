@@ -39,12 +39,14 @@ type Querier interface {
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 	EnrollUserToEvent(ctx context.Context, arg EnrollUserToEventParams) (UserEventApproval, error)
 	FinishExam(ctx context.Context, arg FinishExamParams) error
+	GetAllEventParticipantsForExport(ctx context.Context, eventID uuid.NullUUID) ([]GetAllEventParticipantsForExportRow, error)
 	GetApprovalStatus(ctx context.Context, arg GetApprovalStatusParams) (UserEventApproval, error)
 	GetCategoryById(ctx context.Context, id int32) (Category, error)
 	GetEventById(ctx context.Context, id uuid.UUID) (Event, error)
 	GetEventTotalWeight(ctx context.Context, eventID uuid.UUID) (string, error)
 	GetQuestionById(ctx context.Context, id uuid.UUID) (Question, error)
 	GetSession(ctx context.Context, id uuid.UUID) (Session, error)
+	GetUserAnswersDetail(ctx context.Context, approvalID uuid.NullUUID) ([]GetUserAnswersDetailRow, error)
 	GetUserById(ctx context.Context, id uuid.UUID) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	ListCategories(ctx context.Context, arg ListCategoriesParams) ([]Category, error)

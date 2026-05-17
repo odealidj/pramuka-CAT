@@ -145,6 +145,7 @@ func main() {
 	questionHandler.RegisterAdminRoutes(adminGroup)
 	eventHandler.RegisterAdminRoutes(adminGroup)
 	userHandler.RegisterAdminRoutes(adminGroup)
+	examHandler.RegisterAdminRoutes(adminGroup)
 
 	// 6. Nyalakan Server dengan Graceful Shutdown
 	port := os.Getenv("PORT")

@@ -204,3 +204,38 @@ func (r *eventRepository) CountAvailableQuestions(ctx context.Context, eventID u
 
 	return r.queries.CountAvailableQuestionsForEventAll(ctx, eventID)
 }
+
+func (r *eventRepository) GetAllEventParticipantsForExport(ctx context.Context, eventID uuid.UUID) ([]domain.EventParticipantExport, error) {
+	rows, err := r.queries.GetAllEventParticipantsForExport(ctx, uuid.NullUUID{UUID: eventID, Valid: true})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get event participants for export: %w", err)
+	}
+
+	var results []domain.EventParticipantExport
+	for _, row := range rows {
+		scoreStr := row.Score.String
+		score, _ := strconv.ParseFloat(scoreStr, 64)
+
+		var startedAt *time.Time
+		if row.StartedAt.Valid {
+			startedAt = &row.StartedAt.Time
+		}
+		var completedAt *time.Time
+		if row.CompletedAt.Valid {
+			completedAt = &row.CompletedAt.Time
+		}
+
+		results = append(results, domain.EventParticipantExport{
+			Username:    row.Username,
+			FullName:    row.FullName,
+			Status:      row.Status,
+			IsCompleted: row.IsCompleted,
+			Score:       score,
+			IsPassed:    row.IsPassed.Bool,
+			StartedAt:   startedAt,
+			CompletedAt: completedAt,
+		})
+	}
+
+	return results, nil
+}

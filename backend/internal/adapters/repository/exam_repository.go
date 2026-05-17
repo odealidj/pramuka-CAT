@@ -224,3 +224,37 @@ func (r *examRepository) GetEventById(ctx context.Context, id uuid.UUID) (domain
 	}
 	return mapSqlcToDomainEvent(res), nil
 }
+
+func (r *examRepository) GetUserAnswersDetail(ctx context.Context, approvalID uuid.UUID) ([]domain.UserAnswerDetail, error) {
+	rows, err := r.queries.GetUserAnswersDetail(ctx, uuid.NullUUID{UUID: approvalID, Valid: true})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user answers detail: %w", err)
+	}
+
+	results := make([]domain.UserAnswerDetail, 0, len(rows))
+	for _, row := range rows {
+		results = append(results, domain.UserAnswerDetail{
+			AnswerID:       row.AnswerID,
+			SelectedAnswer: row.SelectedAnswer.String,
+			IsCorrect:      row.IsCorrect.Bool,
+			QuestionID:     row.QuestionID,
+			QuestionText:   row.QuestionText,
+			OptionA:        row.OptionA,
+			OptionB:        row.OptionB,
+			OptionC:        row.OptionC,
+			OptionD:        row.OptionD,
+			CorrectAnswer:  row.CorrectAnswer,
+			Weight:         row.Weight,
+		})
+	}
+
+	return results, nil
+}
+
+// mapSqlcToDomainEvent is already defined in event_repository.go; here we need a local time helper
+func examRepoTimeOrZero(t time.Time, valid bool) time.Time {
+	if !valid {
+		return time.Time{}
+	}
+	return t
+}

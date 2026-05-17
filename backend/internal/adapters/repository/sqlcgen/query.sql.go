@@ -504,6 +504,57 @@ func (q *Queries) FinishExam(ctx context.Context, arg FinishExamParams) error {
 	return err
 }
 
+const getAllEventParticipantsForExport = `-- name: GetAllEventParticipantsForExport :many
+SELECT u.username, u.full_name, uea.status, uea.is_completed, uea.score, uea.is_passed, uea.started_at, uea.completed_at
+FROM users u
+JOIN user_event_approvals uea ON u.id = uea.user_id
+WHERE uea.event_id = $1
+ORDER BY u.full_name ASC
+`
+
+type GetAllEventParticipantsForExportRow struct {
+	Username    string         `json:"username"`
+	FullName    string         `json:"full_name"`
+	Status      string         `json:"status"`
+	IsCompleted bool           `json:"is_completed"`
+	Score       sql.NullString `json:"score"`
+	IsPassed    sql.NullBool   `json:"is_passed"`
+	StartedAt   sql.NullTime   `json:"started_at"`
+	CompletedAt sql.NullTime   `json:"completed_at"`
+}
+
+func (q *Queries) GetAllEventParticipantsForExport(ctx context.Context, eventID uuid.NullUUID) ([]GetAllEventParticipantsForExportRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAllEventParticipantsForExport, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetAllEventParticipantsForExportRow{}
+	for rows.Next() {
+		var i GetAllEventParticipantsForExportRow
+		if err := rows.Scan(
+			&i.Username,
+			&i.FullName,
+			&i.Status,
+			&i.IsCompleted,
+			&i.Score,
+			&i.IsPassed,
+			&i.StartedAt,
+			&i.CompletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getApprovalStatus = `-- name: GetApprovalStatus :one
 SELECT id, user_id, event_id, status, is_completed, score, is_passed, started_at, completed_at FROM user_event_approvals
 WHERE user_id = $1 AND event_id = $2 LIMIT 1
@@ -617,6 +668,73 @@ func (q *Queries) GetSession(ctx context.Context, id uuid.UUID) (Session, error)
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const getUserAnswersDetail = `-- name: GetUserAnswersDetail :many
+SELECT
+    ua.id as answer_id,
+    ua.selected_answer,
+    ua.is_correct,
+    q.id as question_id,
+    q.question_text,
+    q.option_a,
+    q.option_b,
+    q.option_c,
+    q.option_d,
+    q.correct_answer,
+    q.weight
+FROM user_answers ua
+JOIN questions q ON ua.question_id = q.id
+WHERE ua.approval_id = $1
+`
+
+type GetUserAnswersDetailRow struct {
+	AnswerID       uuid.UUID      `json:"answer_id"`
+	SelectedAnswer sql.NullString `json:"selected_answer"`
+	IsCorrect      sql.NullBool   `json:"is_correct"`
+	QuestionID     uuid.UUID      `json:"question_id"`
+	QuestionText   string         `json:"question_text"`
+	OptionA        string         `json:"option_a"`
+	OptionB        string         `json:"option_b"`
+	OptionC        string         `json:"option_c"`
+	OptionD        string         `json:"option_d"`
+	CorrectAnswer  string         `json:"correct_answer"`
+	Weight         int32          `json:"weight"`
+}
+
+func (q *Queries) GetUserAnswersDetail(ctx context.Context, approvalID uuid.NullUUID) ([]GetUserAnswersDetailRow, error) {
+	rows, err := q.db.QueryContext(ctx, getUserAnswersDetail, approvalID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetUserAnswersDetailRow{}
+	for rows.Next() {
+		var i GetUserAnswersDetailRow
+		if err := rows.Scan(
+			&i.AnswerID,
+			&i.SelectedAnswer,
+			&i.IsCorrect,
+			&i.QuestionID,
+			&i.QuestionText,
+			&i.OptionA,
+			&i.OptionB,
+			&i.OptionC,
+			&i.OptionD,
+			&i.CorrectAnswer,
+			&i.Weight,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getUserById = `-- name: GetUserById :one
