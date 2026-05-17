@@ -7,6 +7,7 @@ Diagram di bawah ini menggambarkan relasi antar entitas utama dalam sistem.
 
 ```mermaid
 erDiagram
+    users ||--o{ sessions : "memiliki sesi"
     users ||--o{ user_event_approvals : "mendaftar/mengikuti"
     users {
         uuid id PK
@@ -15,6 +16,15 @@ erDiagram
         string full_name
         string role "ENUM: admin, peserta"
         string photo_url "Nullable"
+        timestamp created_at
+    }
+
+    sessions {
+        uuid id PK "Berperan sebagai Session ID"
+        uuid user_id FK
+        string refresh_token
+        boolean is_blocked "True jika di-revoke"
+        timestamp expires_at
         timestamp created_at
     }
 
@@ -88,7 +98,12 @@ Menyimpan data identitas Peserta dan Admin.
 - Username dibuat unik (misalnya nomor NTA Pramuka) untuk mencegah duplikasi login.
 - Terdapat kolom `role` untuk membedakan otoritas.
 
-### b. Tabel `categories`
+### b. Tabel `sessions`
+Tabel pendukung untuk keamanan Autentikasi ganda (Stateful JWT).
+- Menyimpan riwayat **Refresh Token** saat user *login*.
+- Kolom `is_blocked` memungkinkan Admin menendang paksa (mencabut akses jarak jauh) user yang dicurigai melakukan kecurangan tanpa menunggu token kedaluwarsa.
+
+### c. Tabel `categories`
 Tabel referensi sederhana (Kamus Kategori) untuk memudahkan Admin memfilter bank soal berdasarkan materi tertentu.
 
 ### c. Tabel `questions`

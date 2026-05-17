@@ -31,9 +31,11 @@ Aplikasi akan menggunakan arsitektur **Client-Server** berbasis web (Web Applica
 
 ## 3. Mekanisme Inti (Core Mechanisms)
 
-### 3.1. Autentikasi dan Keamanan
-- Menggunakan **JSON Web Token (JWT)** atau **Session-based Authentication** untuk proses login.
-- **Mencegah Multi-Login:** Peserta tidak bisa login di dua perangkat berbeda secara bersamaan saat ujian berlangsung.
+### 3.1. Autentikasi dan Keamanan (Stateful JWT)
+- Menggunakan strategi **Dual Token (Access & Refresh Token)** untuk mengamankan proses login secara _Enterprise-grade_.
+- **Access Token:** Berumur pendek (misal: 15 menit), divalidasi dengan sangat cepat melalui pengecekan Session ID di **Redis**.
+- **Refresh Token:** Berumur panjang, disimpan permanen di tabel `sessions` pada **PostgreSQL**. Memungkinkan pencabutan akses jarak jauh secara instan (Revoke) dengan mengeset `is_blocked = true`.
+- **Mencegah Multi-Login:** Peserta tidak bisa login di dua perangkat berbeda secara bersamaan karena pembatasan _active session_ tunggal di DB.
 
 ### 3.2. Penanganan Timer dan Waktu Habis
 - Timer berjalan secara mandiri di sisi _client_ (browser).

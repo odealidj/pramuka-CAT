@@ -12,12 +12,15 @@ import (
 
 type Querier interface {
 	ApproveUserEvent(ctx context.Context, id uuid.UUID) (UserEventApproval, error)
+	BlockSession(ctx context.Context, id uuid.UUID) error
 	CreateCategory(ctx context.Context, name string) (Category, error)
 	CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error)
 	CreateQuestion(ctx context.Context, arg CreateQuestionParams) (Question, error)
+	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	EnrollUserToEvent(ctx context.Context, arg EnrollUserToEventParams) (UserEventApproval, error)
 	GetEventById(ctx context.Context, id uuid.UUID) (Event, error)
+	GetSession(ctx context.Context, id uuid.UUID) (Session, error)
 	GetUserById(ctx context.Context, id uuid.UUID) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	ListCategories(ctx context.Context) ([]Category, error)

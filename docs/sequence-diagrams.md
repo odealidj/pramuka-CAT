@@ -19,6 +19,7 @@ sequenceDiagram
     participant P as Peserta/Admin
     participant F as Frontend (Next.js)
     participant B as Backend (Go API)
+    participant R as Redis
     participant DB as Postgres
 
     P->>F: Input Username & Password
@@ -27,14 +28,42 @@ sequenceDiagram
     DB-->>B: Return User Data & Hash Password
     B->>B: Verify Password Hash
     alt Password Valid
-        B->>B: Generate JWT Token
-        B-->>F: Return Token & User Info (200 OK)
+        B->>B: Generate Access & Refresh Token
+        B->>DB: Simpan Sesi (Refresh Token)
+        B->>R: Cache Session ID (Access Token, TTL 15m)
+        B-->>F: Return Tokens & User Info (200 OK)
         F->>P: Redirect ke Dashboard
     else Password Invalid
         B-->>F: Return Error (401 Unauthorized)
         F->>P: Tampilkan Pesan Error
     end
 ```
+
+---
+
+## 1.5 Alur Refresh Token & Keamanan Sesi
+Alur ini berjalan secara transparan di *background* untuk memastikan kenyamanan peserta tanpa mengorbankan keamanan.
+
+**Langkah-langkah (Narasi):**
+1. Setiap kali Frontend meminta data, *Access Token* dikirim ke Backend. Backend mengecek ketersediaan `Session ID` tersebut di **Redis**. Jika ada, _request_ dilayani sangat cepat.
+2. Jika *Access Token* kedaluwarsa atau terhapus dari Redis, Frontend diam-diam memanggil `POST /auth/refresh` dengan membawa *Refresh Token*.
+3. Backend memverifikasi *Refresh Token* ke PostgreSQL (tabel `sessions`). Sistem memastikan sesi belum kedaluwarsa dan tidak sedang `is_blocked = true` (belum dicabut aksesnya oleh admin).
+4. Jika valid, Backend mencetak pasangan token baru, menyimpannya kembali ke DB dan Redis, lalu membalas ke Frontend agar pengguna tidak menyadari ada token yang baru diterbitkan.
+
+```mermaid
+sequenceDiagram
+    participant F as Frontend
+    participant B as Backend API
+    participant R as Redis
+    participant DB as Postgres
+
+    F->>B: POST /api/v1/auth/refresh (Membawa Refresh Token)
+    B->>DB: Verifikasi Refresh Token & Cek is_blocked
+    DB-->>B: Sesi Valid
+    B->>B: Generate New Access & Refresh Tokens
+    B->>DB: Update Refresh Token Baru di PostgreSQL
+    B->>R: Cache Session ID Baru di Redis (TTL 15m)
+    B-->>F: Return Tokens Baru
 
 ---
 
