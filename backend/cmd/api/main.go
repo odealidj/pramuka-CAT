@@ -115,6 +115,8 @@ func main() {
 
 	// Distributed Tracing middleware — membuat span otomatis untuk setiap HTTP request
 	e.Use(otelecho.Middleware("pramuka-cat-api"))
+	// Mark span sebagai Error untuk semua response >= 400 (agar terlihat merah di Jaeger UI)
+	e.Use(appMiddleware.TraceErrorMiddleware())
 
 	// Root endpoint — mengembalikan informasi API (best practice)
 	e.GET("/", func(c echo.Context) error {
