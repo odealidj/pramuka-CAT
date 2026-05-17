@@ -74,9 +74,10 @@ PramukaCAT/
 │   │   └── middleware/       # Echo custom middleware (JWT Auth, CORS)
 │   ├── pkg/                  # Utilities eksternal/publik (Bisa di-share antar project)
 │   │   └── database/         # Konfigurasi koneksi Postgres & Redis
-│   ├── sql/                  # Folder skema database dan raw queries untuk SQLC
-│   │   ├── schema.sql        # Skema tabel database (DDL)
-│   │   └── query.sql         # Raw SQL queries (DML)
+│   ├── sql/                  # Folder terkait database (Migrasi & SQLC)
+│   │   ├── migrations/       # Folder file migrasi versi DB (.up.sql & .down.sql)
+│   │   ├── schema.sql        # Skema tabel database (DDL) untuk referensi SQLC
+│   │   └── query.sql         # Raw SQL queries (DML) untuk SQLC
 │   ├── sqlc.yaml             # Konfigurasi generator SQLC
 │   ├── go.mod                # Dependency manager Go
 │   └── .env.example          # Template environment variables
