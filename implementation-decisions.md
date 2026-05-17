@@ -61,12 +61,15 @@ PramukaCAT/
 ├── backend/                  # Aplikasi Go (REST API dengan Echo Framework)
 │   ├── cmd/
 │   │   └── api/              # Entry point aplikasi (main.go - Inisialisasi Echo Server)
-│   ├── internal/             # Kode aplikasi privat (Menggunakan standar Clean Architecture)
-│   │   ├── delivery/         # Presentation layer (HTTP handlers/routes Echo)
-│   │   ├── models/           # Domain models & Structs (Entitas Database & DTO)
-│   │   ├── repository/       # Data Access Layer (Query ke Postgres & Redis)
-│   │   ├── usecase/          # Business Logic Layer (Logika Auth, Ujian, Penilaian)
-│   │   └── middleware/       # Echo custom middleware (JWT, CORS, Error Handler)
+│   ├── internal/             # Kode aplikasi privat (Berdasarkan Hexagonal Architecture / Ports and Adapters)
+│   │   ├── core/             # Core Business Logic (Tidak bergantung pada framework eksternal)
+│   │   │   ├── domain/       # Structs, Entities, dan Business Rules
+│   │   │   ├── ports/        # Interfaces (Inbound & Outbound Ports)
+│   │   │   └── services/     # Implementasi Usecase (Inbound Ports)
+│   │   ├── adapters/         # Infrastruktur dan Komunikasi Luar (Bergantung pada framework)
+│   │   │   ├── handler/      # Inbound Adapter: Echo HTTP handlers/controllers
+│   │   │   └── repository/   # Outbound Adapter: Implementasi Outbound Ports (Postgres/Redis)
+│   │   └── middleware/       # Echo custom middleware (JWT Auth, CORS)
 │   ├── pkg/                  # Utilities eksternal/publik (Bisa di-share antar project)
 │   │   └── database/         # Konfigurasi koneksi Postgres & Redis
 │   ├── go.mod                # Dependency manager Go
