@@ -1,4 +1,4 @@
-.PHONY: run build test infra-up infra-down migrate-up migrate-down seed clear-seed reset-db sqlc docker-build
+.PHONY: run build test up down infra-up infra-down migrate-up migrate-down seed clear-seed reset-db sqlc docker-build
 
 # Variabel Konfigurasi Database (Sesuaikan dengan .env)
 DB_URL="postgres://postgres:postgres@localhost:5432/pramukacat?sslmode=disable"
@@ -18,14 +18,24 @@ test:
 	@echo "Menjalankan Unit Test..."
 	cd backend && go test -v ./...
 
-# --- Infrastruktur (Docker Compose) ---
-infra-up:
-	@echo "Menyalakan PostgreSQL & Redis via Docker Compose..."
+# --- Keseluruhan Sistem (Docker Compose) ---
+up:
+	@echo "Menyalakan SELURUH sistem (Infra + Backend API) via Docker Compose..."
 	docker-compose up -d
+
+down:
+	@echo "Mematikan seluruh sistem Docker Compose..."
+	docker-compose down
+
+# --- Infrastruktur Khusus ---
+infra-up:
+	@echo "Menyalakan HANYA Infrastruktur (Postgres, Redis, Migrate)..."
+	docker-compose up -d postgres redis migrate
 
 infra-down:
 	@echo "Mematikan Infrastruktur..."
-	docker-compose down
+	docker-compose stop postgres redis migrate
+	docker-compose rm -f postgres redis migrate
 
 # --- Database Migrations ---
 migrate-up:

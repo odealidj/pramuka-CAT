@@ -64,6 +64,8 @@ services:
       - JWT_ACCESS_SECRET=supersecretaccess
       - JWT_REFRESH_SECRET=supersecretrefresh
     depends_on:
+      postgres:
+        condition: service_healthy
       migrate:
         condition: service_completed_successfully
       redis:
