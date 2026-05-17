@@ -225,6 +225,26 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
+const deleteCategory = `-- name: DeleteCategory :exec
+DELETE FROM categories
+WHERE id = $1
+`
+
+func (q *Queries) DeleteCategory(ctx context.Context, id int32) error {
+	_, err := q.db.ExecContext(ctx, deleteCategory, id)
+	return err
+}
+
+const deleteQuestion = `-- name: DeleteQuestion :exec
+DELETE FROM questions
+WHERE id = $1
+`
+
+func (q *Queries) DeleteQuestion(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteQuestion, id)
+	return err
+}
+
 const enrollUserToEvent = `-- name: EnrollUserToEvent :one
 INSERT INTO user_event_approvals (user_id, event_id, status)
 VALUES ($1, $2, 'pending')
@@ -253,6 +273,18 @@ func (q *Queries) EnrollUserToEvent(ctx context.Context, arg EnrollUserToEventPa
 	return i, err
 }
 
+const getCategoryById = `-- name: GetCategoryById :one
+SELECT id, name FROM categories
+WHERE id = $1 LIMIT 1
+`
+
+func (q *Queries) GetCategoryById(ctx context.Context, id int32) (Category, error) {
+	row := q.db.QueryRowContext(ctx, getCategoryById, id)
+	var i Category
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
 const getEventById = `-- name: GetEventById :one
 SELECT id, name, start_time, end_time, duration_minutes, passing_grade, created_at FROM events
 WHERE id = $1 LIMIT 1
@@ -268,6 +300,29 @@ func (q *Queries) GetEventById(ctx context.Context, id uuid.UUID) (Event, error)
 		&i.EndTime,
 		&i.DurationMinutes,
 		&i.PassingGrade,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getQuestionById = `-- name: GetQuestionById :one
+SELECT id, category_id, question_text, option_a, option_b, option_c, option_d, correct_answer, weight, created_at FROM questions
+WHERE id = $1 LIMIT 1
+`
+
+func (q *Queries) GetQuestionById(ctx context.Context, id uuid.UUID) (Question, error) {
+	row := q.db.QueryRowContext(ctx, getQuestionById, id)
+	var i Question
+	err := row.Scan(
+		&i.ID,
+		&i.CategoryID,
+		&i.QuestionText,
+		&i.OptionA,
+		&i.OptionB,
+		&i.OptionC,
+		&i.OptionD,
+		&i.CorrectAnswer,
+		&i.Weight,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -362,6 +417,45 @@ func (q *Queries) ListCategories(ctx context.Context) ([]Category, error) {
 	return items, nil
 }
 
+const listQuestions = `-- name: ListQuestions :many
+SELECT id, category_id, question_text, option_a, option_b, option_c, option_d, correct_answer, weight, created_at FROM questions
+ORDER BY created_at DESC
+`
+
+func (q *Queries) ListQuestions(ctx context.Context) ([]Question, error) {
+	rows, err := q.db.QueryContext(ctx, listQuestions)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Question{}
+	for rows.Next() {
+		var i Question
+		if err := rows.Scan(
+			&i.ID,
+			&i.CategoryID,
+			&i.QuestionText,
+			&i.OptionA,
+			&i.OptionB,
+			&i.OptionC,
+			&i.OptionD,
+			&i.CorrectAnswer,
+			&i.Weight,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const saveUserAnswer = `-- name: SaveUserAnswer :one
 INSERT INTO user_answers (approval_id, question_id, selected_answer, is_correct)
 VALUES ($1, $2, $3, $4)
@@ -393,6 +487,72 @@ func (q *Queries) SaveUserAnswer(ctx context.Context, arg SaveUserAnswerParams) 
 		&i.QuestionID,
 		&i.SelectedAnswer,
 		&i.IsCorrect,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const updateCategory = `-- name: UpdateCategory :one
+UPDATE categories
+SET name = $2
+WHERE id = $1
+RETURNING id, name
+`
+
+type UpdateCategoryParams struct {
+	ID   int32  `json:"id"`
+	Name string `json:"name"`
+}
+
+func (q *Queries) UpdateCategory(ctx context.Context, arg UpdateCategoryParams) (Category, error) {
+	row := q.db.QueryRowContext(ctx, updateCategory, arg.ID, arg.Name)
+	var i Category
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
+const updateQuestion = `-- name: UpdateQuestion :one
+UPDATE questions
+SET category_id = $2, question_text = $3, option_a = $4, option_b = $5, option_c = $6, option_d = $7, correct_answer = $8, weight = $9
+WHERE id = $1
+RETURNING id, category_id, question_text, option_a, option_b, option_c, option_d, correct_answer, weight, created_at
+`
+
+type UpdateQuestionParams struct {
+	ID            uuid.UUID     `json:"id"`
+	CategoryID    sql.NullInt32 `json:"category_id"`
+	QuestionText  string        `json:"question_text"`
+	OptionA       string        `json:"option_a"`
+	OptionB       string        `json:"option_b"`
+	OptionC       string        `json:"option_c"`
+	OptionD       string        `json:"option_d"`
+	CorrectAnswer string        `json:"correct_answer"`
+	Weight        int32         `json:"weight"`
+}
+
+func (q *Queries) UpdateQuestion(ctx context.Context, arg UpdateQuestionParams) (Question, error) {
+	row := q.db.QueryRowContext(ctx, updateQuestion,
+		arg.ID,
+		arg.CategoryID,
+		arg.QuestionText,
+		arg.OptionA,
+		arg.OptionB,
+		arg.OptionC,
+		arg.OptionD,
+		arg.CorrectAnswer,
+		arg.Weight,
+	)
+	var i Question
+	err := row.Scan(
+		&i.ID,
+		&i.CategoryID,
+		&i.QuestionText,
+		&i.OptionA,
+		&i.OptionB,
+		&i.OptionC,
+		&i.OptionD,
+		&i.CorrectAnswer,
+		&i.Weight,
 		&i.CreatedAt,
 	)
 	return i, err

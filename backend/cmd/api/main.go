@@ -46,6 +46,15 @@ func main() {
 	authService := services.NewAuthService(authRepo, authCache)
 	authHandler := handler.NewAuthHandler(authService)
 
+	// CRUD Bank Soal Dependencies
+	categoryRepo := repository.NewCategoryRepository(queries)
+	categoryService := services.NewCategoryService(categoryRepo)
+	categoryHandler := handler.NewCategoryHandler(categoryService)
+
+	questionRepo := repository.NewQuestionRepository(queries)
+	questionService := services.NewQuestionService(questionRepo)
+	questionHandler := handler.NewQuestionHandler(questionService)
+
 	// 5. Siapkan Server Echo
 	e := echo.New()
 
@@ -88,6 +97,14 @@ func main() {
 			"message": "Selamat datang, Admin! Anda berhak melihat rute super rahasia ini.",
 		})
 	})
+
+	// Rute CRUD Bank Soal (Hanya untuk Admin)
+	adminGroup := api.Group("/admin")
+	adminGroup.Use(appMiddleware.RequireAuth(authCache))
+	adminGroup.Use(appMiddleware.RequireRole("admin"))
+	
+	categoryHandler.RegisterAdminRoutes(adminGroup)
+	questionHandler.RegisterAdminRoutes(adminGroup)
 
 	// 6. Nyalakan Server
 	port := os.Getenv("PORT")

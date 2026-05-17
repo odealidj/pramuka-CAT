@@ -1,0 +1,54 @@
+package services
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/odealidj/pramuka-CAT/backend/internal/core/domain"
+	"github.com/odealidj/pramuka-CAT/backend/internal/core/ports"
+)
+
+type categoryService struct {
+	repo ports.CategoryRepository
+}
+
+func NewCategoryService(repo ports.CategoryRepository) ports.CategoryService {
+	return &categoryService{repo: repo}
+}
+
+func (s *categoryService) CreateCategory(ctx context.Context, req domain.CreateCategoryRequest) (domain.Category, error) {
+	if req.Name == "" {
+		return domain.Category{}, fmt.Errorf("nama kategori tidak boleh kosong")
+	}
+	return s.repo.CreateCategory(ctx, req.Name)
+}
+
+func (s *categoryService) GetCategoryById(ctx context.Context, id int32) (domain.Category, error) {
+	return s.repo.GetCategoryById(ctx, id)
+}
+
+func (s *categoryService) ListCategories(ctx context.Context) ([]domain.Category, error) {
+	return s.repo.ListCategories(ctx)
+}
+
+func (s *categoryService) UpdateCategory(ctx context.Context, id int32, req domain.UpdateCategoryRequest) (domain.Category, error) {
+	if req.Name == "" {
+		return domain.Category{}, fmt.Errorf("nama kategori tidak boleh kosong")
+	}
+	// Pastikan kategori ada
+	_, err := s.repo.GetCategoryById(ctx, id)
+	if err != nil {
+		return domain.Category{}, fmt.Errorf("kategori tidak ditemukan")
+	}
+	return s.repo.UpdateCategory(ctx, id, req.Name)
+}
+
+func (s *categoryService) DeleteCategory(ctx context.Context, id int32) error {
+	// Pastikan kategori ada
+	_, err := s.repo.GetCategoryById(ctx, id)
+	if err != nil {
+		return fmt.Errorf("kategori tidak ditemukan")
+	}
+	// PostgreSQL akan menangani pembatasan jika masih ada soal yang merujuk kategori ini (karena constraint foreign key)
+	return s.repo.DeleteCategory(ctx, id)
+}
