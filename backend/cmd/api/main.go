@@ -9,6 +9,10 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	
+	"github.com/odealidj/pramuka-CAT/backend/internal/adapters/handler"
+	"github.com/odealidj/pramuka-CAT/backend/internal/adapters/repository"
+	"github.com/odealidj/pramuka-CAT/backend/internal/adapters/repository/sqlcgen"
+	"github.com/odealidj/pramuka-CAT/backend/internal/core/services"
 	"github.com/odealidj/pramuka-CAT/backend/pkg/database"
 )
 
@@ -33,7 +37,15 @@ func main() {
 	}
 	defer rdb.Close()
 
-	// 4. Siapkan Server Echo
+	// 4. Setup Dependency Injection (Hexagonal Wiring)
+	queries := sqlcgen.New(db)
+	authRepo := repository.NewAuthRepository(queries)
+	authCache := repository.NewAuthCache(rdb)
+
+	authService := services.NewAuthService(authRepo, authCache)
+	authHandler := handler.NewAuthHandler(authService)
+
+	// 5. Siapkan Server Echo
 	e := echo.New()
 
 	// Pasang Middleware dasar (Log, Recover dari panic, dan CORS)
@@ -49,7 +61,11 @@ func main() {
 		})
 	})
 
-	// 5. Nyalakan Server
+	// Pendaftaran Rute API
+	api := e.Group("/api/v1")
+	authHandler.RegisterRoutes(api)
+
+	// 6. Nyalakan Server
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080" // Fallback jika di .env tidak diset
