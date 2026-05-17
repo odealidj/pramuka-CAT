@@ -67,3 +67,7 @@ WHERE id = $1 LIMIT 1;
 UPDATE sessions
 SET is_blocked = true
 WHERE id = $1;
+
+-- name: CreateEventQuestion :exec
+INSERT INTO event_questions (event_id, question_id)
+VALUES ($1, $2);

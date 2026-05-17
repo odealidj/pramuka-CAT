@@ -15,6 +15,7 @@ type Querier interface {
 	BlockSession(ctx context.Context, id uuid.UUID) error
 	CreateCategory(ctx context.Context, name string) (Category, error)
 	CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error)
+	CreateEventQuestion(ctx context.Context, arg CreateEventQuestionParams) error
 	CreateQuestion(ctx context.Context, arg CreateQuestionParams) (Question, error)
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)

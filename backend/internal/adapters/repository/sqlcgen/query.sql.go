@@ -96,6 +96,21 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 	return i, err
 }
 
+const createEventQuestion = `-- name: CreateEventQuestion :exec
+INSERT INTO event_questions (event_id, question_id)
+VALUES ($1, $2)
+`
+
+type CreateEventQuestionParams struct {
+	EventID    uuid.UUID `json:"event_id"`
+	QuestionID uuid.UUID `json:"question_id"`
+}
+
+func (q *Queries) CreateEventQuestion(ctx context.Context, arg CreateEventQuestionParams) error {
+	_, err := q.db.ExecContext(ctx, createEventQuestion, arg.EventID, arg.QuestionID)
+	return err
+}
+
 const createQuestion = `-- name: CreateQuestion :one
 INSERT INTO questions (category_id, question_text, option_a, option_b, option_c, option_d, correct_answer, weight)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
