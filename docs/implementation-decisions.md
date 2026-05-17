@@ -37,7 +37,12 @@ Aplikasi akan menggunakan arsitektur **Client-Server** berbasis web (Web Applica
 - **Refresh Token:** Berumur panjang, disimpan permanen di tabel `sessions` pada **PostgreSQL**. Memungkinkan pencabutan akses jarak jauh secara instan (Revoke) dengan mengeset `is_blocked = true`.
 - **Mencegah Multi-Login:** Peserta tidak bisa login di dua perangkat berbeda secara bersamaan karena pembatasan _active session_ tunggal di DB.
 
-### 3.2. Penanganan Timer dan Waktu Habis
+### 3.2. Role-Based Access Control (RBAC)
+- **Arsitektur Kolom Tunggal:** Tidak ada tabel `roles` atau `permissions` yang terpisah demi menjaga kesederhanaan dan kecepatan _query_. Peran pengguna ("admin", "peserta") disimpan langsung dalam kolom `role` (VARCHAR) di tabel `users`.
+- Saat otentikasi berhasil, nilai `role` ini akan disematkan secara kriptografis ke dalam **Claims JWT**.
+- Middleware **RequireRole** di lapisan HTTP (Echo) akan membaca peran langsung dari JWT tanpa membebani database dengan *query* tambahan, menjadikannya arsitektur yang sangat efisien untuk sistem CAT ini.
+
+### 3.3. Penanganan Timer dan Waktu Habis
 - Timer berjalan secara mandiri di sisi _client_ (browser).
 - Namun, **Backend tetap melakukan validasi akhir**. Saat sesi event dimulai, server mencatat _Start Time_. Jika peserta mengirim jawaban setelah _Start Time + Durasi + Toleransi Keterlambatan_ habis, sistem server akan menolak jawaban tambahan tersebut. Ini mencegah kecurangan memanipulasi _timer_ di browser.
 

@@ -93,10 +93,11 @@ func (s *authService) Login(ctx context.Context, req domain.LoginRequest) (domai
 // Refresh memvalidasi Refresh Token ke DB, lalu membuat Access Token baru
 func (s *authService) Refresh(ctx context.Context, req domain.RefreshRequest) (domain.RefreshResponse, error) {
 	// 1. Validasi struktur Refresh Token
-	sessionID, err := utils.ValidateToken(req.RefreshToken, true)
+	payload, err := utils.ValidateToken(req.RefreshToken, true)
 	if err != nil {
 		return domain.RefreshResponse{}, fmt.Errorf("refresh token tidak valid atau kedaluwarsa")
 	}
+	sessionID := payload.SessionID
 
 	// 2. Cari Sesi di PostgreSQL
 	session, err := s.repo.GetSession(ctx, sessionID)

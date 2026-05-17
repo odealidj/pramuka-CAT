@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	
 	"github.com/odealidj/pramuka-CAT/backend/internal/adapters/handler"
+	appMiddleware "github.com/odealidj/pramuka-CAT/backend/internal/adapters/middleware"
 	"github.com/odealidj/pramuka-CAT/backend/internal/adapters/repository"
 	"github.com/odealidj/pramuka-CAT/backend/internal/adapters/repository/sqlcgen"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/services"
@@ -61,9 +62,32 @@ func main() {
 		})
 	})
 
-	// Pendaftaran Rute API
+	// Pendaftaran Rute API Publik
 	api := e.Group("/api/v1")
 	authHandler.RegisterRoutes(api)
+
+	// Pendaftaran Rute API Terlindungi (Protected Routes)
+	protected := api.Group("/protected")
+	// Pasang Middleware: Wajib bawa Token & Sesi masih ada di Redis
+	protected.Use(appMiddleware.RequireAuth(authCache))
+
+	// Endpoint ini bisa diakses siapa saja yang punya Token valid (Admin maupun Peserta)
+	protected.GET("/profile", func(c echo.Context) error {
+		payload := c.Get(appMiddleware.AuthorizationPayloadKey)
+		return c.JSON(http.StatusOK, map[string]interface{}{
+			"message": "Akses Diterima! Anda sedang melihat profil rahasia.",
+			"user_data": payload,
+		})
+	})
+
+	// Endpoint ini HANYA bisa diakses jika Role di token adalah "admin"
+	adminOnly := protected.Group("/admin-only")
+	adminOnly.Use(appMiddleware.RequireRole("admin"))
+	adminOnly.GET("", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, map[string]interface{}{
+			"message": "Selamat datang, Admin! Anda berhak melihat rute super rahasia ini.",
+		})
+	})
 
 	// 6. Nyalakan Server
 	port := os.Getenv("PORT")

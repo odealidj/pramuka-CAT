@@ -33,6 +33,18 @@ func (c *authCache) SetSession(ctx context.Context, sessionID uuid.UUID, userID 
 	return nil
 }
 
+func (c *authCache) GetSession(ctx context.Context, sessionID uuid.UUID) (string, error) {
+	key := fmt.Sprintf("session:%s", sessionID.String())
+	val, err := c.client.Get(ctx, key).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return "", fmt.Errorf("sesi tidak ditemukan di cache")
+		}
+		return "", fmt.Errorf("gagal mengambil sesi dari redis: %w", err)
+	}
+	return val, nil
+}
+
 func (c *authCache) DeleteSession(ctx context.Context, sessionID uuid.UUID) error {
 	key := fmt.Sprintf("session:%s", sessionID.String())
 	err := c.client.Del(ctx, key).Err()

@@ -50,8 +50,8 @@ func CreateRefreshToken(sessionID uuid.UUID) (string, error) {
 	return token.SignedString([]byte(secretKey))
 }
 
-// ValidateToken memverifikasi JWT dan mengembalikan ID sesi jika valid
-func ValidateToken(tokenString string, isRefresh bool) (uuid.UUID, error) {
+// ValidateToken memverifikasi JWT dan mengembalikan payload jika valid
+func ValidateToken(tokenString string, isRefresh bool) (*TokenPayload, error) {
 	secretKey := os.Getenv("JWT_SECRET")
 	if isRefresh {
 		secretKey = os.Getenv("JWT_REFRESH_SECRET")
@@ -71,22 +71,36 @@ func ValidateToken(tokenString string, isRefresh bool) (uuid.UUID, error) {
 	})
 
 	if err != nil {
-		return uuid.Nil, err
+		return nil, err
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		sessionIDStr, ok := claims["session_id"].(string)
 		if !ok {
-			return uuid.Nil, fmt.Errorf("payload session_id tidak valid")
+			return nil, fmt.Errorf("payload session_id tidak valid")
 		}
 		
 		sessionID, err := uuid.Parse(sessionIDStr)
 		if err != nil {
-			return uuid.Nil, fmt.Errorf("format session_id salah")
+			return nil, fmt.Errorf("format session_id salah")
 		}
 		
-		return sessionID, nil
+		payload := &TokenPayload{
+			SessionID: sessionID,
+		}
+
+		if !isRefresh {
+			// Access token memiliki user_id dan role
+			userIDStr, _ := claims["user_id"].(string)
+			userID, _ := uuid.Parse(userIDStr)
+			role, _ := claims["role"].(string)
+			
+			payload.UserID = userID
+			payload.Role = role
+		}
+		
+		return payload, nil
 	}
 
-	return uuid.Nil, fmt.Errorf("token tidak valid")
+	return nil, fmt.Errorf("token tidak valid")
 }

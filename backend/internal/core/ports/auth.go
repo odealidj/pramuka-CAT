@@ -20,6 +20,7 @@ type AuthRepository interface {
 // AuthCache mendefinisikan kontrak interaksi dengan cache in-memory (Redis)
 type AuthCache interface {
 	SetSession(ctx context.Context, sessionID uuid.UUID, userID uuid.UUID, durationMinutes int) error
+	GetSession(ctx context.Context, sessionID uuid.UUID) (string, error)
 	DeleteSession(ctx context.Context, sessionID uuid.UUID) error
 }
 
