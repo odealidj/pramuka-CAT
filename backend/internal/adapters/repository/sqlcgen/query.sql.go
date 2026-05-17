@@ -48,6 +48,20 @@ func (q *Queries) BlockSession(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const calculateScore = `-- name: CalculateScore :one
+SELECT COALESCE(SUM(q.weight), 0)::numeric as total_score
+FROM user_answers ua
+JOIN questions q ON ua.question_id = q.id
+WHERE ua.approval_id = $1 AND ua.is_correct = true
+`
+
+func (q *Queries) CalculateScore(ctx context.Context, approvalID uuid.NullUUID) (string, error) {
+	row := q.db.QueryRowContext(ctx, calculateScore, approvalID)
+	var total_score string
+	err := row.Scan(&total_score)
+	return total_score, err
+}
+
 const createCategory = `-- name: CreateCategory :one
 INSERT INTO categories (name)
 VALUES ($1)
@@ -283,6 +297,50 @@ type EnrollUserToEventParams struct {
 
 func (q *Queries) EnrollUserToEvent(ctx context.Context, arg EnrollUserToEventParams) (UserEventApproval, error) {
 	row := q.db.QueryRowContext(ctx, enrollUserToEvent, arg.UserID, arg.EventID)
+	var i UserEventApproval
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.EventID,
+		&i.Status,
+		&i.IsCompleted,
+		&i.Score,
+		&i.IsPassed,
+		&i.StartedAt,
+		&i.CompletedAt,
+	)
+	return i, err
+}
+
+const finishExam = `-- name: FinishExam :exec
+UPDATE user_event_approvals
+SET is_completed = true, completed_at = NOW(), score = $2, is_passed = $3
+WHERE id = $1
+`
+
+type FinishExamParams struct {
+	ID       uuid.UUID      `json:"id"`
+	Score    sql.NullString `json:"score"`
+	IsPassed sql.NullBool   `json:"is_passed"`
+}
+
+func (q *Queries) FinishExam(ctx context.Context, arg FinishExamParams) error {
+	_, err := q.db.ExecContext(ctx, finishExam, arg.ID, arg.Score, arg.IsPassed)
+	return err
+}
+
+const getApprovalStatus = `-- name: GetApprovalStatus :one
+SELECT id, user_id, event_id, status, is_completed, score, is_passed, started_at, completed_at FROM user_event_approvals
+WHERE user_id = $1 AND event_id = $2 LIMIT 1
+`
+
+type GetApprovalStatusParams struct {
+	UserID  uuid.NullUUID `json:"user_id"`
+	EventID uuid.NullUUID `json:"event_id"`
+}
+
+func (q *Queries) GetApprovalStatus(ctx context.Context, arg GetApprovalStatusParams) (UserEventApproval, error) {
+	row := q.db.QueryRowContext(ctx, getApprovalStatus, arg.UserID, arg.EventID)
 	var i UserEventApproval
 	err := row.Scan(
 		&i.ID,
@@ -593,6 +651,105 @@ func (q *Queries) ListQuestions(ctx context.Context) ([]Question, error) {
 			&i.CorrectAnswer,
 			&i.Weight,
 			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUpcomingEvents = `-- name: ListUpcomingEvents :many
+SELECT id, name, start_time, end_time, duration_minutes, passing_grade, created_at FROM events
+WHERE end_time > NOW()
+ORDER BY start_time ASC
+`
+
+func (q *Queries) ListUpcomingEvents(ctx context.Context) ([]Event, error) {
+	rows, err := q.db.QueryContext(ctx, listUpcomingEvents)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Event{}
+	for rows.Next() {
+		var i Event
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.StartTime,
+			&i.EndTime,
+			&i.DurationMinutes,
+			&i.PassingGrade,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUserApprovals = `-- name: ListUserApprovals :many
+SELECT e.id, e.name, e.start_time, e.end_time, e.duration_minutes, e.passing_grade, 
+       uea.id as approval_id, uea.status, uea.is_completed, uea.score, uea.is_passed, uea.started_at, uea.completed_at
+FROM events e
+JOIN user_event_approvals uea ON e.id = uea.event_id
+WHERE uea.user_id = $1
+ORDER BY e.start_time DESC
+`
+
+type ListUserApprovalsRow struct {
+	ID              uuid.UUID      `json:"id"`
+	Name            string         `json:"name"`
+	StartTime       time.Time      `json:"start_time"`
+	EndTime         time.Time      `json:"end_time"`
+	DurationMinutes int32          `json:"duration_minutes"`
+	PassingGrade    string         `json:"passing_grade"`
+	ApprovalID      uuid.UUID      `json:"approval_id"`
+	Status          string         `json:"status"`
+	IsCompleted     bool           `json:"is_completed"`
+	Score           sql.NullString `json:"score"`
+	IsPassed        sql.NullBool   `json:"is_passed"`
+	StartedAt       sql.NullTime   `json:"started_at"`
+	CompletedAt     sql.NullTime   `json:"completed_at"`
+}
+
+func (q *Queries) ListUserApprovals(ctx context.Context, userID uuid.NullUUID) ([]ListUserApprovalsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listUserApprovals, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListUserApprovalsRow{}
+	for rows.Next() {
+		var i ListUserApprovalsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.StartTime,
+			&i.EndTime,
+			&i.DurationMinutes,
+			&i.PassingGrade,
+			&i.ApprovalID,
+			&i.Status,
+			&i.IsCompleted,
+			&i.Score,
+			&i.IsPassed,
+			&i.StartedAt,
+			&i.CompletedAt,
 		); err != nil {
 			return nil, err
 		}

@@ -134,3 +134,31 @@ FROM users u
 JOIN user_event_approvals uea ON u.id = uea.user_id
 WHERE uea.event_id = $1
 ORDER BY u.full_name ASC;
+
+-- name: ListUpcomingEvents :many
+SELECT * FROM events
+WHERE end_time > NOW()
+ORDER BY start_time ASC;
+
+-- name: ListUserApprovals :many
+SELECT e.id, e.name, e.start_time, e.end_time, e.duration_minutes, e.passing_grade, 
+       uea.id as approval_id, uea.status, uea.is_completed, uea.score, uea.is_passed, uea.started_at, uea.completed_at
+FROM events e
+JOIN user_event_approvals uea ON e.id = uea.event_id
+WHERE uea.user_id = $1
+ORDER BY e.start_time DESC;
+
+-- name: GetApprovalStatus :one
+SELECT * FROM user_event_approvals
+WHERE user_id = $1 AND event_id = $2 LIMIT 1;
+
+-- name: CalculateScore :one
+SELECT COALESCE(SUM(q.weight), 0)::numeric as total_score
+FROM user_answers ua
+JOIN questions q ON ua.question_id = q.id
+WHERE ua.approval_id = $1 AND ua.is_correct = true;
+
+-- name: FinishExam :exec
+UPDATE user_event_approvals
+SET is_completed = true, completed_at = NOW(), score = $2, is_passed = $3
+WHERE id = $1;

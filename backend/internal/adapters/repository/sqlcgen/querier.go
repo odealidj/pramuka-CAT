@@ -13,6 +13,7 @@ import (
 type Querier interface {
 	ApproveUserEvent(ctx context.Context, id uuid.UUID) (UserEventApproval, error)
 	BlockSession(ctx context.Context, id uuid.UUID) error
+	CalculateScore(ctx context.Context, approvalID uuid.NullUUID) (string, error)
 	CreateCategory(ctx context.Context, name string) (Category, error)
 	CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error)
 	CreateEventQuestion(ctx context.Context, arg CreateEventQuestionParams) error
@@ -24,6 +25,8 @@ type Querier interface {
 	DeleteEventQuestion(ctx context.Context, arg DeleteEventQuestionParams) error
 	DeleteQuestion(ctx context.Context, id uuid.UUID) error
 	EnrollUserToEvent(ctx context.Context, arg EnrollUserToEventParams) (UserEventApproval, error)
+	FinishExam(ctx context.Context, arg FinishExamParams) error
+	GetApprovalStatus(ctx context.Context, arg GetApprovalStatusParams) (UserEventApproval, error)
 	GetCategoryById(ctx context.Context, id int32) (Category, error)
 	GetEventById(ctx context.Context, id uuid.UUID) (Event, error)
 	GetQuestionById(ctx context.Context, id uuid.UUID) (Question, error)
@@ -35,6 +38,8 @@ type Querier interface {
 	ListEventQuestions(ctx context.Context, eventID uuid.UUID) ([]Question, error)
 	ListEvents(ctx context.Context) ([]Event, error)
 	ListQuestions(ctx context.Context) ([]Question, error)
+	ListUpcomingEvents(ctx context.Context) ([]Event, error)
+	ListUserApprovals(ctx context.Context, userID uuid.NullUUID) ([]ListUserApprovalsRow, error)
 	SaveUserAnswer(ctx context.Context, arg SaveUserAnswerParams) (UserAnswer, error)
 	UpdateCategory(ctx context.Context, arg UpdateCategoryParams) (Category, error)
 	UpdateEvent(ctx context.Context, arg UpdateEventParams) (Event, error)

@@ -59,6 +59,10 @@ func main() {
 	eventService := services.NewEventService(eventRepo)
 	eventHandler := handler.NewEventHandler(eventService)
 
+	examRepo := repository.NewExamRepository(queries)
+	examService := services.NewExamService(examRepo)
+	examHandler := handler.NewExamHandler(examService)
+
 	// 5. Siapkan Server Echo
 	e := echo.New()
 
@@ -83,6 +87,8 @@ func main() {
 	protected := api.Group("/protected")
 	// Pasang Middleware: Wajib bawa Token & Sesi masih ada di Redis
 	protected.Use(appMiddleware.RequireAuth(authCache))
+	
+	examHandler.RegisterParticipantRoutes(protected)
 
 	// Endpoint ini bisa diakses siapa saja yang punya Token valid (Admin maupun Peserta)
 	protected.GET("/profile", func(c echo.Context) error {
