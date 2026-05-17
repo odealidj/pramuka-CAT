@@ -95,6 +95,11 @@ func (s *examService) FinishExam(ctx context.Context, userID uuid.UUID, eventID 
 		score = 0
 	}
 	
+	totalWeight, err := s.repo.GetEventTotalWeight(ctx, approval.EventID)
+	if err == nil && totalWeight > 0 {
+		score = (score / totalWeight) * 100
+	}
+	
 	isPassed := score >= approval.PassingGrade
 	
 	err = s.repo.FinishExam(ctx, approval.ApprovalID, score, isPassed)

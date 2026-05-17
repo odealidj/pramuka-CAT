@@ -563,6 +563,20 @@ func (q *Queries) GetEventById(ctx context.Context, id uuid.UUID) (Event, error)
 	return i, err
 }
 
+const getEventTotalWeight = `-- name: GetEventTotalWeight :one
+SELECT COALESCE(SUM(q.weight), 0)::numeric as total_weight
+FROM event_questions eq
+JOIN questions q ON eq.question_id = q.id
+WHERE eq.event_id = $1
+`
+
+func (q *Queries) GetEventTotalWeight(ctx context.Context, eventID uuid.UUID) (string, error) {
+	row := q.db.QueryRowContext(ctx, getEventTotalWeight, eventID)
+	var total_weight string
+	err := row.Scan(&total_weight)
+	return total_weight, err
+}
+
 const getQuestionById = `-- name: GetQuestionById :one
 SELECT id, category_id, question_text, option_a, option_b, option_c, option_d, correct_answer, weight, created_at FROM questions
 WHERE id = $1 LIMIT 1

@@ -221,6 +221,12 @@ UPDATE user_event_approvals
 SET is_completed = true, completed_at = NOW(), score = $2, is_passed = $3
 WHERE id = $1;
 
+-- name: GetEventTotalWeight :one
+SELECT COALESCE(SUM(q.weight), 0)::numeric as total_weight
+FROM event_questions eq
+JOIN questions q ON eq.question_id = q.id
+WHERE eq.event_id = $1;
+
 -- name: CountAvailableQuestionsForEventByCategory :one
 SELECT COUNT(*) FROM questions
 WHERE category_id = $2

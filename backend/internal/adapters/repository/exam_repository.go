@@ -199,6 +199,15 @@ func (r *examRepository) CalculateScore(ctx context.Context, approvalID uuid.UUI
 	return score, nil
 }
 
+func (r *examRepository) GetEventTotalWeight(ctx context.Context, eventID uuid.UUID) (float64, error) {
+	weightStr, err := r.queries.GetEventTotalWeight(ctx, eventID)
+	if err != nil {
+		return 0, err
+	}
+	weight, _ := strconv.ParseFloat(weightStr, 64)
+	return weight, nil
+}
+
 func (r *examRepository) FinishExam(ctx context.Context, approvalID uuid.UUID, score float64, isPassed bool) error {
 	scoreStr := fmt.Sprintf("%.2f", score)
 	return r.queries.FinishExam(ctx, sqlcgen.FinishExamParams{

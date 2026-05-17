@@ -42,6 +42,7 @@ type Querier interface {
 	GetApprovalStatus(ctx context.Context, arg GetApprovalStatusParams) (UserEventApproval, error)
 	GetCategoryById(ctx context.Context, id int32) (Category, error)
 	GetEventById(ctx context.Context, id uuid.UUID) (Event, error)
+	GetEventTotalWeight(ctx context.Context, eventID uuid.UUID) (string, error)
 	GetQuestionById(ctx context.Context, id uuid.UUID) (Question, error)
 	GetSession(ctx context.Context, id uuid.UUID) (Session, error)
 	GetUserById(ctx context.Context, id uuid.UUID) (User, error)

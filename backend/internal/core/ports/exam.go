@@ -18,6 +18,7 @@ type ExamRepository interface {
 	SaveUserAnswer(ctx context.Context, approvalID uuid.UUID, questionID uuid.UUID, selectedAnswer string, isCorrect bool) error
 	
 	CalculateScore(ctx context.Context, approvalID uuid.UUID) (float64, error)
+	GetEventTotalWeight(ctx context.Context, eventID uuid.UUID) (float64, error)
 	FinishExam(ctx context.Context, approvalID uuid.UUID, score float64, isPassed bool) error
 	
 	GetEventById(ctx context.Context, id uuid.UUID) (domain.Event, error)
