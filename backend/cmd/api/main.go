@@ -97,6 +97,18 @@ func main() {
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
 
+	// Root endpoint — mengembalikan informasi API (best practice)
+	e.GET("/", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, map[string]interface{}{
+			"name":        "Pramuka CAT API",
+			"version":     "1.0.0",
+			"description": "REST API untuk platform Computer Assisted Test (CAT) Pramuka",
+			"status":      "running",
+			"docs":        "/swagger/index.html",
+			"health":      "/health",
+		})
+	})
+
 	// Endpoint Health Check (Liveness & Readiness)
 	e.GET("/health", func(c echo.Context) error {
 		status := "ok"
