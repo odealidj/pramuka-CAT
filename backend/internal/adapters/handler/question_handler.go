@@ -35,6 +35,7 @@ func (h *QuestionHandler) RegisterAdminRoutes(adminGroup *echo.Group) {
 // @Produce     json
 // @Param       body  body      domain.CreateQuestionRequest  true  "Data Soal"
 // @Success     201   {object}  response.SuccessResponse{data=domain.Question}
+// @Header      201   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
 // @Router      /admin/questions [post]
 func (h *QuestionHandler) CreateQuestion(c echo.Context) error {
 	var req domain.CreateQuestionRequest
@@ -58,6 +59,8 @@ func (h *QuestionHandler) CreateQuestion(c echo.Context) error {
 // @Param       page   query     int  false  "Halaman"
 // @Param       limit  query     int  false  "Limit"
 // @Success     200    {object}  response.PaginatedResponse{data=[]domain.Question}
+// @Header      200   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+// @Header      201   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
 // @Router      /admin/questions [get]
 func (h *QuestionHandler) ListQuestions(c echo.Context) error {
 	page, limit := response.ParsePaginationParams(c)
@@ -81,6 +84,7 @@ func (h *QuestionHandler) ListQuestions(c echo.Context) error {
 // @Produce     json
 // @Param       id   path      string  true  "UUID Soal"
 // @Success     200  {object}  response.SuccessResponse{data=domain.Question}
+// @Header      200   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
 // @Router      /admin/questions/{id} [get]
 func (h *QuestionHandler) GetQuestion(c echo.Context) error {
 	idParam := c.Param("id")
@@ -106,6 +110,7 @@ func (h *QuestionHandler) GetQuestion(c echo.Context) error {
 // @Param       id    path      string                       true  "UUID Soal"
 // @Param       body  body      domain.UpdateQuestionRequest  true  "Data Soal Baru"
 // @Success     200   {object}  response.SuccessResponse{data=domain.Question}
+// @Header      200   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
 // @Router      /admin/questions/{id} [put]
 func (h *QuestionHandler) UpdateQuestion(c echo.Context) error {
 	idParam := c.Param("id")
@@ -134,6 +139,7 @@ func (h *QuestionHandler) UpdateQuestion(c echo.Context) error {
 // @Produce     json
 // @Param       id   path      string  true  "UUID Soal"
 // @Success     200  {object}  response.SuccessResponse
+// @Header      200   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
 // @Router      /admin/questions/{id} [delete]
 func (h *QuestionHandler) DeleteQuestion(c echo.Context) error {
 	idParam := c.Param("id")

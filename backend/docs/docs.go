@@ -53,7 +53,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.PaginatedResponse"
+                                    "$ref": "#/definitions/response.PaginatedResponse"
                                 },
                                 {
                                     "type": "object",
@@ -61,12 +61,18 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.Category"
+                                                "$ref": "#/definitions/domain.Category"
                                             }
                                         }
                                     }
                                 }
                             ]
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     }
                 }
@@ -94,7 +100,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.CreateCategoryRequest"
+                            "$ref": "#/definitions/domain.CreateCategoryRequest"
                         }
                     }
                 ],
@@ -104,17 +110,23 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse"
+                                    "$ref": "#/definitions/response.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.Category"
+                                            "$ref": "#/definitions/domain.Category"
                                         }
                                     }
                                 }
                             ]
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     }
                 }
@@ -151,7 +163,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UpdateCategoryRequest"
+                            "$ref": "#/definitions/domain.UpdateCategoryRequest"
                         }
                     }
                 ],
@@ -161,17 +173,23 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse"
+                                    "$ref": "#/definitions/response.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.Category"
+                                            "$ref": "#/definitions/domain.Category"
                                         }
                                     }
                                 }
                             ]
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     }
                 }
@@ -202,7 +220,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse"
+                            "$ref": "#/definitions/response.SuccessResponse"
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     }
                 }
@@ -242,7 +266,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.PaginatedResponse"
+                                    "$ref": "#/definitions/response.PaginatedResponse"
                                 },
                                 {
                                     "type": "object",
@@ -250,12 +274,18 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.Event"
+                                                "$ref": "#/definitions/domain.Event"
                                             }
                                         }
                                     }
                                 }
                             ]
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     }
                 }
@@ -283,7 +313,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.CreateEventRequest"
+                            "$ref": "#/definitions/domain.CreateEventRequest"
                         }
                     }
                 ],
@@ -293,17 +323,23 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse"
+                                    "$ref": "#/definitions/response.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.Event"
+                                            "$ref": "#/definitions/domain.Event"
                                         }
                                     }
                                 }
                             ]
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     }
                 }
@@ -344,12 +380,24 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "type": "file"
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     }
                 }
@@ -389,7 +437,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.PaginatedResponse"
+                                    "$ref": "#/definitions/response.PaginatedResponse"
                                 },
                                 {
                                     "type": "object",
@@ -397,12 +445,18 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.Question"
+                                                "$ref": "#/definitions/domain.Question"
                                             }
                                         }
                                     }
                                 }
                             ]
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     }
                 }
@@ -430,7 +484,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.CreateQuestionRequest"
+                            "$ref": "#/definitions/domain.CreateQuestionRequest"
                         }
                     }
                 ],
@@ -440,17 +494,23 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse"
+                                    "$ref": "#/definitions/response.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.Question"
+                                            "$ref": "#/definitions/domain.Question"
                                         }
                                     }
                                 }
                             ]
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     }
                 }
@@ -485,17 +545,23 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse"
+                                    "$ref": "#/definitions/response.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.Question"
+                                            "$ref": "#/definitions/domain.Question"
                                         }
                                     }
                                 }
                             ]
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     }
                 }
@@ -530,7 +596,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UpdateQuestionRequest"
+                            "$ref": "#/definitions/domain.UpdateQuestionRequest"
                         }
                     }
                 ],
@@ -540,17 +606,23 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse"
+                                    "$ref": "#/definitions/response.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.Question"
+                                            "$ref": "#/definitions/domain.Question"
                                         }
                                     }
                                 }
                             ]
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     }
                 }
@@ -581,7 +653,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse"
+                            "$ref": "#/definitions/response.SuccessResponse"
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     }
                 }
@@ -622,7 +700,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.PaginatedResponse"
+                                    "$ref": "#/definitions/response.PaginatedResponse"
                                 },
                                 {
                                     "type": "object",
@@ -630,12 +708,18 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.User"
+                                                "$ref": "#/definitions/domain.User"
                                             }
                                         }
                                     }
                                 }
                             ]
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     }
                 }
@@ -664,7 +748,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.CreateUserRequest"
+                            "$ref": "#/definitions/domain.CreateUserRequest"
                         }
                     }
                 ],
@@ -674,29 +758,47 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse"
+                                    "$ref": "#/definitions/response.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.User"
+                                            "$ref": "#/definitions/domain.User"
                                         }
                                     }
                                 }
                             ]
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     }
                 }
@@ -732,23 +834,35 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse"
+                                    "$ref": "#/definitions/response.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.User"
+                                            "$ref": "#/definitions/domain.User"
                                         }
                                     }
                                 }
                             ]
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     }
                 }
@@ -784,7 +898,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UpdateUserRequest"
+                            "$ref": "#/definitions/domain.UpdateUserRequest"
                         }
                     }
                 ],
@@ -794,23 +908,35 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse"
+                                    "$ref": "#/definitions/response.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.User"
+                                            "$ref": "#/definitions/domain.User"
                                         }
                                     }
                                 }
                             ]
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     }
                 }
@@ -842,13 +968,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse"
+                            "$ref": "#/definitions/response.SuccessResponse"
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     }
                 }
@@ -886,7 +1024,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UpdateUserPasswordRequest"
+                            "$ref": "#/definitions/domain.UpdateUserPasswordRequest"
                         }
                     }
                 ],
@@ -894,13 +1032,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse"
+                            "$ref": "#/definitions/response.SuccessResponse"
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     }
                 }
@@ -926,7 +1076,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.LoginRequest"
+                            "$ref": "#/definitions/domain.LoginRequest"
                         }
                     }
                 ],
@@ -936,23 +1086,35 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse"
+                                    "$ref": "#/definitions/response.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.LoginResponse"
+                                            "$ref": "#/definitions/domain.LoginResponse"
                                         }
                                     }
                                 }
                             ]
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     }
                 }
@@ -978,7 +1140,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.RefreshRequest"
+                            "$ref": "#/definitions/domain.RefreshRequest"
                         }
                     }
                 ],
@@ -988,23 +1150,35 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse"
+                                    "$ref": "#/definitions/response.SuccessResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.RefreshResponse"
+                                            "$ref": "#/definitions/domain.RefreshResponse"
                                         }
                                     }
                                 }
                             ]
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     }
                 }
@@ -1029,13 +1203,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse"
+                            "$ref": "#/definitions/response.SuccessResponse"
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.ErrorResponse"
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     }
                 }
@@ -1066,7 +1252,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.EnrollEventRequest"
+                            "$ref": "#/definitions/domain.EnrollEventRequest"
                         }
                     }
                 ],
@@ -1074,7 +1260,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse"
+                            "$ref": "#/definitions/response.SuccessResponse"
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     }
                 }
@@ -1101,7 +1293,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.PaginatedResponse"
+                                    "$ref": "#/definitions/response.PaginatedResponse"
                                 },
                                 {
                                     "type": "object",
@@ -1109,12 +1301,18 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UserApproval"
+                                                "$ref": "#/definitions/domain.UserApproval"
                                             }
                                         }
                                     }
                                 }
                             ]
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     }
                 }
@@ -1155,7 +1353,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.PaginatedResponse"
+                                    "$ref": "#/definitions/response.PaginatedResponse"
                                 },
                                 {
                                     "type": "object",
@@ -1163,12 +1361,18 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UpcomingEvent"
+                                                "$ref": "#/definitions/domain.UpcomingEvent"
                                             }
                                         }
                                     }
                                 }
                             ]
+                        },
+                        "headers": {
+                            "X-Trace-Id": {
+                                "type": "string",
+                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
+                            }
                         }
                     }
                 }
@@ -1176,7 +1380,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_odealidj_pramuka-CAT_backend_internal_core_domain.Category": {
+        "domain.Category": {
             "type": "object",
             "properties": {
                 "id": {
@@ -1187,7 +1391,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_odealidj_pramuka-CAT_backend_internal_core_domain.CreateCategoryRequest": {
+        "domain.CreateCategoryRequest": {
             "type": "object",
             "required": [
                 "name"
@@ -1198,7 +1402,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_odealidj_pramuka-CAT_backend_internal_core_domain.CreateEventRequest": {
+        "domain.CreateEventRequest": {
             "type": "object",
             "required": [
                 "duration_minutes",
@@ -1228,7 +1432,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_odealidj_pramuka-CAT_backend_internal_core_domain.CreateQuestionRequest": {
+        "domain.CreateQuestionRequest": {
             "type": "object",
             "required": [
                 "correct_answer",
@@ -1273,7 +1477,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_odealidj_pramuka-CAT_backend_internal_core_domain.CreateUserRequest": {
+        "domain.CreateUserRequest": {
             "type": "object",
             "required": [
                 "full_name",
@@ -1304,7 +1508,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_odealidj_pramuka-CAT_backend_internal_core_domain.EnrollEventRequest": {
+        "domain.EnrollEventRequest": {
             "type": "object",
             "required": [
                 "event_id"
@@ -1315,7 +1519,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_odealidj_pramuka-CAT_backend_internal_core_domain.Event": {
+        "domain.Event": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -1341,7 +1545,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_odealidj_pramuka-CAT_backend_internal_core_domain.LoginRequest": {
+        "domain.LoginRequest": {
             "type": "object",
             "required": [
                 "password",
@@ -1356,7 +1560,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_odealidj_pramuka-CAT_backend_internal_core_domain.LoginResponse": {
+        "domain.LoginResponse": {
             "type": "object",
             "properties": {
                 "access_token": {
@@ -1366,11 +1570,11 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user": {
-                    "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UserResponse"
+                    "$ref": "#/definitions/domain.UserResponse"
                 }
             }
         },
-        "github_com_odealidj_pramuka-CAT_backend_internal_core_domain.Question": {
+        "domain.Question": {
             "type": "object",
             "properties": {
                 "category_id": {
@@ -1405,7 +1609,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_odealidj_pramuka-CAT_backend_internal_core_domain.RefreshRequest": {
+        "domain.RefreshRequest": {
             "type": "object",
             "required": [
                 "refresh_token"
@@ -1416,7 +1620,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_odealidj_pramuka-CAT_backend_internal_core_domain.RefreshResponse": {
+        "domain.RefreshResponse": {
             "type": "object",
             "properties": {
                 "access_token": {
@@ -1427,7 +1631,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UpcomingEvent": {
+        "domain.UpcomingEvent": {
             "type": "object",
             "properties": {
                 "duration_minutes": {
@@ -1450,7 +1654,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UpdateCategoryRequest": {
+        "domain.UpdateCategoryRequest": {
             "type": "object",
             "required": [
                 "name"
@@ -1461,7 +1665,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UpdateQuestionRequest": {
+        "domain.UpdateQuestionRequest": {
             "type": "object",
             "required": [
                 "correct_answer",
@@ -1506,7 +1710,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UpdateUserPasswordRequest": {
+        "domain.UpdateUserPasswordRequest": {
             "type": "object",
             "required": [
                 "password"
@@ -1518,7 +1722,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UpdateUserRequest": {
+        "domain.UpdateUserRequest": {
             "type": "object",
             "required": [
                 "full_name",
@@ -1544,7 +1748,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_odealidj_pramuka-CAT_backend_internal_core_domain.User": {
+        "domain.User": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -1567,7 +1771,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UserApproval": {
+        "domain.UserApproval": {
             "type": "object",
             "properties": {
                 "approval_id": {
@@ -1612,7 +1816,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UserResponse": {
+        "domain.UserResponse": {
             "type": "object",
             "properties": {
                 "full_name": {
@@ -1629,7 +1833,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_odealidj_pramuka-CAT_backend_pkg_response.ErrorDetail": {
+        "response.ErrorDetail": {
             "type": "object",
             "properties": {
                 "field": {
@@ -1640,7 +1844,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_odealidj_pramuka-CAT_backend_pkg_response.ErrorResponse": {
+        "response.ErrorResponse": {
             "type": "object",
             "properties": {
                 "code": {
@@ -1650,7 +1854,7 @@ const docTemplate = `{
                 "errors": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.ErrorDetail"
+                        "$ref": "#/definitions/response.ErrorDetail"
                     }
                 },
                 "message": {
@@ -1663,7 +1867,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_odealidj_pramuka-CAT_backend_pkg_response.Meta": {
+        "response.Meta": {
             "type": "object",
             "properties": {
                 "has_next": {
@@ -1686,7 +1890,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_odealidj_pramuka-CAT_backend_pkg_response.PaginatedResponse": {
+        "response.PaginatedResponse": {
             "type": "object",
             "properties": {
                 "code": {
@@ -1698,7 +1902,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "meta": {
-                    "$ref": "#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.Meta"
+                    "$ref": "#/definitions/response.Meta"
                 },
                 "success": {
                     "type": "boolean",
@@ -1706,7 +1910,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse": {
+        "response.SuccessResponse": {
             "type": "object",
             "properties": {
                 "code": {

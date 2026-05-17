@@ -49,6 +49,7 @@ func getUserIDFromContext(c echo.Context) (uuid.UUID, error) {
 // @Param       page   query     int  false  "Halaman"
 // @Param       limit  query     int  false  "Limit"
 // @Success     200    {object}  response.PaginatedResponse{data=[]domain.UpcomingEvent}
+// @Header      200   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
 // @Router      /protected/exams/upcoming [get]
 func (h *ExamHandler) ListUpcomingEvents(c echo.Context) error {
 	page, limit := response.ParsePaginationParams(c)
@@ -72,6 +73,7 @@ func (h *ExamHandler) ListUpcomingEvents(c echo.Context) error {
 // @Security    BearerAuth
 // @Produce     json
 // @Success     200  {object}  response.PaginatedResponse{data=[]domain.UserApproval}
+// @Header      200   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
 // @Router      /protected/exams/my-exams [get]
 func (h *ExamHandler) ListMyExams(c echo.Context) error {
 	userID, err := getUserIDFromContext(c)
@@ -102,6 +104,7 @@ func (h *ExamHandler) ListMyExams(c echo.Context) error {
 // @Produce     json
 // @Param       body  body      domain.EnrollEventRequest  true  "ID Event"
 // @Success     200   {object}  response.SuccessResponse
+// @Header      200   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
 // @Router      /protected/exams/enroll [post]
 func (h *ExamHandler) Enroll(c echo.Context) error {
 	userID, err := getUserIDFromContext(c)

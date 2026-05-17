@@ -1,20 +1,20 @@
 basePath: /api/v1
 definitions:
-  github_com_odealidj_pramuka-CAT_backend_internal_core_domain.Category:
+  domain.Category:
     properties:
       id:
         type: integer
       name:
         type: string
     type: object
-  github_com_odealidj_pramuka-CAT_backend_internal_core_domain.CreateCategoryRequest:
+  domain.CreateCategoryRequest:
     properties:
       name:
         type: string
     required:
     - name
     type: object
-  github_com_odealidj_pramuka-CAT_backend_internal_core_domain.CreateEventRequest:
+  domain.CreateEventRequest:
     properties:
       duration_minutes:
         minimum: 1
@@ -36,7 +36,7 @@ definitions:
     - passing_grade
     - start_time
     type: object
-  github_com_odealidj_pramuka-CAT_backend_internal_core_domain.CreateQuestionRequest:
+  domain.CreateQuestionRequest:
     properties:
       category_id:
         type: integer
@@ -69,7 +69,7 @@ definitions:
     - question_text
     - weight
     type: object
-  github_com_odealidj_pramuka-CAT_backend_internal_core_domain.CreateUserRequest:
+  domain.CreateUserRequest:
     properties:
       full_name:
         type: string
@@ -91,14 +91,14 @@ definitions:
     - role
     - username
     type: object
-  github_com_odealidj_pramuka-CAT_backend_internal_core_domain.EnrollEventRequest:
+  domain.EnrollEventRequest:
     properties:
       event_id:
         type: string
     required:
     - event_id
     type: object
-  github_com_odealidj_pramuka-CAT_backend_internal_core_domain.Event:
+  domain.Event:
     properties:
       created_at:
         type: string
@@ -115,7 +115,7 @@ definitions:
       start_time:
         type: string
     type: object
-  github_com_odealidj_pramuka-CAT_backend_internal_core_domain.LoginRequest:
+  domain.LoginRequest:
     properties:
       password:
         type: string
@@ -125,16 +125,16 @@ definitions:
     - password
     - username
     type: object
-  github_com_odealidj_pramuka-CAT_backend_internal_core_domain.LoginResponse:
+  domain.LoginResponse:
     properties:
       access_token:
         type: string
       refresh_token:
         type: string
       user:
-        $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UserResponse'
+        $ref: '#/definitions/domain.UserResponse'
     type: object
-  github_com_odealidj_pramuka-CAT_backend_internal_core_domain.Question:
+  domain.Question:
     properties:
       category_id:
         type: integer
@@ -157,21 +157,21 @@ definitions:
       weight:
         type: integer
     type: object
-  github_com_odealidj_pramuka-CAT_backend_internal_core_domain.RefreshRequest:
+  domain.RefreshRequest:
     properties:
       refresh_token:
         type: string
     required:
     - refresh_token
     type: object
-  github_com_odealidj_pramuka-CAT_backend_internal_core_domain.RefreshResponse:
+  domain.RefreshResponse:
     properties:
       access_token:
         type: string
       refresh_token:
         type: string
     type: object
-  github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UpcomingEvent:
+  domain.UpcomingEvent:
     properties:
       duration_minutes:
         type: integer
@@ -186,14 +186,14 @@ definitions:
       start_time:
         type: string
     type: object
-  github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UpdateCategoryRequest:
+  domain.UpdateCategoryRequest:
     properties:
       name:
         type: string
     required:
     - name
     type: object
-  github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UpdateQuestionRequest:
+  domain.UpdateQuestionRequest:
     properties:
       category_id:
         type: integer
@@ -226,7 +226,7 @@ definitions:
     - question_text
     - weight
     type: object
-  github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UpdateUserPasswordRequest:
+  domain.UpdateUserPasswordRequest:
     properties:
       password:
         minLength: 6
@@ -234,7 +234,7 @@ definitions:
     required:
     - password
     type: object
-  github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UpdateUserRequest:
+  domain.UpdateUserRequest:
     properties:
       full_name:
         type: string
@@ -252,7 +252,7 @@ definitions:
     - role
     - username
     type: object
-  github_com_odealidj_pramuka-CAT_backend_internal_core_domain.User:
+  domain.User:
     properties:
       created_at:
         type: string
@@ -267,7 +267,7 @@ definitions:
       username:
         type: string
     type: object
-  github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UserApproval:
+  domain.UserApproval:
     properties:
       approval_id:
         type: string
@@ -297,7 +297,7 @@ definitions:
         description: pending, approved, revoked
         type: string
     type: object
-  github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UserResponse:
+  domain.UserResponse:
     properties:
       full_name:
         type: string
@@ -308,21 +308,21 @@ definitions:
       username:
         type: string
     type: object
-  github_com_odealidj_pramuka-CAT_backend_pkg_response.ErrorDetail:
+  response.ErrorDetail:
     properties:
       field:
         type: string
       message:
         type: string
     type: object
-  github_com_odealidj_pramuka-CAT_backend_pkg_response.ErrorResponse:
+  response.ErrorResponse:
     properties:
       code:
         example: 400
         type: integer
       errors:
         items:
-          $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.ErrorDetail'
+          $ref: '#/definitions/response.ErrorDetail'
         type: array
       message:
         example: Terjadi kesalahan
@@ -331,7 +331,7 @@ definitions:
         example: false
         type: boolean
     type: object
-  github_com_odealidj_pramuka-CAT_backend_pkg_response.Meta:
+  response.Meta:
     properties:
       has_next:
         type: boolean
@@ -346,7 +346,7 @@ definitions:
       total_records:
         type: integer
     type: object
-  github_com_odealidj_pramuka-CAT_backend_pkg_response.PaginatedResponse:
+  response.PaginatedResponse:
     properties:
       code:
         example: 200
@@ -355,12 +355,12 @@ definitions:
       message:
         type: string
       meta:
-        $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.Meta'
+        $ref: '#/definitions/response.Meta'
       success:
         example: true
         type: boolean
     type: object
-  github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse:
+  response.SuccessResponse:
     properties:
       code:
         example: 200
@@ -399,13 +399,19 @@ paths:
       responses:
         "200":
           description: OK
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.PaginatedResponse'
+            - $ref: '#/definitions/response.PaginatedResponse'
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.Category'
+                    $ref: '#/definitions/domain.Category'
                   type: array
               type: object
       security:
@@ -422,18 +428,24 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.CreateCategoryRequest'
+          $ref: '#/definitions/domain.CreateCategoryRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse'
+            - $ref: '#/definitions/response.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.Category'
+                  $ref: '#/definitions/domain.Category'
               type: object
       security:
       - BearerAuth: []
@@ -453,8 +465,14 @@ paths:
       responses:
         "200":
           description: OK
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
-            $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse'
+            $ref: '#/definitions/response.SuccessResponse'
       security:
       - BearerAuth: []
       summary: Hapus Kategori Soal
@@ -474,18 +492,24 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UpdateCategoryRequest'
+          $ref: '#/definitions/domain.UpdateCategoryRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse'
+            - $ref: '#/definitions/response.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.Category'
+                  $ref: '#/definitions/domain.Category'
               type: object
       security:
       - BearerAuth: []
@@ -508,13 +532,19 @@ paths:
       responses:
         "200":
           description: OK
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.PaginatedResponse'
+            - $ref: '#/definitions/response.PaginatedResponse'
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.Event'
+                    $ref: '#/definitions/domain.Event'
                   type: array
               type: object
       security:
@@ -531,18 +561,24 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.CreateEventRequest'
+          $ref: '#/definitions/domain.CreateEventRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse'
+            - $ref: '#/definitions/response.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.Event'
+                  $ref: '#/definitions/domain.Event'
               type: object
       security:
       - BearerAuth: []
@@ -567,12 +603,24 @@ paths:
       responses:
         "200":
           description: OK
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
             type: file
         "400":
           description: Bad Request
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
-            $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Export Laporan Peserta
@@ -594,13 +642,19 @@ paths:
       responses:
         "200":
           description: OK
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.PaginatedResponse'
+            - $ref: '#/definitions/response.PaginatedResponse'
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.Question'
+                    $ref: '#/definitions/domain.Question'
                   type: array
               type: object
       security:
@@ -617,18 +671,24 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.CreateQuestionRequest'
+          $ref: '#/definitions/domain.CreateQuestionRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse'
+            - $ref: '#/definitions/response.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.Question'
+                  $ref: '#/definitions/domain.Question'
               type: object
       security:
       - BearerAuth: []
@@ -648,8 +708,14 @@ paths:
       responses:
         "200":
           description: OK
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
-            $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse'
+            $ref: '#/definitions/response.SuccessResponse'
       security:
       - BearerAuth: []
       summary: Hapus Soal
@@ -667,12 +733,18 @@ paths:
       responses:
         "200":
           description: OK
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse'
+            - $ref: '#/definitions/response.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.Question'
+                  $ref: '#/definitions/domain.Question'
               type: object
       security:
       - BearerAuth: []
@@ -693,18 +765,24 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UpdateQuestionRequest'
+          $ref: '#/definitions/domain.UpdateQuestionRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse'
+            - $ref: '#/definitions/response.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.Question'
+                  $ref: '#/definitions/domain.Question'
               type: object
       security:
       - BearerAuth: []
@@ -728,13 +806,19 @@ paths:
       responses:
         "200":
           description: OK
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.PaginatedResponse'
+            - $ref: '#/definitions/response.PaginatedResponse'
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.User'
+                    $ref: '#/definitions/domain.User'
                   type: array
               type: object
       security:
@@ -752,27 +836,45 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.CreateUserRequest'
+          $ref: '#/definitions/domain.CreateUserRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse'
+            - $ref: '#/definitions/response.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.User'
+                  $ref: '#/definitions/domain.User'
               type: object
         "400":
           description: Bad Request
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
-            $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "500":
           description: Internal Server Error
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
-            $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Buat User Baru
@@ -792,12 +894,24 @@ paths:
       responses:
         "200":
           description: OK
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
-            $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse'
+            $ref: '#/definitions/response.SuccessResponse'
         "404":
           description: Not Found
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
-            $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Hapus User (Soft-Delete)
@@ -816,17 +930,29 @@ paths:
       responses:
         "200":
           description: OK
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse'
+            - $ref: '#/definitions/response.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.User'
+                  $ref: '#/definitions/domain.User'
               type: object
         "404":
           description: Not Found
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
-            $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Detail User
@@ -847,23 +973,35 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UpdateUserRequest'
+          $ref: '#/definitions/domain.UpdateUserRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse'
+            - $ref: '#/definitions/response.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.User'
+                  $ref: '#/definitions/domain.User'
               type: object
         "400":
           description: Bad Request
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
-            $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update Data User
@@ -885,18 +1023,30 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UpdateUserPasswordRequest'
+          $ref: '#/definitions/domain.UpdateUserPasswordRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
-            $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse'
+            $ref: '#/definitions/response.SuccessResponse'
         "400":
           description: Bad Request
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
-            $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update Password User
@@ -913,23 +1063,35 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.LoginRequest'
+          $ref: '#/definitions/domain.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse'
+            - $ref: '#/definitions/response.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.LoginResponse'
+                  $ref: '#/definitions/domain.LoginResponse'
               type: object
         "401":
           description: Unauthorized
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
-            $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
       summary: Login
       tags:
       - Auth
@@ -944,23 +1106,35 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.RefreshRequest'
+          $ref: '#/definitions/domain.RefreshRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse'
+            - $ref: '#/definitions/response.SuccessResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.RefreshResponse'
+                  $ref: '#/definitions/domain.RefreshResponse'
               type: object
         "401":
           description: Unauthorized
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
-            $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
       summary: Refresh Token
       tags:
       - Auth
@@ -972,12 +1146,24 @@ paths:
       responses:
         "200":
           description: OK
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
-            $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse'
+            $ref: '#/definitions/response.SuccessResponse'
         "401":
           description: Unauthorized
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
-            $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.ErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Logout
@@ -994,14 +1180,20 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.EnrollEventRequest'
+          $ref: '#/definitions/domain.EnrollEventRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
-            $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.SuccessResponse'
+            $ref: '#/definitions/response.SuccessResponse'
       security:
       - BearerAuth: []
       summary: Daftar ke Event Ujian
@@ -1015,13 +1207,19 @@ paths:
       responses:
         "200":
           description: OK
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.PaginatedResponse'
+            - $ref: '#/definitions/response.PaginatedResponse'
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UserApproval'
+                    $ref: '#/definitions/domain.UserApproval'
                   type: array
               type: object
       security:
@@ -1046,13 +1244,19 @@ paths:
       responses:
         "200":
           description: OK
+          headers:
+            X-Trace-Id:
+              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
+                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
+                ini.
+              type: string
           schema:
             allOf:
-            - $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_pkg_response.PaginatedResponse'
+            - $ref: '#/definitions/response.PaginatedResponse'
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/github_com_odealidj_pramuka-CAT_backend_internal_core_domain.UpcomingEvent'
+                    $ref: '#/definitions/domain.UpcomingEvent'
                   type: array
               type: object
       security:
