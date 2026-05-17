@@ -61,7 +61,25 @@ Aplikasi akan menggunakan arsitektur **Client-Server** berbasis web (Web Applica
 
 ## 4. Infrastruktur dan Deployment
 - Aplikasi akan di-containerisasi menggunakan **Docker** agar mudah dideploy di berbagai server (VPS atau Cloud).
+- **Dockerfile (Multi-Stage Build):** Backend Go menggunakan pola *multi-stage build*. Tahap pertama (`Builder`) mengompilasi *binary* menggunakan image Go Alpine. Tahap kedua (`Final`) hanya menyalin *binary* ke image Alpine murni yang sangat ringan, tanpa *source code* sisa.
+- **Docker Compose:** Orkestrasi seluruh layanan (`postgres`, `redis`, `migrate`, `api`) dengan urutan *startup* yang ditegaskan via `depends_on` + `healthcheck`. Service `api` baru akan menyala setelah migrasi database selesai dijalankan.
+- **Makefile:** Disediakan sebagai antarmuka perintah DevOps yang terpadu. Perintah utama:
+  - `make infra-up` / `make infra-down` — Menyalakan/mematikan HANYA infrastruktur (Postgres, Redis, Migrate) untuk sesi *debugging* lokal.
+  - `make up` / `make down` — Menjalankan/menghentikan seluruh sistem termasuk Backend API.
+  - `make run` — Menjalankan API Go langsung di host (untuk mode *debug*).
+  - `make seed` / `make clear-seed` — Memasukkan atau membersihkan data simulasi.
+  - `make reset-db` — Reset penuh database (migrate-down → migrate-up → seed).
 - Menggunakan NGINX sebagai _Reverse Proxy_ dan pengelola sertifikat HTTPS (SSL) agar transmisi data ujian aman.
+
+### 4.1. Graceful Shutdown
+- Backend API mengimplementasikan *graceful shutdown* standar industri. Saat menerima sinyal `SIGTERM` atau `SIGINT` (dari Docker, Kubernetes, atau Ctrl+C), server tidak langsung mati.
+- Server berhenti menerima *request* baru, tetapi menunggu hingga seluruh *request* yang sedang diproses selesai (dengan batas waktu maksimal **10 detik**) sebelum benar-benar menutup koneksi.
+- Ini memastikan tidak ada data peserta yang hilang di tengah proses *submit* ujian akibat *deployment* atau *restart* server.
+
+### 4.2. Health Check Endpoint
+- Tersedia endpoint `GET /health` yang melakukan pengecekan koneksi aktif (*liveness & readiness probe*) ke PostgreSQL dan Redis setiap kali dipanggil.
+- Mengembalikan HTTP **200** jika semua komponen sehat, dan HTTP **503 Service Unavailable** jika salah satu komponen terputus, lengkap dengan detail komponen mana yang bermasalah.
+- Endpoint ini sangat krusial untuk integrasi dengan *load balancer* dan sistem monitoring di *production* (Kubernetes, AWS ALB, dsb).
 
 ## 5. Struktur Direktori Proyek
 Mengingat frontend dan backend menggunakan teknologi yang berbeda (Next.js dan Go), struktur direktori utama akan memisahkan keduanya secara jelas:
@@ -81,7 +99,9 @@ PramukaCAT/
 │
 ├── backend/                  # Aplikasi Go (REST API dengan Echo Framework)
 │   ├── cmd/
-│   │   └── api/              # Entry point aplikasi (main.go - Inisialisasi Echo Server)
+│   │   ├── api/              # Entry point aplikasi (main.go - Graceful Shutdown, Health Check, Routing)
+│   │   ├── seeder/           # Script pengisian data simulasi (seed)
+│   │   └── clear_seed/       # Script pembersihan data simulasi
 │   ├── internal/             # Kode aplikasi privat (Berdasarkan Hexagonal Architecture / Ports and Adapters)
 │   │   ├── core/             # Core Business Logic (Tidak bergantung pada framework eksternal)
 │   │   │   ├── domain/       # Structs, Entities, dan Business Rules
@@ -91,9 +111,11 @@ PramukaCAT/
 │   │   │   ├── handler/      # Inbound Adapter: Echo HTTP handlers/controllers
 │   │   │   └── repository/   # Outbound Adapter: Implementasi Outbound Ports (Postgres/Redis)
 │   │   │       └── sqlcgen/  # Package kode Go hasil generate otomatis dari SQLC
-│   │   └── middleware/       # Echo custom middleware (JWT Auth, CORS)
+│   │   └── middleware/       # Echo custom middleware (JWT Auth, RBAC Role)
 │   ├── pkg/                  # Utilities eksternal/publik (Bisa di-share antar project)
-│   │   └── database/         # Konfigurasi koneksi Postgres & Redis
+│   │   ├── database/         # Konfigurasi koneksi Postgres & Redis
+│   │   ├── response/         # Standar format JSON response (success & error)
+│   │   └── utils/            # Utilities (hashing password, dsb)
 │   ├── sql/                  # Folder terkait database (Migrasi & SQLC)
 │   │   ├── migrations/       # Folder file migrasi versi DB (.up.sql & .down.sql)
 │   │   ├── schema.sql        # Skema tabel database (DDL) untuk referensi SQLC
@@ -101,6 +123,7 @@ PramukaCAT/
 │   ├── sqlc.yaml             # Konfigurasi generator SQLC
 │   ├── tests/                # Folder terpisah khusus Integration Tests
 │   │   └── integration/      # Test integrasi DB, Redis, dan Endpoint API
+│   ├── Dockerfile            # Multi-Stage Build untuk production image
 │   ├── go.mod                # Dependency manager Go
 │   └── .env.example          # Template environment variables
 │
@@ -110,6 +133,7 @@ PramukaCAT/
 │   ├── sequence-diagrams.md
 │   └── database-erd.md
 │
-├── docker-compose.yml        # Orchestration untuk Local Development
+├── docker-compose.yml        # Orchestration untuk Local Development (Postgres, Redis, Migrate, API)
+├── Makefile                  # Perintah DevOps: infra-up/down, up/down, seed, clear-seed, reset-db, build, test
 └── README.md                 # Petunjuk instalasi utama
 ```
