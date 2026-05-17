@@ -62,6 +62,7 @@ type User struct {
 	PhotoUrl     sql.NullString `json:"photo_url"`
 	CreatedAt    sql.NullTime   `json:"created_at"`
 	UpdatedAt    sql.NullTime   `json:"updated_at"`
+	DeletedAt    sql.NullTime   `json:"deleted_at"`
 }
 
 type UserAnswer struct {

@@ -25,6 +25,7 @@ type Querier interface {
 	CountQuestions(ctx context.Context) (int64, error)
 	CountUpcomingEvents(ctx context.Context) (int64, error)
 	CountUserApprovals(ctx context.Context, userID uuid.NullUUID) (int64, error)
+	CountUsers(ctx context.Context) (int64, error)
 	CreateCategory(ctx context.Context, name string) (Category, error)
 	CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error)
 	CreateEventQuestion(ctx context.Context, arg CreateEventQuestionParams) error
@@ -35,6 +36,7 @@ type Querier interface {
 	DeleteEvent(ctx context.Context, id uuid.UUID) error
 	DeleteEventQuestion(ctx context.Context, arg DeleteEventQuestionParams) error
 	DeleteQuestion(ctx context.Context, id uuid.UUID) error
+	DeleteUser(ctx context.Context, id uuid.UUID) error
 	EnrollUserToEvent(ctx context.Context, arg EnrollUserToEventParams) (UserEventApproval, error)
 	FinishExam(ctx context.Context, arg FinishExamParams) error
 	GetApprovalStatus(ctx context.Context, arg GetApprovalStatusParams) (UserEventApproval, error)
@@ -51,10 +53,13 @@ type Querier interface {
 	ListQuestions(ctx context.Context, arg ListQuestionsParams) ([]Question, error)
 	ListUpcomingEvents(ctx context.Context, arg ListUpcomingEventsParams) ([]Event, error)
 	ListUserApprovals(ctx context.Context, arg ListUserApprovalsParams) ([]ListUserApprovalsRow, error)
+	ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error)
 	SaveUserAnswer(ctx context.Context, arg SaveUserAnswerParams) (UserAnswer, error)
 	UpdateCategory(ctx context.Context, arg UpdateCategoryParams) (Category, error)
 	UpdateEvent(ctx context.Context, arg UpdateEventParams) (Event, error)
 	UpdateQuestion(ctx context.Context, arg UpdateQuestionParams) (Question, error)
+	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
+	UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) error
 }
 
 var _ Querier = (*Queries)(nil)

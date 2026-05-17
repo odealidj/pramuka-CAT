@@ -7,6 +7,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/ports"
+	"github.com/odealidj/pramuka-CAT/backend/pkg/response"
 	"github.com/odealidj/pramuka-CAT/backend/pkg/utils"
 )
 
@@ -23,29 +24,29 @@ func RequireAuth(cache ports.AuthCache) echo.MiddlewareFunc {
 			authHeader := c.Request().Header.Get(authorizationHeaderKey)
 
 			if len(authHeader) == 0 {
-				return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Header otorisasi tidak disertakan"})
+				return response.Error(c, http.StatusUnauthorized, "Header otorisasi tidak disertakan", nil)
 			}
 
 			fields := strings.Fields(authHeader)
 			if len(fields) < 2 {
-				return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Format header otorisasi tidak valid"})
+				return response.Error(c, http.StatusUnauthorized, "Format header otorisasi tidak valid", nil)
 			}
 
 			authType := strings.ToLower(fields[0])
 			if authType != authorizationTypeBearer {
-				return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Tipe otorisasi tidak didukung (harus Bearer)"})
+				return response.Error(c, http.StatusUnauthorized, "Tipe otorisasi tidak didukung (harus Bearer)", nil)
 			}
 
 			accessToken := fields[1]
 			payload, err := utils.ValidateToken(accessToken, false)
 			if err != nil {
-				return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Token tidak valid atau kedaluwarsa"})
+				return response.Error(c, http.StatusUnauthorized, "Token tidak valid atau kedaluwarsa", nil)
 			}
 
 			// Pengecekan krusial: Memastikan sesi ID yang ada di token JWT belum dicabut di memori Redis
 			_, err = cache.GetSession(context.Background(), payload.SessionID)
 			if err != nil {
-				return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Sesi telah berakhir atau ditolak server"})
+				return response.Error(c, http.StatusUnauthorized, "Sesi telah berakhir atau ditolak server", nil)
 			}
 
 			// Menitipkan data (UserID, Role, dll) ke dalam Context Request
@@ -62,12 +63,12 @@ func RequireRole(allowedRoles ...string) echo.MiddlewareFunc {
 			// Mengambil Payload dari Context (pastikan middleware RequireAuth dijalankan lebih dulu!)
 			payloadValue := c.Get(AuthorizationPayloadKey)
 			if payloadValue == nil {
-				return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Tidak terautentikasi"})
+				return response.Error(c, http.StatusUnauthorized, "Tidak terautentikasi", nil)
 			}
 
 			payload, ok := payloadValue.(*utils.TokenPayload)
 			if !ok {
-				return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Terjadi kesalahan internal server membaca sesi"})
+				return response.Error(c, http.StatusInternalServerError, "Terjadi kesalahan internal server membaca sesi", nil)
 			}
 
 			roleMatched := false
@@ -79,7 +80,7 @@ func RequireRole(allowedRoles ...string) echo.MiddlewareFunc {
 			}
 
 			if !roleMatched {
-				return c.JSON(http.StatusForbidden, map[string]string{"error": "Akses ditolak: Wewenang Anda tidak cukup untuk rute ini"})
+				return response.Error(c, http.StatusForbidden, "Akses ditolak: Wewenang Anda tidak cukup untuk rute ini", nil)
 			}
 
 			return next(c)

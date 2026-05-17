@@ -63,6 +63,10 @@ func main() {
 	examService := services.NewExamService(examRepo)
 	examHandler := handler.NewExamHandler(examService)
 
+	userRepo := repository.NewUserRepository(queries)
+	userService := services.NewUserService(userRepo)
+	userHandler := handler.NewUserHandler(userService)
+
 	// 5. Siapkan Server Echo
 	e := echo.New()
 
@@ -116,6 +120,7 @@ func main() {
 	categoryHandler.RegisterAdminRoutes(adminGroup)
 	questionHandler.RegisterAdminRoutes(adminGroup)
 	eventHandler.RegisterAdminRoutes(adminGroup)
+	userHandler.RegisterAdminRoutes(adminGroup)
 
 	// 6. Nyalakan Server
 	port := os.Getenv("PORT")

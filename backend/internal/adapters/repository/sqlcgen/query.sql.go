@@ -213,6 +213,18 @@ func (q *Queries) CountUserApprovals(ctx context.Context, userID uuid.NullUUID) 
 	return count, err
 }
 
+const countUsers = `-- name: CountUsers :one
+SELECT COUNT(*) FROM users
+WHERE deleted_at IS NULL
+`
+
+func (q *Queries) CountUsers(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countUsers)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createCategory = `-- name: CreateCategory :one
 INSERT INTO categories (name)
 VALUES ($1)
@@ -357,7 +369,7 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (S
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (username, password_hash, full_name, role, photo_url)
 VALUES ($1, $2, $3, $4, $5)
-RETURNING id, username, password_hash, full_name, role, photo_url, created_at, updated_at
+RETURNING id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at
 `
 
 type CreateUserParams struct {
@@ -386,6 +398,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.PhotoUrl,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
@@ -432,6 +445,17 @@ WHERE id = $1
 
 func (q *Queries) DeleteQuestion(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.ExecContext(ctx, deleteQuestion, id)
+	return err
+}
+
+const deleteUser = `-- name: DeleteUser :exec
+UPDATE users
+SET deleted_at = NOW()
+WHERE id = $1
+`
+
+func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteUser, id)
 	return err
 }
 
@@ -582,8 +606,8 @@ func (q *Queries) GetSession(ctx context.Context, id uuid.UUID) (Session, error)
 }
 
 const getUserById = `-- name: GetUserById :one
-SELECT id, username, password_hash, full_name, role, photo_url, created_at, updated_at FROM users
-WHERE id = $1 LIMIT 1
+SELECT id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at FROM users
+WHERE id = $1 AND deleted_at IS NULL LIMIT 1
 `
 
 func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (User, error) {
@@ -598,13 +622,14 @@ func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.PhotoUrl,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT id, username, password_hash, full_name, role, photo_url, created_at, updated_at FROM users
-WHERE username = $1 LIMIT 1
+SELECT id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at FROM users
+WHERE username = $1 AND deleted_at IS NULL LIMIT 1
 `
 
 func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User, error) {
@@ -619,6 +644,7 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 		&i.PhotoUrl,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
@@ -960,6 +986,51 @@ func (q *Queries) ListUserApprovals(ctx context.Context, arg ListUserApprovalsPa
 	return items, nil
 }
 
+const listUsers = `-- name: ListUsers :many
+SELECT id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at FROM users
+WHERE deleted_at IS NULL
+ORDER BY created_at DESC
+LIMIT $1 OFFSET $2
+`
+
+type ListUsersParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error) {
+	rows, err := q.db.QueryContext(ctx, listUsers, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []User{}
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.Username,
+			&i.PasswordHash,
+			&i.FullName,
+			&i.Role,
+			&i.PhotoUrl,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const saveUserAnswer = `-- name: SaveUserAnswer :one
 INSERT INTO user_answers (approval_id, question_id, selected_answer, is_correct)
 VALUES ($1, $2, $3, $4)
@@ -1098,4 +1169,58 @@ func (q *Queries) UpdateQuestion(ctx context.Context, arg UpdateQuestionParams) 
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const updateUser = `-- name: UpdateUser :one
+UPDATE users
+SET username = $2, full_name = $3, role = $4, photo_url = $5
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at
+`
+
+type UpdateUserParams struct {
+	ID       uuid.UUID      `json:"id"`
+	Username string         `json:"username"`
+	FullName string         `json:"full_name"`
+	Role     string         `json:"role"`
+	PhotoUrl sql.NullString `json:"photo_url"`
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, updateUser,
+		arg.ID,
+		arg.Username,
+		arg.FullName,
+		arg.Role,
+		arg.PhotoUrl,
+	)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.PasswordHash,
+		&i.FullName,
+		&i.Role,
+		&i.PhotoUrl,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const updateUserPassword = `-- name: UpdateUserPassword :exec
+UPDATE users
+SET password_hash = $2
+WHERE id = $1 AND deleted_at IS NULL
+`
+
+type UpdateUserPasswordParams struct {
+	ID           uuid.UUID `json:"id"`
+	PasswordHash string    `json:"password_hash"`
+}
+
+func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) error {
+	_, err := q.db.ExecContext(ctx, updateUserPassword, arg.ID, arg.PasswordHash)
+	return err
 }

@@ -5,11 +5,37 @@ RETURNING *;
 
 -- name: GetUserByUsername :one
 SELECT * FROM users
-WHERE username = $1 LIMIT 1;
+WHERE username = $1 AND deleted_at IS NULL LIMIT 1;
 
 -- name: GetUserById :one
 SELECT * FROM users
-WHERE id = $1 LIMIT 1;
+WHERE id = $1 AND deleted_at IS NULL LIMIT 1;
+
+-- name: ListUsers :many
+SELECT * FROM users
+WHERE deleted_at IS NULL
+ORDER BY created_at DESC
+LIMIT $1 OFFSET $2;
+
+-- name: CountUsers :one
+SELECT COUNT(*) FROM users
+WHERE deleted_at IS NULL;
+
+-- name: UpdateUser :one
+UPDATE users
+SET username = $2, full_name = $3, role = $4, photo_url = $5
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING *;
+
+-- name: UpdateUserPassword :exec
+UPDATE users
+SET password_hash = $2
+WHERE id = $1 AND deleted_at IS NULL;
+
+-- name: DeleteUser :exec
+UPDATE users
+SET deleted_at = NOW()
+WHERE id = $1;
 
 -- name: CreateCategory :one
 INSERT INTO categories (name)
