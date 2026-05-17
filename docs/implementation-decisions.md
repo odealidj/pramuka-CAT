@@ -81,6 +81,14 @@ Aplikasi akan menggunakan arsitektur **Client-Server** berbasis web (Web Applica
 - Mengembalikan HTTP **200** jika semua komponen sehat, dan HTTP **503 Service Unavailable** jika salah satu komponen terputus, lengkap dengan detail komponen mana yang bermasalah.
 - Endpoint ini sangat krusial untuk integrasi dengan *load balancer* dan sistem monitoring di *production* (Kubernetes, AWS ALB, dsb).
 
+### 4.3. Distributed Tracing — Jaeger + OpenTelemetry
+- Sistem menggunakan **OpenTelemetry (OTEL) SDK** sebagai standar instrumentasi yang *vendor-neutral*, dengan **Jaeger** sebagai backend visualisasi trace.
+- `jaeger-client-go` tidak digunakan karena sudah *deprecated* sejak 2022. Standar resmi penggantinya adalah OTEL SDK.
+- **Alur pengiriman trace:** `Go App → OTLP Exporter (gRPC) → Jaeger Collector → Jaeger UI`
+- **Mengapa gRPC untuk transport OTLP?** OTLP mendukung dua protokol transport: gRPC (port 4317) dan HTTP (port 4318). gRPC dipilih karena menggunakan format *binary/protobuf* yang lebih efisien dan latensi lebih rendah dibandingkan HTTP/JSON. Ini bukan arsitektur gRPC microservice — melainkan hanya *kabel* internal pengiriman data telemetri.
+- **`otelecho` middleware** dipasang di Echo untuk menciptakan **span otomatis pada setiap HTTP request** tanpa perlu mengubah satu handler pun. Setiap span berisi: method, URL, status code, latency, dan error.
+- **Jaeger UI** tersedia di `http://localhost:16686` untuk visualisasi dan analisis trace.
+
 ## 5. Struktur Direktori Proyek
 Mengingat frontend dan backend menggunakan teknologi yang berbeda (Next.js dan Go), struktur direktori utama akan memisahkan keduanya secara jelas:
 
@@ -115,6 +123,7 @@ PramukaCAT/
 │   ├── pkg/                  # Utilities eksternal/publik (Bisa di-share antar project)
 │   │   ├── database/         # Konfigurasi koneksi Postgres & Redis
 │   │   ├── response/         # Standar format JSON response (success & error)
+│   │   ├── tracer/           # Inisialisasi OpenTelemetry TracerProvider untuk Jaeger
 │   │   └── utils/            # Utilities (hashing password, dsb)
 │   ├── sql/                  # Folder terkait database (Migrasi & SQLC)
 │   │   ├── migrations/       # Folder file migrasi versi DB (.up.sql & .down.sql)
@@ -133,7 +142,7 @@ PramukaCAT/
 │   ├── sequence-diagrams.md
 │   └── database-erd.md
 │
-├── docker-compose.yml        # Orchestration untuk Local Development (Postgres, Redis, Migrate, API)
-├── Makefile                  # Perintah DevOps: infra-up/down, up/down, seed, clear-seed, reset-db, build, test
+├── docker-compose.yml        # Orchestration untuk Local Development (Postgres, Redis, Migrate, API, Jaeger)
+├── Makefile                  # Perintah DevOps: infra-up/down, up/down, seed, clear-seed, reset-db, build, test, swagger
 └── README.md                 # Petunjuk instalasi utama
 ```
