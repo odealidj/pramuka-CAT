@@ -235,6 +235,31 @@ func (q *Queries) DeleteCategory(ctx context.Context, id int32) error {
 	return err
 }
 
+const deleteEvent = `-- name: DeleteEvent :exec
+DELETE FROM events
+WHERE id = $1
+`
+
+func (q *Queries) DeleteEvent(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteEvent, id)
+	return err
+}
+
+const deleteEventQuestion = `-- name: DeleteEventQuestion :exec
+DELETE FROM event_questions
+WHERE event_id = $1 AND question_id = $2
+`
+
+type DeleteEventQuestionParams struct {
+	EventID    uuid.UUID `json:"event_id"`
+	QuestionID uuid.UUID `json:"question_id"`
+}
+
+func (q *Queries) DeleteEventQuestion(ctx context.Context, arg DeleteEventQuestionParams) error {
+	_, err := q.db.ExecContext(ctx, deleteEventQuestion, arg.EventID, arg.QuestionID)
+	return err
+}
+
 const deleteQuestion = `-- name: DeleteQuestion :exec
 DELETE FROM questions
 WHERE id = $1
@@ -417,6 +442,132 @@ func (q *Queries) ListCategories(ctx context.Context) ([]Category, error) {
 	return items, nil
 }
 
+const listEventParticipants = `-- name: ListEventParticipants :many
+SELECT u.id, u.username, u.full_name, uea.status, uea.is_completed, uea.score, uea.is_passed
+FROM users u
+JOIN user_event_approvals uea ON u.id = uea.user_id
+WHERE uea.event_id = $1
+ORDER BY u.full_name ASC
+`
+
+type ListEventParticipantsRow struct {
+	ID          uuid.UUID      `json:"id"`
+	Username    string         `json:"username"`
+	FullName    string         `json:"full_name"`
+	Status      string         `json:"status"`
+	IsCompleted bool           `json:"is_completed"`
+	Score       sql.NullString `json:"score"`
+	IsPassed    sql.NullBool   `json:"is_passed"`
+}
+
+func (q *Queries) ListEventParticipants(ctx context.Context, eventID uuid.NullUUID) ([]ListEventParticipantsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listEventParticipants, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEventParticipantsRow{}
+	for rows.Next() {
+		var i ListEventParticipantsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Username,
+			&i.FullName,
+			&i.Status,
+			&i.IsCompleted,
+			&i.Score,
+			&i.IsPassed,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEventQuestions = `-- name: ListEventQuestions :many
+SELECT q.id, q.category_id, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_answer, q.weight, q.created_at FROM questions q
+JOIN event_questions eq ON q.id = eq.question_id
+WHERE eq.event_id = $1
+ORDER BY q.created_at ASC
+`
+
+func (q *Queries) ListEventQuestions(ctx context.Context, eventID uuid.UUID) ([]Question, error) {
+	rows, err := q.db.QueryContext(ctx, listEventQuestions, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Question{}
+	for rows.Next() {
+		var i Question
+		if err := rows.Scan(
+			&i.ID,
+			&i.CategoryID,
+			&i.QuestionText,
+			&i.OptionA,
+			&i.OptionB,
+			&i.OptionC,
+			&i.OptionD,
+			&i.CorrectAnswer,
+			&i.Weight,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEvents = `-- name: ListEvents :many
+SELECT id, name, start_time, end_time, duration_minutes, passing_grade, created_at FROM events
+ORDER BY created_at DESC
+`
+
+func (q *Queries) ListEvents(ctx context.Context) ([]Event, error) {
+	rows, err := q.db.QueryContext(ctx, listEvents)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Event{}
+	for rows.Next() {
+		var i Event
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.StartTime,
+			&i.EndTime,
+			&i.DurationMinutes,
+			&i.PassingGrade,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listQuestions = `-- name: ListQuestions :many
 SELECT id, category_id, question_text, option_a, option_b, option_c, option_d, correct_answer, weight, created_at FROM questions
 ORDER BY created_at DESC
@@ -508,6 +659,44 @@ func (q *Queries) UpdateCategory(ctx context.Context, arg UpdateCategoryParams) 
 	row := q.db.QueryRowContext(ctx, updateCategory, arg.ID, arg.Name)
 	var i Category
 	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
+const updateEvent = `-- name: UpdateEvent :one
+UPDATE events
+SET name = $2, start_time = $3, end_time = $4, duration_minutes = $5, passing_grade = $6
+WHERE id = $1
+RETURNING id, name, start_time, end_time, duration_minutes, passing_grade, created_at
+`
+
+type UpdateEventParams struct {
+	ID              uuid.UUID `json:"id"`
+	Name            string    `json:"name"`
+	StartTime       time.Time `json:"start_time"`
+	EndTime         time.Time `json:"end_time"`
+	DurationMinutes int32     `json:"duration_minutes"`
+	PassingGrade    string    `json:"passing_grade"`
+}
+
+func (q *Queries) UpdateEvent(ctx context.Context, arg UpdateEventParams) (Event, error) {
+	row := q.db.QueryRowContext(ctx, updateEvent,
+		arg.ID,
+		arg.Name,
+		arg.StartTime,
+		arg.EndTime,
+		arg.DurationMinutes,
+		arg.PassingGrade,
+	)
+	var i Event
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.StartTime,
+		&i.EndTime,
+		&i.DurationMinutes,
+		&i.PassingGrade,
+		&i.CreatedAt,
+	)
 	return i, err
 }
 

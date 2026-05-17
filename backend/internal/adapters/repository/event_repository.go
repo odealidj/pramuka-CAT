@@ -1,0 +1,149 @@
+package repository
+
+import (
+	"context"
+	"fmt"
+	"strconv"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/odealidj/pramuka-CAT/backend/internal/adapters/repository/sqlcgen"
+	"github.com/odealidj/pramuka-CAT/backend/internal/core/domain"
+	"github.com/odealidj/pramuka-CAT/backend/internal/core/ports"
+)
+
+type eventRepository struct {
+	queries *sqlcgen.Queries
+}
+
+func NewEventRepository(queries *sqlcgen.Queries) ports.EventRepository {
+	return &eventRepository{queries: queries}
+}
+
+func mapSqlcToDomainEvent(e sqlcgen.Event) domain.Event {
+	var createdAt time.Time
+	if e.CreatedAt.Valid {
+		createdAt = e.CreatedAt.Time
+	}
+
+	passingGrade, _ := strconv.ParseFloat(e.PassingGrade, 64)
+
+	return domain.Event{
+		ID:              e.ID,
+		Name:            e.Name,
+		StartTime:       e.StartTime,
+		EndTime:         e.EndTime,
+		DurationMinutes: e.DurationMinutes,
+		PassingGrade:    passingGrade,
+		CreatedAt:       createdAt,
+	}
+}
+
+func (r *eventRepository) CreateEvent(ctx context.Context, e domain.Event) (domain.Event, error) {
+	passingGradeStr := fmt.Sprintf("%.2f", e.PassingGrade)
+	res, err := r.queries.CreateEvent(ctx, sqlcgen.CreateEventParams{
+		Name:            e.Name,
+		StartTime:       e.StartTime,
+		EndTime:         e.EndTime,
+		DurationMinutes: e.DurationMinutes,
+		PassingGrade:    passingGradeStr,
+	})
+	if err != nil {
+		return domain.Event{}, err
+	}
+	return mapSqlcToDomainEvent(res), nil
+}
+
+func (r *eventRepository) GetEventById(ctx context.Context, id uuid.UUID) (domain.Event, error) {
+	res, err := r.queries.GetEventById(ctx, id)
+	if err != nil {
+		return domain.Event{}, err
+	}
+	return mapSqlcToDomainEvent(res), nil
+}
+
+func (r *eventRepository) ListEvents(ctx context.Context) ([]domain.Event, error) {
+	rows, err := r.queries.ListEvents(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var events []domain.Event
+	for _, row := range rows {
+		events = append(events, mapSqlcToDomainEvent(row))
+	}
+	return events, nil
+}
+
+func (r *eventRepository) UpdateEvent(ctx context.Context, id uuid.UUID, e domain.Event) (domain.Event, error) {
+	passingGradeStr := fmt.Sprintf("%.2f", e.PassingGrade)
+	res, err := r.queries.UpdateEvent(ctx, sqlcgen.UpdateEventParams{
+		ID:              id,
+		Name:            e.Name,
+		StartTime:       e.StartTime,
+		EndTime:         e.EndTime,
+		DurationMinutes: e.DurationMinutes,
+		PassingGrade:    passingGradeStr,
+	})
+	if err != nil {
+		return domain.Event{}, err
+	}
+	return mapSqlcToDomainEvent(res), nil
+}
+
+func (r *eventRepository) DeleteEvent(ctx context.Context, id uuid.UUID) error {
+	return r.queries.DeleteEvent(ctx, id)
+}
+
+func (r *eventRepository) AddEventQuestion(ctx context.Context, eventID uuid.UUID, questionID uuid.UUID) error {
+	return r.queries.CreateEventQuestion(ctx, sqlcgen.CreateEventQuestionParams{
+		EventID:    eventID,
+		QuestionID: questionID,
+	})
+}
+
+func (r *eventRepository) ListEventQuestions(ctx context.Context, eventID uuid.UUID) ([]domain.Question, error) {
+	rows, err := r.queries.ListEventQuestions(ctx, eventID)
+	if err != nil {
+		return nil, err
+	}
+	var questions []domain.Question
+	for _, row := range rows {
+		// Menggunakan mapper yang kita buat di question_repository.go
+		questions = append(questions, mapSqlcToDomainQuestion(sqlcgen.Question(row)))
+	}
+	return questions, nil
+}
+
+func (r *eventRepository) RemoveEventQuestion(ctx context.Context, eventID uuid.UUID, questionID uuid.UUID) error {
+	return r.queries.DeleteEventQuestion(ctx, sqlcgen.DeleteEventQuestionParams{
+		EventID:    eventID,
+		QuestionID: questionID,
+	})
+}
+
+func (r *eventRepository) ListEventParticipants(ctx context.Context, eventID uuid.UUID) ([]domain.EventParticipant, error) {
+	rows, err := r.queries.ListEventParticipants(ctx, uuid.NullUUID{UUID: eventID, Valid: true})
+	if err != nil {
+		return nil, err
+	}
+
+	var participants []domain.EventParticipant
+	for _, row := range rows {
+		score, _ := strconv.ParseFloat(row.Score.String, 64)
+		participants = append(participants, domain.EventParticipant{
+			UserID:      row.ID,
+			Username:    row.Username,
+			FullName:    row.FullName,
+			Status:      row.Status,
+			IsCompleted: row.IsCompleted,
+			Score:       score,
+			IsPassed:    row.IsPassed.Bool,
+		})
+	}
+	return participants, nil
+}
+
+func (r *eventRepository) ApproveUserEvent(ctx context.Context, approvalID uuid.UUID) error {
+	_, err := r.queries.ApproveUserEvent(ctx, approvalID)
+	return err
+}

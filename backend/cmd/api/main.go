@@ -55,6 +55,10 @@ func main() {
 	questionService := services.NewQuestionService(questionRepo)
 	questionHandler := handler.NewQuestionHandler(questionService)
 
+	eventRepo := repository.NewEventRepository(queries)
+	eventService := services.NewEventService(eventRepo)
+	eventHandler := handler.NewEventHandler(eventService)
+
 	// 5. Siapkan Server Echo
 	e := echo.New()
 
@@ -105,6 +109,7 @@ func main() {
 	
 	categoryHandler.RegisterAdminRoutes(adminGroup)
 	questionHandler.RegisterAdminRoutes(adminGroup)
+	eventHandler.RegisterAdminRoutes(adminGroup)
 
 	// 6. Nyalakan Server
 	port := os.Getenv("PORT")

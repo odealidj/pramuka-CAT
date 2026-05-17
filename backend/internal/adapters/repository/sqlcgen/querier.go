@@ -20,6 +20,8 @@ type Querier interface {
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteCategory(ctx context.Context, id int32) error
+	DeleteEvent(ctx context.Context, id uuid.UUID) error
+	DeleteEventQuestion(ctx context.Context, arg DeleteEventQuestionParams) error
 	DeleteQuestion(ctx context.Context, id uuid.UUID) error
 	EnrollUserToEvent(ctx context.Context, arg EnrollUserToEventParams) (UserEventApproval, error)
 	GetCategoryById(ctx context.Context, id int32) (Category, error)
@@ -29,9 +31,13 @@ type Querier interface {
 	GetUserById(ctx context.Context, id uuid.UUID) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	ListCategories(ctx context.Context) ([]Category, error)
+	ListEventParticipants(ctx context.Context, eventID uuid.NullUUID) ([]ListEventParticipantsRow, error)
+	ListEventQuestions(ctx context.Context, eventID uuid.UUID) ([]Question, error)
+	ListEvents(ctx context.Context) ([]Event, error)
 	ListQuestions(ctx context.Context) ([]Question, error)
 	SaveUserAnswer(ctx context.Context, arg SaveUserAnswerParams) (UserAnswer, error)
 	UpdateCategory(ctx context.Context, arg UpdateCategoryParams) (Category, error)
+	UpdateEvent(ctx context.Context, arg UpdateEventParams) (Event, error)
 	UpdateQuestion(ctx context.Context, arg UpdateQuestionParams) (Question, error)
 }
 

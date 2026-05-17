@@ -66,6 +66,20 @@ RETURNING *;
 SELECT * FROM events
 WHERE id = $1 LIMIT 1;
 
+-- name: ListEvents :many
+SELECT * FROM events
+ORDER BY created_at DESC;
+
+-- name: UpdateEvent :one
+UPDATE events
+SET name = $2, start_time = $3, end_time = $4, duration_minutes = $5, passing_grade = $6
+WHERE id = $1
+RETURNING *;
+
+-- name: DeleteEvent :exec
+DELETE FROM events
+WHERE id = $1;
+
 -- name: EnrollUserToEvent :one
 INSERT INTO user_event_approvals (user_id, event_id, status)
 VALUES ($1, $2, 'pending')
@@ -103,3 +117,20 @@ WHERE id = $1;
 -- name: CreateEventQuestion :exec
 INSERT INTO event_questions (event_id, question_id)
 VALUES ($1, $2);
+
+-- name: ListEventQuestions :many
+SELECT q.* FROM questions q
+JOIN event_questions eq ON q.id = eq.question_id
+WHERE eq.event_id = $1
+ORDER BY q.created_at ASC;
+
+-- name: DeleteEventQuestion :exec
+DELETE FROM event_questions
+WHERE event_id = $1 AND question_id = $2;
+
+-- name: ListEventParticipants :many
+SELECT u.id, u.username, u.full_name, uea.status, uea.is_completed, uea.score, uea.is_passed
+FROM users u
+JOIN user_event_approvals uea ON u.id = uea.user_id
+WHERE uea.event_id = $1
+ORDER BY u.full_name ASC;
