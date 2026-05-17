@@ -3,7 +3,16 @@
 Dokumen ini berisi diagram urutan (_Sequence Diagram_) yang menjelaskan alur interaksi antara Pengguna, Frontend (Next.js), Backend API (Go Echo), Database Utama (PostgreSQL), dan Cache (Redis) untuk fitur-fitur krusial di aplikasi.
 
 ## 1. Alur Login & Autentikasi
-Menjelaskan bagaimana peserta atau admin memvalidasi identitas mereka.
+Alur ini menjelaskan bagaimana peserta atau admin memvalidasi identitas mereka ke dalam sistem.
+
+**Langkah-langkah (Narasi):**
+1. Pengguna (Peserta/Admin) memasukkan _Username_ dan _Password_ di halaman Login Frontend.
+2. Frontend mengirim *request* `POST /login` ke Backend.
+3. Backend mencari data pengguna di database PostgreSQL berdasarkan _Username_.
+4. Database mengembalikan data pengguna beserta *hash* dari password.
+5. Backend melakukan verifikasi (mencocokkan *hash* password dengan *input* pengguna).
+6. Jika **Valid**, Backend akan men-*generate* JWT (_JSON Web Token_) dan mengirimkannya ke Frontend. Frontend kemudian mengalihkan pengguna ke halaman *Dashboard*.
+7. Jika **Tidak Valid**, Backend mengirim kode *error* 401 dan Frontend menampilkan pesan gagal.
 
 ```mermaid
 sequenceDiagram
@@ -29,8 +38,48 @@ sequenceDiagram
 
 ---
 
-## 2. Alur Persetujuan (Approval) Peserta
+## 2. Alur Manajemen Event & Setup Soal (Admin Flow)
+Alur ini merinci bagaimana Admin menyiapkan Bank Soal dan merilis Jadwal Ujian (Event).
+
+**Langkah-langkah (Narasi):**
+1. Admin masuk ke halaman Manajemen Soal dan menginput data soal beserta opsi jawaban (A/B/C/D), kunci jawaban, dan bobot.
+2. Frontend mengirim data soal ke Backend melalui `POST /questions`, lalu Backend menyimpannya di PostgreSQL.
+3. Setelah bank soal dirasa cukup, Admin masuk ke halaman Manajemen Event untuk menerbitkan ujian baru.
+4. Admin menginput nama Event, rentang waktu ujian, _Passing Grade_ (batas lulus), dan mengatur parameter pengambilan soal (misal: "Acak 100 soal dari kategori PUPK").
+5. Frontend mengirim konfigurasi ini melalui `POST /events`.
+6. Backend memvalidasi data dan menyimpannya di PostgreSQL sebagai Event ujian baru yang siap diikuti (di-_enroll_) oleh para anggota pramuka.
+
+```mermaid
+sequenceDiagram
+    participant A as Admin
+    participant F as Frontend
+    participant B as Backend API
+    participant DB as Postgres
+
+    A->>F: Input Soal Baru (Soal, Opsi, Kunci, Bobot)
+    F->>B: POST /api/v1/admin/questions
+    B->>DB: Insert Question Data
+    DB-->>B: OK
+    B-->>F: Success (Soal Tersimpan)
+
+    A->>F: Setup Event Baru (Waktu, Passing Grade, Rule Soal)
+    F->>B: POST /api/v1/admin/events
+    B->>DB: Insert Event & Distribusi Soal
+    DB-->>B: OK
+    B-->>F: Success (Event Diterbitkan)
+```
+
+---
+
+## 3. Alur Persetujuan (Approval) Peserta
 Peserta tidak bisa sembarangan mengikuti ujian meskipun sudah login. Mereka harus mendaftar/memilih *event*, lalu disetujui Admin.
+
+**Langkah-langkah (Narasi):**
+1. Peserta memilih *Event* yang tersedia di *Dashboard* dan menekan tombol "Ikut Ujian" (Enroll).
+2. Backend menerima _request_ tersebut dan mencatat riwayat partisipasi peserta di database dengan status `pending`.
+3. Admin masuk ke halaman *Approval* dan melihat tabel daftar peserta berstatus `pending`.
+4. Admin menekan tombol "Approve" (Setuju) untuk mengizinkan peserta tersebut.
+5. Frontend Admin mengirim instruksi ke Backend untuk memperbarui (_update_) status peserta menjadi `approved` di database PostgreSQL.
 
 ```mermaid
 sequenceDiagram
@@ -59,8 +108,17 @@ sequenceDiagram
 
 ---
 
-## 3. Alur Pelaksanaan Ujian (Real-time & Auto-Resume)
-Ini adalah alur paling penting, di mana Redis berperan sebagai penyimpan jawaban sementara untuk menahan *load* ke database PostgreSQL.
+## 4. Alur Pelaksanaan Ujian (Real-time & Auto-Resume)
+Ini adalah alur di mana Redis berperan sebagai penyimpan jawaban sementara untuk menahan *load* ke database utama.
+
+**Langkah-langkah (Narasi):**
+1. Peserta (yang statusnya sudah `approved`) menekan tombol "Mulai Ujian".
+2. Backend memvalidasi status peserta dan apakah saat ini adalah waktu ujian yang legal berdasarkan database.
+3. Backend menarik daftar soal secara acak (sesuai _rule_ Event) dari PostgreSQL.
+4. Backend menyimpan paket soal ini berserta batas waktu (Timer) ke dalam *Cache* (Redis) khusus untuk sesi peserta tersebut.
+5. Frontend mulai menampilkan soal satu per satu, dan *Timer Countdown* berjalan.
+6. Setiap kali peserta memilih jawaban (A/B/C/D), Frontend mengirim respons di _background_ ke Backend.
+7. Backend secara _real-time_ menyimpan jawaban tersebut ke Redis tanpa membebani (Hit) database PostgreSQL, memastikan aplikasi berkinerja tinggi dan jawaban aman jika internet terputus (_Auto-Resume_).
 
 ```mermaid
 sequenceDiagram
@@ -90,8 +148,18 @@ sequenceDiagram
 
 ---
 
-## 4. Alur Penilaian & Auto-Submit (Scoring Flow)
+## 5. Alur Penilaian & Auto-Submit (Scoring Flow)
 Terjadi ketika waktu di *browser* habis, atau peserta sengaja menekan tombol "Selesai".
+
+**Langkah-langkah (Narasi):**
+1. *Trigger* pengumpulan ujian bisa terjadi dua cara: Peserta klik "Selesai" secara manual, ATAU Frontend memicu paksa (*Auto-Submit*) karena Timer menunjukkan angka `00:00`.
+2. Frontend menembak _endpoint_ `submit` ke Backend.
+3. Backend mengambil seluruh opsi jawaban yang diisi peserta dari *Cache* (Redis).
+4. Backend mencocokkan jawaban peserta dengan kunci jawaban yang benar di database, lalu mengakumulasi poin berdasarkan bobot soal.
+5. Backend membandingkan total nilai peserta dengan _Passing Grade_ yang diatur pada *Event* tersebut untuk meluluskan atau menggagalkan peserta.
+6. Hasil akhir (Total Nilai dan Status Lulus/Tidak Lulus) disimpan secara permanen ke PostgreSQL.
+7. Sesi *Cache* ujian peserta di Redis dibersihkan.
+8. Frontend memunculkan layar "Hasil Ujian" yang menampilkan rekap nilai.
 
 ```mermaid
 sequenceDiagram
