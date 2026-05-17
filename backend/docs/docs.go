@@ -1348,11 +1348,13 @@ const docTemplate = `{
                 "username"
             ],
             "properties": {
-                "password": {
-                    "type": "string"
-                },
                 "username": {
-                    "type": "string"
+                    "type": "string",
+                    "x-order": "0"
+                },
+                "password": {
+                    "type": "string",
+                    "x-order": "1"
                 }
             }
         },

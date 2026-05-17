@@ -6,8 +6,8 @@ import (
 
 // LoginRequest merepresentasikan data JSON yang dikirim saat login
 type LoginRequest struct {
-	Username string `json:"username" validate:"required"`
-	Password string `json:"password" validate:"required"`
+	Username string `json:"username" validate:"required" extensions:"x-order=0"`
+	Password string `json:"password" validate:"required" extensions:"x-order=1"`
 }
 
 // UserResponse adalah representasi data user tanpa password hash

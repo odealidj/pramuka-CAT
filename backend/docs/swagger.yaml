@@ -119,8 +119,10 @@ definitions:
     properties:
       password:
         type: string
+        x-order: "1"
       username:
         type: string
+        x-order: "0"
     required:
     - password
     - username
