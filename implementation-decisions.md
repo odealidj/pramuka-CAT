@@ -16,9 +16,10 @@ Aplikasi akan menggunakan arsitektur **Client-Server** berbasis web (Web Applica
 - **Bahasa / Framework:** Go (Golang) menggunakan framework **Echo**.
 - **Alasan:** Go sangat ringan, kinerjanya sangat cepat, dan tangguh dengan _concurrency_ (Goroutines). **Echo** dipilih sebagai _best practice_ karena menyajikan _router_ HTTP berkinerja tinggi, manajemen _middleware_ yang elegan, dan sangat solid untuk membangun REST API berskala besar secara terstruktur.
 
-### 2.3. Database Utama (RDBMS)
+### 2.3. Database Utama (RDBMS) & Database Interaction
 - **Database:** PostgreSQL
-- **Alasan:** Karena aplikasi ini melibatkan relasi data yang kuat (Data User, Jadwal Event, Bank Soal, Relasi Soal-Event, dan Riwayat Jawaban), _Relational Database_ wajib digunakan. PostgreSQL sangat handal untuk integritas data dan transaksi (_ACID compliance_).
+- **Database Tool:** **sqlc** (Sebagai pengganti ORM konvensional)
+- **Alasan:** Karena aplikasi ini melibatkan relasi data yang kuat, _Relational Database_ wajib digunakan. Untuk interaksi ke PostgreSQL, proyek ini secara eksplisit tidak menggunakan ORM (seperti GORM) demi performa maksimal, melainkan menggunakan **sqlc**. Sqlc akan membaca _raw SQL queries_ dan mengompilasinya menjadi kode Go yang _type-safe_, memastikan *query* dieksekusi dengan kecepatan super tinggi tanpa adanya _overhead_ eksekusi khas ORM.
 
 ### 2.4. Temporary Storage & Caching (Untuk Fitur Ujian)
 - **Sistem:** Redis
@@ -69,9 +70,14 @@ PramukaCAT/
 │   │   ├── adapters/         # Infrastruktur dan Komunikasi Luar (Bergantung pada framework)
 │   │   │   ├── handler/      # Inbound Adapter: Echo HTTP handlers/controllers
 │   │   │   └── repository/   # Outbound Adapter: Implementasi Outbound Ports (Postgres/Redis)
+│   │   │       └── sqlcgen/  # Package kode Go hasil generate otomatis dari SQLC
 │   │   └── middleware/       # Echo custom middleware (JWT Auth, CORS)
 │   ├── pkg/                  # Utilities eksternal/publik (Bisa di-share antar project)
 │   │   └── database/         # Konfigurasi koneksi Postgres & Redis
+│   ├── sql/                  # Folder skema database dan raw queries untuk SQLC
+│   │   ├── schema.sql        # Skema tabel database (DDL)
+│   │   └── query.sql         # Raw SQL queries (DML)
+│   ├── sqlc.yaml             # Konfigurasi generator SQLC
 │   ├── go.mod                # Dependency manager Go
 │   └── .env.example          # Template environment variables
 │
