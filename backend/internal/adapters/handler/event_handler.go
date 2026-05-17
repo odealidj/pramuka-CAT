@@ -49,7 +49,6 @@ func (h *EventHandler) RegisterAdminRoutes(adminGroup *echo.Group) {
 // @Produce     json
 // @Param       body  body      domain.CreateEventRequest  true  "Data Event"
 // @Success     201   {object}  response.SuccessResponse{data=domain.Event}
-// @Header      201   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
 // @Router      /admin/events [post]
 func (h *EventHandler) CreateEvent(c echo.Context) error {
 	var req domain.CreateEventRequest
@@ -73,8 +72,6 @@ func (h *EventHandler) CreateEvent(c echo.Context) error {
 // @Param       page   query     int  false  "Halaman"
 // @Param       limit  query     int  false  "Limit"
 // @Success     200    {object}  response.PaginatedResponse{data=[]domain.Event}
-// @Header      200   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-// @Header      201   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
 // @Router      /admin/events [get]
 func (h *EventHandler) ListEvents(c echo.Context) error {
 	page, limit := response.ParsePaginationParams(c)
@@ -259,8 +256,6 @@ func (h *EventHandler) ApproveParticipant(c echo.Context) error {
 // @Param       format  query     string  false  "Format file: excel (default) atau pdf"
 // @Success     200     {file}    binary
 // @Failure     400     {object}  response.ErrorResponse
-// @Header      200   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-// @Header      400   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
 // @Router      /admin/events/{id}/export [get]
 func (h *EventHandler) ExportParticipants(c echo.Context) error {
 	eventID, err := uuid.Parse(c.Param("id"))

@@ -41,8 +41,6 @@ func (h *AuthHandler) RegisterProtectedRoutes(g *echo.Group) {
 // @Produce     json
 // @Success     200  {object}  response.SuccessResponse
 // @Failure     401  {object}  response.ErrorResponse
-// @Header      200   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-// @Header      401   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
 // @Router      /protected/auth/logout [post]
 func (h *AuthHandler) Logout(c echo.Context) error {
 	sessionIDStr := c.Get("session_id").(string)
@@ -68,8 +66,6 @@ func (h *AuthHandler) Logout(c echo.Context) error {
 // @Param       body  body      domain.LoginRequest   true  "Kredensial Login"
 // @Success     200   {object}  response.SuccessResponse{data=domain.LoginResponse}
 // @Failure     401   {object}  response.ErrorResponse
-// @Header      200   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-// @Header      401   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
 // @Router      /auth/login [post]
 func (h *AuthHandler) Login(c echo.Context) error {
 	var req domain.LoginRequest
@@ -97,8 +93,6 @@ func (h *AuthHandler) Login(c echo.Context) error {
 // @Param       body  body      domain.RefreshRequest   true  "Refresh Token"
 // @Success     200   {object}  response.SuccessResponse{data=domain.RefreshResponse}
 // @Failure     401   {object}  response.ErrorResponse
-// @Header      200   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-// @Header      401   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
 // @Router      /auth/refresh [post]
 func (h *AuthHandler) Refresh(c echo.Context) error {
 	var req domain.RefreshRequest

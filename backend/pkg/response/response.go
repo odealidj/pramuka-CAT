@@ -5,7 +5,11 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"go.opentelemetry.io/otel/trace"
 )
+
+// ContextKeyTraceID adalah key untuk menyimpan Trace ID di echo context
+const ContextKeyTraceID = "trace_id"
 
 type Meta struct {
 	Page         int   `json:"page"`
@@ -23,27 +27,33 @@ type ErrorDetail struct {
 
 // SuccessResponse format JSON standar untuk response sukses tanpa paginasi
 type SuccessResponse struct {
-	Success bool        `json:"success" example:"true"`
-	Code    int         `json:"code" example:"200"`
-	Message string      `json:"message" example:"Operasi berhasil"`
-	Data    interface{} `json:"data"`
+	Success   bool        `json:"success" example:"true"`
+	Code      int         `json:"code" example:"200"`
+	Message   string      `json:"message" example:"Operasi berhasil"`
+	Data      interface{} `json:"data"`
+	Timestamp string      `json:"timestamp" example:"2026-05-18T02:00:00Z"`
+	TraceID   string      `json:"trace_id,omitempty" example:"ed462bd023ff76e0001482c0e045e906"`
 }
 
 // ErrorResponse format JSON standar untuk response error
 type ErrorResponse struct {
-	Success bool          `json:"success" example:"false"`
-	Code    int           `json:"code" example:"400"`
-	Message string        `json:"message" example:"Terjadi kesalahan"`
-	Errors  []ErrorDetail `json:"errors"`
+	Success   bool          `json:"success" example:"false"`
+	Code      int           `json:"code" example:"400"`
+	Message   string        `json:"message" example:"Terjadi kesalahan"`
+	Errors    []ErrorDetail `json:"errors"`
+	Timestamp string        `json:"timestamp" example:"2026-05-18T02:00:00Z"`
+	TraceID   string        `json:"trace_id,omitempty" example:"ed462bd023ff76e0001482c0e045e906"`
 }
 
 // PaginatedResponse format JSON standar untuk response berisi koleksi + meta paginasi
 type PaginatedResponse struct {
-	Success bool        `json:"success" example:"true"`
-	Code    int         `json:"code" example:"200"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
-	Meta    *Meta       `json:"meta"`
+	Success   bool        `json:"success" example:"true"`
+	Code      int         `json:"code" example:"200"`
+	Message   string      `json:"message"`
+	Data      interface{} `json:"data"`
+	Meta      *Meta       `json:"meta"`
+	Timestamp string      `json:"timestamp" example:"2026-05-18T02:00:00Z"`
+	TraceID   string      `json:"trace_id,omitempty" example:"ed462bd023ff76e0001482c0e045e906"`
 }
 
 type BaseResponse struct {
@@ -54,6 +64,16 @@ type BaseResponse struct {
 	Meta      *Meta         `json:"meta"`
 	Errors    []ErrorDetail `json:"errors"`
 	Timestamp string        `json:"timestamp"`
+	TraceID   string        `json:"trace_id,omitempty"`
+}
+
+// extractTraceID mengambil Trace ID dari span aktif di context request
+func extractTraceID(c echo.Context) string {
+	span := trace.SpanFromContext(c.Request().Context())
+	if span.SpanContext().IsValid() {
+		return span.SpanContext().TraceID().String()
+	}
+	return ""
 }
 
 func Success(c echo.Context, statusCode int, message string, data interface{}) error {
@@ -65,6 +85,7 @@ func Success(c echo.Context, statusCode int, message string, data interface{}) e
 		Meta:      nil,
 		Errors:    nil,
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		TraceID:   extractTraceID(c),
 	})
 }
 
@@ -77,6 +98,7 @@ func SuccessWithMeta(c echo.Context, statusCode int, message string, data interf
 		Meta:      &meta,
 		Errors:    nil,
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		TraceID:   extractTraceID(c),
 	})
 }
 
@@ -89,6 +111,7 @@ func Error(c echo.Context, statusCode int, message string, errors []ErrorDetail)
 		Meta:      nil,
 		Errors:    errors,
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		TraceID:   extractTraceID(c),
 	})
 }
 

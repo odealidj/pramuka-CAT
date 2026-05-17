@@ -330,6 +330,12 @@ definitions:
       success:
         example: false
         type: boolean
+      timestamp:
+        example: "2026-05-18T02:00:00Z"
+        type: string
+      trace_id:
+        example: ed462bd023ff76e0001482c0e045e906
+        type: string
     type: object
   response.Meta:
     properties:
@@ -359,6 +365,12 @@ definitions:
       success:
         example: true
         type: boolean
+      timestamp:
+        example: "2026-05-18T02:00:00Z"
+        type: string
+      trace_id:
+        example: ed462bd023ff76e0001482c0e045e906
+        type: string
     type: object
   response.SuccessResponse:
     properties:
@@ -372,6 +384,12 @@ definitions:
       success:
         example: true
         type: boolean
+      timestamp:
+        example: "2026-05-18T02:00:00Z"
+        type: string
+      trace_id:
+        example: ed462bd023ff76e0001482c0e045e906
+        type: string
     type: object
 host: localhost:8080
 info:
@@ -399,12 +417,6 @@ paths:
       responses:
         "200":
           description: OK
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             allOf:
             - $ref: '#/definitions/response.PaginatedResponse'
@@ -434,12 +446,6 @@ paths:
       responses:
         "201":
           description: Created
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             allOf:
             - $ref: '#/definitions/response.SuccessResponse'
@@ -465,12 +471,6 @@ paths:
       responses:
         "200":
           description: OK
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             $ref: '#/definitions/response.SuccessResponse'
       security:
@@ -498,12 +498,6 @@ paths:
       responses:
         "200":
           description: OK
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             allOf:
             - $ref: '#/definitions/response.SuccessResponse'
@@ -532,12 +526,6 @@ paths:
       responses:
         "200":
           description: OK
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             allOf:
             - $ref: '#/definitions/response.PaginatedResponse'
@@ -567,12 +555,6 @@ paths:
       responses:
         "201":
           description: Created
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             allOf:
             - $ref: '#/definitions/response.SuccessResponse'
@@ -603,22 +585,10 @@ paths:
       responses:
         "200":
           description: OK
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             type: file
         "400":
           description: Bad Request
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             $ref: '#/definitions/response.ErrorResponse'
       security:
@@ -642,12 +612,6 @@ paths:
       responses:
         "200":
           description: OK
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             allOf:
             - $ref: '#/definitions/response.PaginatedResponse'
@@ -677,12 +641,6 @@ paths:
       responses:
         "201":
           description: Created
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             allOf:
             - $ref: '#/definitions/response.SuccessResponse'
@@ -708,12 +666,6 @@ paths:
       responses:
         "200":
           description: OK
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             $ref: '#/definitions/response.SuccessResponse'
       security:
@@ -733,12 +685,6 @@ paths:
       responses:
         "200":
           description: OK
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             allOf:
             - $ref: '#/definitions/response.SuccessResponse'
@@ -771,12 +717,6 @@ paths:
       responses:
         "200":
           description: OK
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             allOf:
             - $ref: '#/definitions/response.SuccessResponse'
@@ -806,12 +746,6 @@ paths:
       responses:
         "200":
           description: OK
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             allOf:
             - $ref: '#/definitions/response.PaginatedResponse'
@@ -842,12 +776,6 @@ paths:
       responses:
         "201":
           description: Created
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             allOf:
             - $ref: '#/definitions/response.SuccessResponse'
@@ -857,22 +785,10 @@ paths:
               type: object
         "400":
           description: Bad Request
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             $ref: '#/definitions/response.ErrorResponse'
         "500":
           description: Internal Server Error
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             $ref: '#/definitions/response.ErrorResponse'
       security:
@@ -894,22 +810,10 @@ paths:
       responses:
         "200":
           description: OK
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             $ref: '#/definitions/response.SuccessResponse'
         "404":
           description: Not Found
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             $ref: '#/definitions/response.ErrorResponse'
       security:
@@ -930,12 +834,6 @@ paths:
       responses:
         "200":
           description: OK
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             allOf:
             - $ref: '#/definitions/response.SuccessResponse'
@@ -945,12 +843,6 @@ paths:
               type: object
         "404":
           description: Not Found
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             $ref: '#/definitions/response.ErrorResponse'
       security:
@@ -979,12 +871,6 @@ paths:
       responses:
         "200":
           description: OK
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             allOf:
             - $ref: '#/definitions/response.SuccessResponse'
@@ -994,12 +880,6 @@ paths:
               type: object
         "400":
           description: Bad Request
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             $ref: '#/definitions/response.ErrorResponse'
       security:
@@ -1029,22 +909,10 @@ paths:
       responses:
         "200":
           description: OK
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             $ref: '#/definitions/response.SuccessResponse'
         "400":
           description: Bad Request
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             $ref: '#/definitions/response.ErrorResponse'
       security:
@@ -1069,12 +937,6 @@ paths:
       responses:
         "200":
           description: OK
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             allOf:
             - $ref: '#/definitions/response.SuccessResponse'
@@ -1084,12 +946,6 @@ paths:
               type: object
         "401":
           description: Unauthorized
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             $ref: '#/definitions/response.ErrorResponse'
       summary: Login
@@ -1112,12 +968,6 @@ paths:
       responses:
         "200":
           description: OK
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             allOf:
             - $ref: '#/definitions/response.SuccessResponse'
@@ -1127,12 +977,6 @@ paths:
               type: object
         "401":
           description: Unauthorized
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             $ref: '#/definitions/response.ErrorResponse'
       summary: Refresh Token
@@ -1146,22 +990,10 @@ paths:
       responses:
         "200":
           description: OK
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             $ref: '#/definitions/response.SuccessResponse'
         "401":
           description: Unauthorized
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             $ref: '#/definitions/response.ErrorResponse'
       security:
@@ -1186,12 +1018,6 @@ paths:
       responses:
         "200":
           description: OK
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             $ref: '#/definitions/response.SuccessResponse'
       security:
@@ -1207,12 +1033,6 @@ paths:
       responses:
         "200":
           description: OK
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             allOf:
             - $ref: '#/definitions/response.PaginatedResponse'
@@ -1244,12 +1064,6 @@ paths:
       responses:
         "200":
           description: OK
-          headers:
-            X-Trace-Id:
-              description: Trace ID untuk distributed tracing. Gunakan nilai ini di
-                Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request
-                ini.
-              type: string
           schema:
             allOf:
             - $ref: '#/definitions/response.PaginatedResponse'

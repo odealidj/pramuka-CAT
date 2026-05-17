@@ -67,12 +67,6 @@ const docTemplate = `{
                                     }
                                 }
                             ]
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     }
                 }
@@ -121,12 +115,6 @@ const docTemplate = `{
                                     }
                                 }
                             ]
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     }
                 }
@@ -184,12 +172,6 @@ const docTemplate = `{
                                     }
                                 }
                             ]
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     }
                 }
@@ -221,12 +203,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/response.SuccessResponse"
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     }
                 }
@@ -280,12 +256,6 @@ const docTemplate = `{
                                     }
                                 }
                             ]
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     }
                 }
@@ -334,12 +304,6 @@ const docTemplate = `{
                                     }
                                 }
                             ]
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     }
                 }
@@ -380,24 +344,12 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "type": "file"
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     }
                 }
@@ -451,12 +403,6 @@ const docTemplate = `{
                                     }
                                 }
                             ]
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     }
                 }
@@ -505,12 +451,6 @@ const docTemplate = `{
                                     }
                                 }
                             ]
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     }
                 }
@@ -556,12 +496,6 @@ const docTemplate = `{
                                     }
                                 }
                             ]
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     }
                 }
@@ -617,12 +551,6 @@ const docTemplate = `{
                                     }
                                 }
                             ]
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     }
                 }
@@ -654,12 +582,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/response.SuccessResponse"
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     }
                 }
@@ -714,12 +636,6 @@ const docTemplate = `{
                                     }
                                 }
                             ]
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     }
                 }
@@ -769,36 +685,18 @@ const docTemplate = `{
                                     }
                                 }
                             ]
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     }
                 }
@@ -845,24 +743,12 @@ const docTemplate = `{
                                     }
                                 }
                             ]
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     }
                 }
@@ -919,24 +805,12 @@ const docTemplate = `{
                                     }
                                 }
                             ]
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     }
                 }
@@ -969,24 +843,12 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/response.SuccessResponse"
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     }
                 }
@@ -1033,24 +895,12 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/response.SuccessResponse"
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     }
                 }
@@ -1097,24 +947,12 @@ const docTemplate = `{
                                     }
                                 }
                             ]
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     }
                 }
@@ -1161,24 +999,12 @@ const docTemplate = `{
                                     }
                                 }
                             ]
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     }
                 }
@@ -1204,24 +1030,12 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/response.SuccessResponse"
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     }
                 }
@@ -1261,12 +1075,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/response.SuccessResponse"
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     }
                 }
@@ -1307,12 +1115,6 @@ const docTemplate = `{
                                     }
                                 }
                             ]
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     }
                 }
@@ -1367,12 +1169,6 @@ const docTemplate = `{
                                     }
                                 }
                             ]
-                        },
-                        "headers": {
-                            "X-Trace-Id": {
-                                "type": "string",
-                                "description": "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-                            }
                         }
                     }
                 }
@@ -1864,6 +1660,14 @@ const docTemplate = `{
                 "success": {
                     "type": "boolean",
                     "example": false
+                },
+                "timestamp": {
+                    "type": "string",
+                    "example": "2026-05-18T02:00:00Z"
+                },
+                "trace_id": {
+                    "type": "string",
+                    "example": "ed462bd023ff76e0001482c0e045e906"
                 }
             }
         },
@@ -1907,6 +1711,14 @@ const docTemplate = `{
                 "success": {
                     "type": "boolean",
                     "example": true
+                },
+                "timestamp": {
+                    "type": "string",
+                    "example": "2026-05-18T02:00:00Z"
+                },
+                "trace_id": {
+                    "type": "string",
+                    "example": "ed462bd023ff76e0001482c0e045e906"
                 }
             }
         },
@@ -1925,6 +1737,14 @@ const docTemplate = `{
                 "success": {
                     "type": "boolean",
                     "example": true
+                },
+                "timestamp": {
+                    "type": "string",
+                    "example": "2026-05-18T02:00:00Z"
+                },
+                "trace_id": {
+                    "type": "string",
+                    "example": "ed462bd023ff76e0001482c0e045e906"
                 }
             }
         }

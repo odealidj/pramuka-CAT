@@ -39,9 +39,6 @@ func (h *UserHandler) RegisterAdminRoutes(adminGroup *echo.Group) {
 // @Success     201   {object}  response.SuccessResponse{data=domain.User}
 // @Failure     400   {object}  response.ErrorResponse
 // @Failure     500   {object}  response.ErrorResponse
-// @Header      201   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-// @Header      400   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-// @Header      500   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
 // @Router      /admin/users [post]
 func (h *UserHandler) CreateUser(c echo.Context) error {
 	var req domain.CreateUserRequest
@@ -66,10 +63,6 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 // @Param       page   query     int  false  "Halaman (default: 1)"
 // @Param       limit  query     int  false  "Jumlah per halaman (default: 10)"
 // @Success     200    {object}  response.PaginatedResponse{data=[]domain.User}
-// @Header      200   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-// @Header      201   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-// @Header      400   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-// @Header      500   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
 // @Router      /admin/users [get]
 func (h *UserHandler) ListUsers(c echo.Context) error {
 	page, limit := response.ParsePaginationParams(c)
@@ -95,8 +88,6 @@ func (h *UserHandler) ListUsers(c echo.Context) error {
 // @Param       id   path      string  true  "UUID User"
 // @Success     200  {object}  response.SuccessResponse{data=domain.User}
 // @Failure     404  {object}  response.ErrorResponse
-// @Header      200   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-// @Header      404   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
 // @Router      /admin/users/{id} [get]
 func (h *UserHandler) GetUser(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
@@ -123,9 +114,6 @@ func (h *UserHandler) GetUser(c echo.Context) error {
 // @Param       body  body      domain.UpdateUserRequest  true  "Data yang diperbarui"
 // @Success     200   {object}  response.SuccessResponse{data=domain.User}
 // @Failure     400   {object}  response.ErrorResponse
-// @Header      200   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-// @Header      400   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-// @Header      404   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
 // @Router      /admin/users/{id} [put]
 func (h *UserHandler) UpdateUser(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
@@ -157,8 +145,6 @@ func (h *UserHandler) UpdateUser(c echo.Context) error {
 // @Param       body  body      domain.UpdateUserPasswordRequest  true  "Password Baru"
 // @Success     200   {object}  response.SuccessResponse
 // @Failure     400   {object}  response.ErrorResponse
-// @Header      200   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-// @Header      400   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
 // @Router      /admin/users/{id}/password [put]
 func (h *UserHandler) UpdateUserPassword(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
@@ -188,9 +174,6 @@ func (h *UserHandler) UpdateUserPassword(c echo.Context) error {
 // @Param       id   path      string  true  "UUID User"
 // @Success     200  {object}  response.SuccessResponse
 // @Failure     404  {object}  response.ErrorResponse
-// @Header      200   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-// @Header      400   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-// @Header      404   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
 // @Router      /admin/users/{id} [delete]
 func (h *UserHandler) DeleteUser(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))

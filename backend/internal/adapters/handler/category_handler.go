@@ -34,7 +34,6 @@ func (h *CategoryHandler) RegisterAdminRoutes(adminGroup *echo.Group) {
 // @Produce     json
 // @Param       body  body      domain.CreateCategoryRequest  true  "Nama Kategori"
 // @Success     201   {object}  response.SuccessResponse{data=domain.Category}
-// @Header      201   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
 // @Router      /admin/categories [post]
 func (h *CategoryHandler) CreateCategory(c echo.Context) error {
 	var req domain.CreateCategoryRequest
@@ -58,8 +57,6 @@ func (h *CategoryHandler) CreateCategory(c echo.Context) error {
 // @Param       page   query     int  false  "Halaman"
 // @Param       limit  query     int  false  "Limit"
 // @Success     200    {object}  response.PaginatedResponse{data=[]domain.Category}
-// @Header      200   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
-// @Header      201   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
 // @Router      /admin/categories [get]
 func (h *CategoryHandler) ListCategories(c echo.Context) error {
 	page, limit := response.ParsePaginationParams(c)
@@ -85,7 +82,6 @@ func (h *CategoryHandler) ListCategories(c echo.Context) error {
 // @Param       id    path      int                           true  "ID Kategori"
 // @Param       body  body      domain.UpdateCategoryRequest  true  "Nama Baru"
 // @Success     200   {object}  response.SuccessResponse{data=domain.Category}
-// @Header      200   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
 // @Router      /admin/categories/{id} [put]
 func (h *CategoryHandler) UpdateCategory(c echo.Context) error {
 	idParam := c.Param("id")
@@ -114,7 +110,6 @@ func (h *CategoryHandler) UpdateCategory(c echo.Context) error {
 // @Produce     json
 // @Param       id   path      int  true  "ID Kategori"
 // @Success     200  {object}  response.SuccessResponse
-// @Header      200   {string}  X-Trace-Id  "Trace ID untuk distributed tracing. Gunakan nilai ini di Jaeger UI (klik Lookup by Trace ID) untuk menemukan detail request ini."
 // @Router      /admin/categories/{id} [delete]
 func (h *CategoryHandler) DeleteCategory(c echo.Context) error {
 	idParam := c.Param("id")
