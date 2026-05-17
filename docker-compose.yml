@@ -53,14 +53,20 @@ services:
       - "8080:8080"
     environment:
       - PORT=8080
-      - APP_ENV=development
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5432
-      - POSTGRES_USER=POSTGRES_USER
-      - POSTGRES_PASSWORD=POSTGRES_PASSWORD
-      - POSTGRES_DB=pramukacat
+      - APP_ENV=production
+      # PostgreSQL — harus sesuai dengan pkg/database/postgres.go
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=POSTGRES_USER
+      - DB_PASSWORD=POSTGRES_PASSWORD
+      - DB_NAME=pramukacat
+      - DB_SSLMODE=disable
+      # Redis — harus sesuai dengan pkg/database/redis.go
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+      - REDIS_DB=0
+      # JWT Secrets
       - JWT_ACCESS_SECRET=supersecretaccess
       - JWT_REFRESH_SECRET=supersecretrefresh
     depends_on:
