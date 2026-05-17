@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
@@ -142,12 +146,34 @@ func main() {
 	eventHandler.RegisterAdminRoutes(adminGroup)
 	userHandler.RegisterAdminRoutes(adminGroup)
 
-	// 6. Nyalakan Server
+	// 6. Nyalakan Server dengan Graceful Shutdown
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080" // Fallback jika di .env tidak diset
 	}
 
-	log.Printf("Server mulai mendengarkan di port :%s", port)
-	e.Logger.Fatal(e.Start(":" + port))
+	// Jalankan server di goroutine agar tidak memblokir sinyal OS
+	go func() {
+		log.Printf("Server mulai mendengarkan di port :%s", port)
+		if err := e.Start(":" + port); err != nil && err != http.ErrServerClosed {
+			e.Logger.Fatal("Server error: ", err)
+		}
+	}()
+
+	// Tunggu sinyal interupsi (SIGINT, SIGTERM)
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+	<-quit
+
+	log.Println("Menerima sinyal shutdown, mematikan server secara perlahan...")
+
+	// Beri batas waktu maksimal 10 detik untuk menyelesaikan request yang sedang berjalan
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := e.Shutdown(ctx); err != nil {
+		e.Logger.Fatal("Terjadi kesalahan saat mematikan server: ", err)
+	}
+
+	log.Println("Server berhasil dimatikan dengan aman. Sampai jumpa!")
 }
