@@ -1,4 +1,4 @@
-.PHONY: run build test infra-up infra-down migrate-up migrate-down seed reset-db sqlc docker-build
+.PHONY: run build test infra-up infra-down migrate-up migrate-down seed clear-seed reset-db sqlc docker-build
 
 # Variabel Konfigurasi Database (Sesuaikan dengan .env)
 DB_URL="postgres://postgres:postgres@localhost:5432/pramukacat?sslmode=disable"
@@ -44,6 +44,10 @@ sqlc:
 seed:
 	@echo "Memasukkan Dummy Data ke Database..."
 	cd backend && go run cmd/seeder/main.go
+
+clear-seed:
+	@echo "Menghapus Dummy Data dari Database..."
+	cd backend && go run cmd/clear_seed/main.go
 
 reset-db: migrate-down migrate-up seed
 	@echo "Database telah di-reset dan di-seed dengan sukses!"

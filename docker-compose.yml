@@ -44,6 +44,31 @@ services:
       postgres:
         condition: service_healthy
 
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pramukacat_api
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - APP_ENV=development
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=POSTGRES_USER
+      - POSTGRES_PASSWORD=POSTGRES_PASSWORD
+      - POSTGRES_DB=pramukacat
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_ACCESS_SECRET=supersecretaccess
+      - JWT_REFRESH_SECRET=supersecretrefresh
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
 volumes:
   pramukacat_pgdata:
   pramukacat_redisdata:
