@@ -118,16 +118,21 @@ func main() {
 	// Mark span sebagai Error untuk semua response >= 400 (agar terlihat merah di Jaeger UI)
 	e.Use(appMiddleware.TraceErrorMiddleware())
 
-	// Root endpoint — mengembalikan informasi API (best practice)
+	// Root endpoint — redirect ke Swagger UI untuk browser, return JSON metadata untuk API client (best practice)
 	e.GET("/", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, map[string]interface{}{
-			"name":        "Pramuka CAT API",
-			"version":     "1.0.0",
-			"description": "REST API untuk platform Computer Assisted Test (CAT) Pramuka",
-			"status":      "running",
-			"docs":        "/swagger/index.html",
-			"health":      "/health",
-		})
+		// Jika request meminta JSON, kembalikan JSON metadata
+		if c.Request().Header.Get("Accept") == "application/json" {
+			return c.JSON(http.StatusOK, map[string]interface{}{
+				"name":        "Pramuka CAT API",
+				"version":     "1.0.0",
+				"description": "REST API untuk platform Computer Assisted Test (CAT) Pramuka",
+				"status":      "running",
+				"docs":        "/swagger/index.html",
+				"health":      "/health",
+			})
+		}
+		// Selain itu (misal kunjungan via browser), redirect langsung ke Swagger UI
+		return c.Redirect(http.StatusFound, "/swagger/index.html")
 	})
 
 	// Endpoint Health Check (Liveness & Readiness)
