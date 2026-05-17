@@ -28,6 +28,18 @@ func (h *UserHandler) RegisterAdminRoutes(adminGroup *echo.Group) {
 	usersGroup.DELETE("/:id", h.DeleteUser)
 }
 
+// CreateUser godoc
+// @Summary     Buat User Baru
+// @Description Admin membuat akun peserta atau admin baru
+// @Tags        Admin - User
+// @Security    BearerAuth
+// @Accept      json
+// @Produce     json
+// @Param       body  body      domain.CreateUserRequest  true  "Data User Baru"
+// @Success     201   {object}  response.SuccessResponse{data=domain.User}
+// @Failure     400   {object}  response.ErrorResponse
+// @Failure     500   {object}  response.ErrorResponse
+// @Router      /admin/users [post]
 func (h *UserHandler) CreateUser(c echo.Context) error {
 	var req domain.CreateUserRequest
 	if err := c.Bind(&req); err != nil {
@@ -42,6 +54,16 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 	return response.Success(c, http.StatusCreated, "User berhasil dibuat", u)
 }
 
+// ListUsers godoc
+// @Summary     Daftar Semua User
+// @Description Mengambil daftar seluruh pengguna dengan paginasi
+// @Tags        Admin - User
+// @Security    BearerAuth
+// @Produce     json
+// @Param       page   query     int  false  "Halaman (default: 1)"
+// @Param       limit  query     int  false  "Jumlah per halaman (default: 10)"
+// @Success     200    {object}  response.PaginatedResponse{data=[]domain.User}
+// @Router      /admin/users [get]
 func (h *UserHandler) ListUsers(c echo.Context) error {
 	page, limit := response.ParsePaginationParams(c)
 	users, total, err := h.service.ListUsers(c.Request().Context(), page, limit)
@@ -57,6 +79,16 @@ func (h *UserHandler) ListUsers(c echo.Context) error {
 	return response.SuccessWithMeta(c, http.StatusOK, "Daftar user berhasil diambil", users, meta)
 }
 
+// GetUser godoc
+// @Summary     Detail User
+// @Description Mengambil data detail satu pengguna berdasarkan ID
+// @Tags        Admin - User
+// @Security    BearerAuth
+// @Produce     json
+// @Param       id   path      string  true  "UUID User"
+// @Success     200  {object}  response.SuccessResponse{data=domain.User}
+// @Failure     404  {object}  response.ErrorResponse
+// @Router      /admin/users/{id} [get]
 func (h *UserHandler) GetUser(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -71,6 +103,18 @@ func (h *UserHandler) GetUser(c echo.Context) error {
 	return response.Success(c, http.StatusOK, "User berhasil diambil", u)
 }
 
+// UpdateUser godoc
+// @Summary     Update Data User
+// @Description Admin memperbarui data profil pengguna
+// @Tags        Admin - User
+// @Security    BearerAuth
+// @Accept      json
+// @Produce     json
+// @Param       id    path      string                   true  "UUID User"
+// @Param       body  body      domain.UpdateUserRequest  true  "Data yang diperbarui"
+// @Success     200   {object}  response.SuccessResponse{data=domain.User}
+// @Failure     400   {object}  response.ErrorResponse
+// @Router      /admin/users/{id} [put]
 func (h *UserHandler) UpdateUser(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -90,6 +134,18 @@ func (h *UserHandler) UpdateUser(c echo.Context) error {
 	return response.Success(c, http.StatusOK, "User berhasil diperbarui", u)
 }
 
+// UpdateUserPassword godoc
+// @Summary     Update Password User
+// @Description Admin mengubah kata sandi pengguna
+// @Tags        Admin - User
+// @Security    BearerAuth
+// @Accept      json
+// @Produce     json
+// @Param       id    path      string                           true  "UUID User"
+// @Param       body  body      domain.UpdateUserPasswordRequest  true  "Password Baru"
+// @Success     200   {object}  response.SuccessResponse
+// @Failure     400   {object}  response.ErrorResponse
+// @Router      /admin/users/{id}/password [put]
 func (h *UserHandler) UpdateUserPassword(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -109,6 +165,16 @@ func (h *UserHandler) UpdateUserPassword(c echo.Context) error {
 	return response.Success(c, http.StatusOK, "Kata sandi user berhasil diperbarui", nil)
 }
 
+// DeleteUser godoc
+// @Summary     Hapus User (Soft-Delete)
+// @Description Admin menonaktifkan akun pengguna (data tidak benar-benar dihapus)
+// @Tags        Admin - User
+// @Security    BearerAuth
+// @Produce     json
+// @Param       id   path      string  true  "UUID User"
+// @Success     200  {object}  response.SuccessResponse
+// @Failure     404  {object}  response.ErrorResponse
+// @Router      /admin/users/{id} [delete]
 func (h *UserHandler) DeleteUser(c echo.Context) error {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {

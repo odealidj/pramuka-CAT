@@ -21,6 +21,31 @@ type ErrorDetail struct {
 	Message string `json:"message"`
 }
 
+// SuccessResponse format JSON standar untuk response sukses tanpa paginasi
+type SuccessResponse struct {
+	Success bool        `json:"success" example:"true"`
+	Code    int         `json:"code" example:"200"`
+	Message string      `json:"message" example:"Operasi berhasil"`
+	Data    interface{} `json:"data"`
+}
+
+// ErrorResponse format JSON standar untuk response error
+type ErrorResponse struct {
+	Success bool          `json:"success" example:"false"`
+	Code    int           `json:"code" example:"400"`
+	Message string        `json:"message" example:"Terjadi kesalahan"`
+	Errors  []ErrorDetail `json:"errors"`
+}
+
+// PaginatedResponse format JSON standar untuk response berisi koleksi + meta paginasi
+type PaginatedResponse struct {
+	Success bool        `json:"success" example:"true"`
+	Code    int         `json:"code" example:"200"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
+	Meta    *Meta       `json:"meta"`
+}
+
 type BaseResponse struct {
 	Success   bool          `json:"success"`
 	Code      int           `json:"code"`

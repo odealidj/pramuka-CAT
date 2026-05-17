@@ -40,6 +40,16 @@ func getUserIDFromContext(c echo.Context) (uuid.UUID, error) {
 	return uuid.Parse(userIDStr)
 }
 
+// ListUpcomingEvents godoc
+// @Summary     Daftar Event Mendatang
+// @Description Peserta melihat event ujian yang belum berakhir
+// @Tags        Peserta - Ujian
+// @Security    BearerAuth
+// @Produce     json
+// @Param       page   query     int  false  "Halaman"
+// @Param       limit  query     int  false  "Limit"
+// @Success     200    {object}  response.PaginatedResponse{data=[]domain.UpcomingEvent}
+// @Router      /protected/exams/upcoming [get]
 func (h *ExamHandler) ListUpcomingEvents(c echo.Context) error {
 	page, limit := response.ParsePaginationParams(c)
 	events, total, err := h.service.ListUpcomingEvents(c.Request().Context(), page, limit)
@@ -55,6 +65,14 @@ func (h *ExamHandler) ListUpcomingEvents(c echo.Context) error {
 	return response.SuccessWithMeta(c, http.StatusOK, "Daftar event mendatang berhasil diambil", events, meta)
 }
 
+// ListMyExams godoc
+// @Summary     Riwayat Ujian Saya
+// @Description Peserta melihat daftar pendaftaran & nilai ujian miliknya
+// @Tags        Peserta - Ujian
+// @Security    BearerAuth
+// @Produce     json
+// @Success     200  {object}  response.PaginatedResponse{data=[]domain.UserApproval}
+// @Router      /protected/exams/my-exams [get]
 func (h *ExamHandler) ListMyExams(c echo.Context) error {
 	userID, err := getUserIDFromContext(c)
 	if err != nil {
@@ -75,6 +93,16 @@ func (h *ExamHandler) ListMyExams(c echo.Context) error {
 	return response.SuccessWithMeta(c, http.StatusOK, "Daftar ujian berhasil diambil", exams, meta)
 }
 
+// Enroll godoc
+// @Summary     Daftar ke Event Ujian
+// @Description Peserta mendaftar ke suatu event ujian (status awal: pending)
+// @Tags        Peserta - Ujian
+// @Security    BearerAuth
+// @Accept      json
+// @Produce     json
+// @Param       body  body      domain.EnrollEventRequest  true  "ID Event"
+// @Success     200   {object}  response.SuccessResponse
+// @Router      /protected/exams/enroll [post]
 func (h *ExamHandler) Enroll(c echo.Context) error {
 	userID, err := getUserIDFromContext(c)
 	if err != nil {

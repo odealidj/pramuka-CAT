@@ -1,4 +1,4 @@
-.PHONY: run build test up down infra-up infra-down migrate-up migrate-down seed clear-seed reset-db sqlc docker-build
+.PHONY: run build test swagger up down infra-up infra-down migrate-up migrate-down seed clear-seed reset-db sqlc docker-build
 
 # Variabel Konfigurasi Database (Sesuaikan dengan .env)
 DB_URL="postgres://postgres:postgres@localhost:5432/pramukacat?sslmode=disable"
@@ -17,6 +17,10 @@ build:
 test:
 	@echo "Menjalankan Unit Test..."
 	cd backend && go test -v ./...
+swagger:
+	@echo "Generate Swagger Docs..."
+	cd backend && swag init -g cmd/api/main.go -o docs --parseDependency --parseInternal
+	@echo "Swagger UI tersedia di http://localhost:8080/swagger/index.html setelah server berjalan"
 
 # --- Keseluruhan Sistem (Docker Compose) ---
 up:

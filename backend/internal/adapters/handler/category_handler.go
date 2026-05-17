@@ -26,6 +26,15 @@ func (h *CategoryHandler) RegisterAdminRoutes(adminGroup *echo.Group) {
 	categoriesGroup.DELETE("/:id", h.DeleteCategory)
 }
 
+// CreateCategory godoc
+// @Summary     Buat Kategori Soal
+// @Tags        Admin - Kategori
+// @Security    BearerAuth
+// @Accept      json
+// @Produce     json
+// @Param       body  body      domain.CreateCategoryRequest  true  "Nama Kategori"
+// @Success     201   {object}  response.SuccessResponse{data=domain.Category}
+// @Router      /admin/categories [post]
 func (h *CategoryHandler) CreateCategory(c echo.Context) error {
 	var req domain.CreateCategoryRequest
 	if err := c.Bind(&req); err != nil {
@@ -40,6 +49,15 @@ func (h *CategoryHandler) CreateCategory(c echo.Context) error {
 	return response.Success(c, http.StatusCreated, "Kategori berhasil dibuat", category)
 }
 
+// ListCategories godoc
+// @Summary     Daftar Kategori Soal
+// @Tags        Admin - Kategori
+// @Security    BearerAuth
+// @Produce     json
+// @Param       page   query     int  false  "Halaman"
+// @Param       limit  query     int  false  "Limit"
+// @Success     200    {object}  response.PaginatedResponse{data=[]domain.Category}
+// @Router      /admin/categories [get]
 func (h *CategoryHandler) ListCategories(c echo.Context) error {
 	page, limit := response.ParsePaginationParams(c)
 	categories, total, err := h.service.ListCategories(c.Request().Context(), page, limit)
@@ -55,6 +73,16 @@ func (h *CategoryHandler) ListCategories(c echo.Context) error {
 	return response.SuccessWithMeta(c, http.StatusOK, "Daftar kategori berhasil diambil", categories, meta)
 }
 
+// UpdateCategory godoc
+// @Summary     Update Kategori Soal
+// @Tags        Admin - Kategori
+// @Security    BearerAuth
+// @Accept      json
+// @Produce     json
+// @Param       id    path      int                           true  "ID Kategori"
+// @Param       body  body      domain.UpdateCategoryRequest  true  "Nama Baru"
+// @Success     200   {object}  response.SuccessResponse{data=domain.Category}
+// @Router      /admin/categories/{id} [put]
 func (h *CategoryHandler) UpdateCategory(c echo.Context) error {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)
@@ -75,6 +103,14 @@ func (h *CategoryHandler) UpdateCategory(c echo.Context) error {
 	return response.Success(c, http.StatusOK, "Kategori berhasil diperbarui", category)
 }
 
+// DeleteCategory godoc
+// @Summary     Hapus Kategori Soal
+// @Tags        Admin - Kategori
+// @Security    BearerAuth
+// @Produce     json
+// @Param       id   path      int  true  "ID Kategori"
+// @Success     200  {object}  response.SuccessResponse
+// @Router      /admin/categories/{id} [delete]
 func (h *CategoryHandler) DeleteCategory(c echo.Context) error {
 	idParam := c.Param("id")
 	id, err := strconv.Atoi(idParam)

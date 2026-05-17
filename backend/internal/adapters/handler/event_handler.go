@@ -41,6 +41,15 @@ func (h *EventHandler) RegisterAdminRoutes(adminGroup *echo.Group) {
 	eventsGroup.GET("/:id/export", h.ExportParticipants)
 }
 
+// CreateEvent godoc
+// @Summary     Buat Event Ujian
+// @Tags        Admin - Event
+// @Security    BearerAuth
+// @Accept      json
+// @Produce     json
+// @Param       body  body      domain.CreateEventRequest  true  "Data Event"
+// @Success     201   {object}  response.SuccessResponse{data=domain.Event}
+// @Router      /admin/events [post]
 func (h *EventHandler) CreateEvent(c echo.Context) error {
 	var req domain.CreateEventRequest
 	if err := c.Bind(&req); err != nil {
@@ -55,6 +64,15 @@ func (h *EventHandler) CreateEvent(c echo.Context) error {
 	return response.Success(c, http.StatusCreated, "Event berhasil dibuat", e)
 }
 
+// ListEvents godoc
+// @Summary     Daftar Event Ujian
+// @Tags        Admin - Event
+// @Security    BearerAuth
+// @Produce     json
+// @Param       page   query     int  false  "Halaman"
+// @Param       limit  query     int  false  "Limit"
+// @Success     200    {object}  response.PaginatedResponse{data=[]domain.Event}
+// @Router      /admin/events [get]
 func (h *EventHandler) ListEvents(c echo.Context) error {
 	page, limit := response.ParsePaginationParams(c)
 	events, total, err := h.service.ListEvents(c.Request().Context(), page, limit)
@@ -228,6 +246,17 @@ func (h *EventHandler) ApproveParticipant(c echo.Context) error {
 	return response.Success(c, http.StatusOK, "Peserta berhasil disetujui (Approved)", nil)
 }
 
+// ExportParticipants godoc
+// @Summary     Export Laporan Peserta
+// @Description Download rekap nilai peserta dalam format Excel (.xlsx) atau PDF
+// @Tags        Admin - Event
+// @Security    BearerAuth
+// @Produce     application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+// @Param       id      path      string  true   "UUID Event"
+// @Param       format  query     string  false  "Format file: excel (default) atau pdf"
+// @Success     200     {file}    binary
+// @Failure     400     {object}  response.ErrorResponse
+// @Router      /admin/events/{id}/export [get]
 func (h *EventHandler) ExportParticipants(c echo.Context) error {
 	eventID, err := uuid.Parse(c.Param("id"))
 	if err != nil {

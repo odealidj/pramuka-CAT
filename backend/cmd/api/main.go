@@ -1,3 +1,19 @@
+// @title          Pramuka CAT API
+// @version        1.0
+// @description    REST API untuk platform Computer Assisted Test (CAT) Pramuka.
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name  Dev Team Pramuka CAT
+// @contact.url   https://github.com/odealidj/pramuka-CAT
+
+// @host      localhost:8080
+// @BasePath  /api/v1
+
+// @securityDefinitions.apikey BearerAuth
+// @in                         header
+// @name                       Authorization
+// @description                Masukkan token JWT dengan format: Bearer {token}
+
 package main
 
 import (
@@ -12,7 +28,9 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	
+	echoSwagger "github.com/swaggo/echo-swagger"
+
+	_ "github.com/odealidj/pramuka-CAT/backend/docs"
 	"github.com/odealidj/pramuka-CAT/backend/internal/adapters/handler"
 	appMiddleware "github.com/odealidj/pramuka-CAT/backend/internal/adapters/middleware"
 	"github.com/odealidj/pramuka-CAT/backend/internal/adapters/repository"
@@ -106,6 +124,9 @@ func main() {
 			"redis":    redisStatus,
 		})
 	})
+
+	// Swagger UI
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// Pendaftaran Rute API Publik
 	api := e.Group("/api/v1")

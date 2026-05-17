@@ -33,6 +33,15 @@ func (h *AuthHandler) RegisterProtectedRoutes(g *echo.Group) {
 	authGroup.POST("/logout", h.Logout)
 }
 
+// Logout godoc
+// @Summary     Logout
+// @Description Membatalkan sesi aktif dan menginvalidasi token
+// @Tags        Auth
+// @Security    BearerAuth
+// @Produce     json
+// @Success     200  {object}  response.SuccessResponse
+// @Failure     401  {object}  response.ErrorResponse
+// @Router      /protected/auth/logout [post]
 func (h *AuthHandler) Logout(c echo.Context) error {
 	sessionIDStr := c.Get("session_id").(string)
 	sessionID, err := uuid.Parse(sessionIDStr)
@@ -48,7 +57,16 @@ func (h *AuthHandler) Logout(c echo.Context) error {
 	return response.Success(c, http.StatusOK, "Logout berhasil", nil)
 }
 
-// Login menangani HTTP POST request untuk proses autentikasi
+// Login godoc
+// @Summary     Login
+// @Description Autentikasi pengguna dan mendapatkan Access Token & Refresh Token
+// @Tags        Auth
+// @Accept      json
+// @Produce     json
+// @Param       body  body      domain.LoginRequest   true  "Kredensial Login"
+// @Success     200   {object}  response.SuccessResponse{data=domain.LoginResponse}
+// @Failure     401   {object}  response.ErrorResponse
+// @Router      /auth/login [post]
 func (h *AuthHandler) Login(c echo.Context) error {
 	var req domain.LoginRequest
 	
@@ -66,7 +84,16 @@ func (h *AuthHandler) Login(c echo.Context) error {
 	return response.Success(c, http.StatusOK, "Login berhasil", resp)
 }
 
-// Refresh menangani HTTP POST request untuk perpanjangan Access Token
+// Refresh godoc
+// @Summary     Refresh Token
+// @Description Memperbarui Access Token menggunakan Refresh Token yang masih berlaku
+// @Tags        Auth
+// @Accept      json
+// @Produce     json
+// @Param       body  body      domain.RefreshRequest   true  "Refresh Token"
+// @Success     200   {object}  response.SuccessResponse{data=domain.RefreshResponse}
+// @Failure     401   {object}  response.ErrorResponse
+// @Router      /auth/refresh [post]
 func (h *AuthHandler) Refresh(c echo.Context) error {
 	var req domain.RefreshRequest
 	

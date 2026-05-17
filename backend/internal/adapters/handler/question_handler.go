@@ -27,6 +27,15 @@ func (h *QuestionHandler) RegisterAdminRoutes(adminGroup *echo.Group) {
 	questionsGroup.DELETE("/:id", h.DeleteQuestion)
 }
 
+// CreateQuestion godoc
+// @Summary     Buat Soal Baru
+// @Tags        Admin - Bank Soal
+// @Security    BearerAuth
+// @Accept      json
+// @Produce     json
+// @Param       body  body      domain.CreateQuestionRequest  true  "Data Soal"
+// @Success     201   {object}  response.SuccessResponse{data=domain.Question}
+// @Router      /admin/questions [post]
 func (h *QuestionHandler) CreateQuestion(c echo.Context) error {
 	var req domain.CreateQuestionRequest
 	if err := c.Bind(&req); err != nil {
@@ -41,6 +50,15 @@ func (h *QuestionHandler) CreateQuestion(c echo.Context) error {
 	return response.Success(c, http.StatusCreated, "Pertanyaan berhasil dibuat", q)
 }
 
+// ListQuestions godoc
+// @Summary     Daftar Soal
+// @Tags        Admin - Bank Soal
+// @Security    BearerAuth
+// @Produce     json
+// @Param       page   query     int  false  "Halaman"
+// @Param       limit  query     int  false  "Limit"
+// @Success     200    {object}  response.PaginatedResponse{data=[]domain.Question}
+// @Router      /admin/questions [get]
 func (h *QuestionHandler) ListQuestions(c echo.Context) error {
 	page, limit := response.ParsePaginationParams(c)
 	questions, total, err := h.service.ListQuestions(c.Request().Context(), page, limit)
@@ -56,6 +74,14 @@ func (h *QuestionHandler) ListQuestions(c echo.Context) error {
 	return response.SuccessWithMeta(c, http.StatusOK, "Daftar pertanyaan berhasil diambil", questions, meta)
 }
 
+// GetQuestion godoc
+// @Summary     Detail Soal
+// @Tags        Admin - Bank Soal
+// @Security    BearerAuth
+// @Produce     json
+// @Param       id   path      string  true  "UUID Soal"
+// @Success     200  {object}  response.SuccessResponse{data=domain.Question}
+// @Router      /admin/questions/{id} [get]
 func (h *QuestionHandler) GetQuestion(c echo.Context) error {
 	idParam := c.Param("id")
 	id, err := uuid.Parse(idParam)
@@ -71,6 +97,16 @@ func (h *QuestionHandler) GetQuestion(c echo.Context) error {
 	return response.Success(c, http.StatusOK, "Pertanyaan berhasil diambil", q)
 }
 
+// UpdateQuestion godoc
+// @Summary     Update Soal
+// @Tags        Admin - Bank Soal
+// @Security    BearerAuth
+// @Accept      json
+// @Produce     json
+// @Param       id    path      string                       true  "UUID Soal"
+// @Param       body  body      domain.UpdateQuestionRequest  true  "Data Soal Baru"
+// @Success     200   {object}  response.SuccessResponse{data=domain.Question}
+// @Router      /admin/questions/{id} [put]
 func (h *QuestionHandler) UpdateQuestion(c echo.Context) error {
 	idParam := c.Param("id")
 	id, err := uuid.Parse(idParam)
@@ -91,6 +127,14 @@ func (h *QuestionHandler) UpdateQuestion(c echo.Context) error {
 	return response.Success(c, http.StatusOK, "Pertanyaan berhasil diperbarui", q)
 }
 
+// DeleteQuestion godoc
+// @Summary     Hapus Soal
+// @Tags        Admin - Bank Soal
+// @Security    BearerAuth
+// @Produce     json
+// @Param       id   path      string  true  "UUID Soal"
+// @Success     200  {object}  response.SuccessResponse
+// @Router      /admin/questions/{id} [delete]
 func (h *QuestionHandler) DeleteQuestion(c echo.Context) error {
 	idParam := c.Param("id")
 	id, err := uuid.Parse(idParam)
