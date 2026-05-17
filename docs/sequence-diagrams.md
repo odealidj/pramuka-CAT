@@ -185,10 +185,11 @@ Terjadi ketika waktu di *browser* habis, atau peserta sengaja menekan tombol "Se
 2. Frontend menembak _endpoint_ `submit` ke Backend.
 3. Backend mengambil seluruh opsi jawaban yang diisi peserta dari *Cache* (Redis).
 4. Backend mencocokkan jawaban peserta dengan kunci jawaban yang benar di database, lalu mengakumulasi poin berdasarkan bobot soal.
-5. Backend membandingkan total nilai peserta dengan _Passing Grade_ yang diatur pada *Event* tersebut untuk meluluskan atau menggagalkan peserta.
-6. Hasil akhir (Total Nilai dan Status Lulus/Tidak Lulus) disimpan secara permanen ke PostgreSQL.
-7. Sesi *Cache* ujian peserta di Redis dibersihkan.
-8. Frontend memunculkan layar "Hasil Ujian" yang menampilkan rekap nilai.
+5. Backend melakukan proses standardisasi skor akhir menjadi skala 100 dengan rumus Auto-Bobot `(Skor Peserta / Total Bobot Event) * 100`.
+6. Backend membandingkan total nilai peserta dengan _Passing Grade_ yang diatur pada *Event* tersebut untuk meluluskan atau menggagalkan peserta.
+7. Hasil akhir (Total Nilai dan Status Lulus/Tidak Lulus) disimpan secara permanen ke PostgreSQL.
+8. Sesi *Cache* ujian peserta di Redis dibersihkan.
+9. Frontend memunculkan layar "Hasil Ujian" yang menampilkan rekap nilai.
 
 ```mermaid
 sequenceDiagram

@@ -50,6 +50,15 @@ Aplikasi akan menggunakan arsitektur **Client-Server** berbasis web (Web Applica
 - Pengacakan soal tidak dilakukan di sisi frontend (untuk menghindari peserta mengintip _source_ soal yang tersembunyi).
 - Saat peserta menekan "Mulai Ujian", Backend akan melakukan penarikan soal (sesuai distribusi), mengacaknya (algoritma _Fisher-Yates_ atau fungsi `RANDOM()` SQL yang di-cache), dan menyimpannya sebagai "Paket Soal Peserta X" di database/Redis. 
 
+### 3.4. Standarisasi API Response & Pagination
+- Seluruh endpoint API mematuhi standar JSON tunggal (melalui package `pkg/response`) yang memuat properti mutlak: `success`, `code`, `message`, `data`, `meta`, dan `errors`.
+- Meta pagination (`page`, `limit`, `total_records`, dll) diotomatisasi pada lapisan handler untuk setiap request berjenis koleksi/daftar.
+
+### 3.5. Penilaian Otomatis (Auto-Bobot) & Skala Nilai
+- Backend menghitung skor akhir menggunakan pendekatan matematis proporsional yang berskala maksimum 100 secara default.
+- Rumus: `(Total Bobot Jawaban Benar / Total Bobot Seluruh Soal) * 100`.
+- Pendekatan ini memungkinkan *Auto-Bobot* (ketika semua soal berbobot default 1) sekaligus mendukung perhitungan berkeadilan jika Admin mengatur bobot sulit/mudah (manual) untuk masing-masing soal.
+
 ## 4. Infrastruktur dan Deployment
 - Aplikasi akan di-containerisasi menggunakan **Docker** agar mudah dideploy di berbagai server (VPS atau Cloud).
 - Menggunakan NGINX sebagai _Reverse Proxy_ dan pengelola sertifikat HTTPS (SSL) agar transmisi data ujian aman.

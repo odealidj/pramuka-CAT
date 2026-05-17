@@ -17,6 +17,7 @@ erDiagram
         string role "ENUM: admin, peserta"
         string photo_url "Nullable"
         timestamp created_at
+        timestamp deleted_at "Soft Delete Indicator"
     }
 
     sessions {
@@ -97,6 +98,7 @@ erDiagram
 Menyimpan data identitas Peserta dan Admin.
 - Username dibuat unik (misalnya nomor NTA Pramuka) untuk mencegah duplikasi login.
 - Terdapat kolom `role` untuk membedakan otoritas.
+- Terdapat kolom `deleted_at` untuk mendukung **Soft-Delete**; data user yang dihapus tetap tersimpan utuh di sistem agar relasi ujian historisnya tidak rusak, namun user tersebut berstatus dinonaktifkan.
 
 ### b. Tabel `sessions`
 Tabel pendukung untuk keamanan Autentikasi ganda (Stateful JWT).

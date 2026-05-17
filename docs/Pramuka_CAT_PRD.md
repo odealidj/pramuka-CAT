@@ -33,7 +33,7 @@ Aplikasi memiliki 2 jenis peran utama:
 1. **Manajemen Admin:** Admin yang sudah ada dapat menambahkan akun admin baru ke dalam sistem.
 2. **Manajemen Peserta (CRUD User):**
    - Melihat daftar seluruh anggota pramuka yang terdaftar (List User).
-   - Menambah, mengubah, atau menghapus data peserta.
+   - Menambah, mengubah, atau menghapus data peserta (menggunakan metode **Soft-Delete** untuk menjaga integritas riwayat ujian masa lalu).
 3. **Approval Peserta Ujian:**
    - Admin dapat memvalidasi dan menyetujui (Approve) peserta agar bisa mengikuti event ujian tertentu.
    - Admin memiliki fitur pembatalan (Revoke/Batal) persetujuan, sehingga peserta tersebut terkunci dan tidak bisa mengerjakan soal.
