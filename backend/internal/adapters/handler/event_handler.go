@@ -28,6 +28,7 @@ func (h *EventHandler) RegisterAdminRoutes(adminGroup *echo.Group) {
 
 	// Event Questions (Distribusi Soal)
 	eventsGroup.POST("/:id/questions", h.AddEventQuestion)
+	eventsGroup.POST("/:id/random-questions", h.AddRandomEventQuestions)
 	eventsGroup.GET("/:id/questions", h.ListEventQuestions)
 	eventsGroup.DELETE("/:id/questions/:question_id", h.RemoveEventQuestion)
 
@@ -129,6 +130,25 @@ func (h *EventHandler) AddEventQuestion(c echo.Context) error {
 	}
 
 	return response.Success(c, http.StatusCreated, "Soal berhasil ditambahkan ke Event", nil)
+}
+
+func (h *EventHandler) AddRandomEventQuestions(c echo.Context) error {
+	eventID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		return response.Error(c, http.StatusBadRequest, "ID event tidak valid", nil)
+	}
+
+	var req domain.AddRandomEventQuestionsRequest
+	if err := c.Bind(&req); err != nil {
+		return response.Error(c, http.StatusBadRequest, "Format request tidak valid", nil)
+	}
+
+	err = h.service.AddRandomEventQuestions(c.Request().Context(), eventID, req)
+	if err != nil {
+		return response.Error(c, http.StatusBadRequest, "Gagal menarik soal acak", []response.ErrorDetail{{Field: "validation", Message: err.Error()}})
+	}
+
+	return response.Success(c, http.StatusCreated, "Soal acak berhasil ditambahkan ke Event", nil)
 }
 
 func (h *EventHandler) ListEventQuestions(c echo.Context) error {

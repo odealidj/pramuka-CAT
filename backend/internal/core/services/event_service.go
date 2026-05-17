@@ -92,3 +92,26 @@ func (s *eventService) ListEventParticipants(ctx context.Context, eventID uuid.U
 func (s *eventService) ApproveUserEvent(ctx context.Context, approvalID uuid.UUID) error {
 	return s.repo.ApproveUserEvent(ctx, approvalID)
 }
+
+func (s *eventService) AddRandomEventQuestions(ctx context.Context, eventID uuid.UUID, req domain.AddRandomEventQuestionsRequest) error {
+	if req.Amount > 500 {
+		return fmt.Errorf("jumlah soal maksimal untuk penarikan acak dalam satu waktu adalah 500 soal")
+	}
+
+	_, err := s.repo.GetEventById(ctx, eventID)
+	if err != nil {
+		return fmt.Errorf("event tidak ditemukan")
+	}
+
+	// Cek ketersediaan soal
+	available, err := s.repo.CountAvailableQuestions(ctx, eventID, req.CategoryID)
+	if err != nil {
+		return fmt.Errorf("gagal mengecek ketersediaan soal: %w", err)
+	}
+
+	if int64(req.Amount) > available {
+		return fmt.Errorf("soal yang tersedia tidak mencukupi (diminta: %d, tersedia: %d)", req.Amount, available)
+	}
+
+	return s.repo.AddRandomEventQuestions(ctx, eventID, req.CategoryID, req.Amount)
+}

@@ -11,9 +11,13 @@ import (
 )
 
 type Querier interface {
+	AddRandomEventQuestionsAll(ctx context.Context, arg AddRandomEventQuestionsAllParams) error
+	AddRandomEventQuestionsByCategory(ctx context.Context, arg AddRandomEventQuestionsByCategoryParams) error
 	ApproveUserEvent(ctx context.Context, id uuid.UUID) (UserEventApproval, error)
 	BlockSession(ctx context.Context, id uuid.UUID) error
 	CalculateScore(ctx context.Context, approvalID uuid.NullUUID) (string, error)
+	CountAvailableQuestionsForEventAll(ctx context.Context, eventID uuid.UUID) (int64, error)
+	CountAvailableQuestionsForEventByCategory(ctx context.Context, arg CountAvailableQuestionsForEventByCategoryParams) (int64, error)
 	CountCategories(ctx context.Context) (int64, error)
 	CountEventParticipants(ctx context.Context, eventID uuid.NullUUID) (int64, error)
 	CountEventQuestions(ctx context.Context, eventID uuid.UUID) (int64, error)

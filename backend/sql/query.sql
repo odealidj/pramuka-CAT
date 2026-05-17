@@ -194,3 +194,29 @@ WHERE ua.approval_id = $1 AND ua.is_correct = true;
 UPDATE user_event_approvals
 SET is_completed = true, completed_at = NOW(), score = $2, is_passed = $3
 WHERE id = $1;
+
+-- name: CountAvailableQuestionsForEventByCategory :one
+SELECT COUNT(*) FROM questions
+WHERE category_id = $2
+  AND id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1);
+
+-- name: CountAvailableQuestionsForEventAll :one
+SELECT COUNT(*) FROM questions
+WHERE id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1);
+
+-- name: AddRandomEventQuestionsByCategory :exec
+INSERT INTO event_questions (event_id, question_id)
+SELECT $1, id
+FROM questions
+WHERE category_id = $2
+  AND id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1)
+ORDER BY RANDOM()
+LIMIT $3;
+
+-- name: AddRandomEventQuestionsAll :exec
+INSERT INTO event_questions (event_id, question_id)
+SELECT $1, id
+FROM questions
+WHERE id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1)
+ORDER BY RANDOM()
+LIMIT $2;

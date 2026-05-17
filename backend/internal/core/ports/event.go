@@ -20,6 +20,9 @@ type EventRepository interface {
 
 	ListEventParticipants(ctx context.Context, eventID uuid.UUID, page int32, limit int32) ([]domain.EventParticipant, int64, error)
 	ApproveUserEvent(ctx context.Context, approvalID uuid.UUID) error
+
+	AddRandomEventQuestions(ctx context.Context, eventID uuid.UUID, categoryID *int32, amount int32) error
+	CountAvailableQuestions(ctx context.Context, eventID uuid.UUID, categoryID *int32) (int64, error)
 }
 
 type EventService interface {
@@ -32,6 +35,7 @@ type EventService interface {
 	AddEventQuestion(ctx context.Context, eventID uuid.UUID, req domain.AddEventQuestionRequest) error
 	ListEventQuestions(ctx context.Context, eventID uuid.UUID, page int32, limit int32) ([]domain.Question, int64, error)
 	RemoveEventQuestion(ctx context.Context, eventID uuid.UUID, questionID uuid.UUID) error
+	AddRandomEventQuestions(ctx context.Context, eventID uuid.UUID, req domain.AddRandomEventQuestionsRequest) error
 
 	ListEventParticipants(ctx context.Context, eventID uuid.UUID, page int32, limit int32) ([]domain.EventParticipant, int64, error)
 	ApproveUserEvent(ctx context.Context, approvalID uuid.UUID) error

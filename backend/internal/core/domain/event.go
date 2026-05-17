@@ -45,3 +45,8 @@ type EventParticipant struct {
 type AddEventQuestionRequest struct {
 	QuestionID uuid.UUID `json:"question_id" validate:"required"`
 }
+
+type AddRandomEventQuestionsRequest struct {
+	CategoryID *int32 `json:"category_id"`
+	Amount     int32  `json:"amount" validate:"required,min=1"`
+}

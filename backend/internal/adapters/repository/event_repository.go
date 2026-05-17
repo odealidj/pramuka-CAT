@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"strconv"
 	"time"
@@ -176,4 +177,30 @@ func (r *eventRepository) ListEventParticipants(ctx context.Context, eventID uui
 func (r *eventRepository) ApproveUserEvent(ctx context.Context, approvalID uuid.UUID) error {
 	_, err := r.queries.ApproveUserEvent(ctx, approvalID)
 	return err
+}
+
+func (r *eventRepository) AddRandomEventQuestions(ctx context.Context, eventID uuid.UUID, categoryID *int32, amount int32) error {
+	if categoryID != nil {
+		return r.queries.AddRandomEventQuestionsByCategory(ctx, sqlcgen.AddRandomEventQuestionsByCategoryParams{
+			EventID:    eventID,
+			CategoryID: sql.NullInt32{Int32: *categoryID, Valid: true},
+			Limit:      amount,
+		})
+	}
+
+	return r.queries.AddRandomEventQuestionsAll(ctx, sqlcgen.AddRandomEventQuestionsAllParams{
+		EventID: eventID,
+		Limit:   amount,
+	})
+}
+
+func (r *eventRepository) CountAvailableQuestions(ctx context.Context, eventID uuid.UUID, categoryID *int32) (int64, error) {
+	if categoryID != nil {
+		return r.queries.CountAvailableQuestionsForEventByCategory(ctx, sqlcgen.CountAvailableQuestionsForEventByCategoryParams{
+			EventID:    eventID,
+			CategoryID: sql.NullInt32{Int32: *categoryID, Valid: true},
+		})
+	}
+
+	return r.queries.CountAvailableQuestionsForEventAll(ctx, eventID)
 }

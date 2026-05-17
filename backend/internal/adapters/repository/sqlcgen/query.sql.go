@@ -13,6 +13,46 @@ import (
 	"github.com/google/uuid"
 )
 
+const addRandomEventQuestionsAll = `-- name: AddRandomEventQuestionsAll :exec
+INSERT INTO event_questions (event_id, question_id)
+SELECT $1, id
+FROM questions
+WHERE id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1)
+ORDER BY RANDOM()
+LIMIT $2
+`
+
+type AddRandomEventQuestionsAllParams struct {
+	EventID uuid.UUID `json:"event_id"`
+	Limit   int32     `json:"limit"`
+}
+
+func (q *Queries) AddRandomEventQuestionsAll(ctx context.Context, arg AddRandomEventQuestionsAllParams) error {
+	_, err := q.db.ExecContext(ctx, addRandomEventQuestionsAll, arg.EventID, arg.Limit)
+	return err
+}
+
+const addRandomEventQuestionsByCategory = `-- name: AddRandomEventQuestionsByCategory :exec
+INSERT INTO event_questions (event_id, question_id)
+SELECT $1, id
+FROM questions
+WHERE category_id = $2
+  AND id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1)
+ORDER BY RANDOM()
+LIMIT $3
+`
+
+type AddRandomEventQuestionsByCategoryParams struct {
+	EventID    uuid.UUID     `json:"event_id"`
+	CategoryID sql.NullInt32 `json:"category_id"`
+	Limit      int32         `json:"limit"`
+}
+
+func (q *Queries) AddRandomEventQuestionsByCategory(ctx context.Context, arg AddRandomEventQuestionsByCategoryParams) error {
+	_, err := q.db.ExecContext(ctx, addRandomEventQuestionsByCategory, arg.EventID, arg.CategoryID, arg.Limit)
+	return err
+}
+
 const approveUserEvent = `-- name: ApproveUserEvent :one
 UPDATE user_event_approvals
 SET status = 'approved'
@@ -60,6 +100,36 @@ func (q *Queries) CalculateScore(ctx context.Context, approvalID uuid.NullUUID) 
 	var total_score string
 	err := row.Scan(&total_score)
 	return total_score, err
+}
+
+const countAvailableQuestionsForEventAll = `-- name: CountAvailableQuestionsForEventAll :one
+SELECT COUNT(*) FROM questions
+WHERE id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1)
+`
+
+func (q *Queries) CountAvailableQuestionsForEventAll(ctx context.Context, eventID uuid.UUID) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countAvailableQuestionsForEventAll, eventID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countAvailableQuestionsForEventByCategory = `-- name: CountAvailableQuestionsForEventByCategory :one
+SELECT COUNT(*) FROM questions
+WHERE category_id = $2
+  AND id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1)
+`
+
+type CountAvailableQuestionsForEventByCategoryParams struct {
+	EventID    uuid.UUID     `json:"event_id"`
+	CategoryID sql.NullInt32 `json:"category_id"`
+}
+
+func (q *Queries) CountAvailableQuestionsForEventByCategory(ctx context.Context, arg CountAvailableQuestionsForEventByCategoryParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countAvailableQuestionsForEventByCategory, arg.EventID, arg.CategoryID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
 }
 
 const countCategories = `-- name: CountCategories :one
