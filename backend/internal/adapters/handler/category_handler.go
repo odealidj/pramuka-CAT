@@ -56,11 +56,13 @@ func (h *CategoryHandler) CreateCategory(c echo.Context) error {
 // @Produce     json
 // @Param       page   query     int  false  "Halaman" default(1)
 // @Param       limit  query     int  false  "Limit" default(10)
+// @Param       search query     string false "Cari nama kategori"
 // @Success     200    {object}  response.PaginatedResponse{data=[]domain.Category}
 // @Router      /admin/categories [get]
 func (h *CategoryHandler) ListCategories(c echo.Context) error {
 	page, limit := response.ParsePaginationParams(c)
-	categories, total, err := h.service.ListCategories(c.Request().Context(), page, limit)
+	search := c.QueryParam("search")
+	categories, total, err := h.service.ListCategories(c.Request().Context(), page, limit, search)
 	if err != nil {
 		return response.Error(c, http.StatusInternalServerError, "Gagal mengambil daftar kategori", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}

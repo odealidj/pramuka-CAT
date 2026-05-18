@@ -27,8 +27,8 @@ func (s *categoryService) GetCategoryById(ctx context.Context, id int32) (domain
 	return s.repo.GetCategoryById(ctx, id)
 }
 
-func (s *categoryService) ListCategories(ctx context.Context, page int32, limit int32) ([]domain.Category, int64, error) {
-	return s.repo.ListCategories(ctx, page, limit)
+func (s *categoryService) ListCategories(ctx context.Context, page int32, limit int32, search string) ([]domain.Category, int64, error) {
+	return s.repo.ListCategories(ctx, page, limit, search)
 }
 
 func (s *categoryService) UpdateCategory(ctx context.Context, id int32, req domain.UpdateCategoryRequest) (domain.Category, error) {

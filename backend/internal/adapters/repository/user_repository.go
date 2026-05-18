@@ -67,17 +67,18 @@ func (r *userRepository) GetUserById(ctx context.Context, id uuid.UUID) (domain.
 	return mapSqlcToDomainUser(res), nil
 }
 
-func (r *userRepository) ListUsers(ctx context.Context, page int32, limit int32) ([]domain.User, int64, error) {
+func (r *userRepository) ListUsers(ctx context.Context, page int32, limit int32, search string) ([]domain.User, int64, error) {
 	offset := (page - 1) * limit
 	rows, err := r.queries.ListUsers(ctx, sqlcgen.ListUsersParams{
 		Limit:  limit,
 		Offset: offset,
+		Search: search,
 	})
 	if err != nil {
 		return nil, 0, err
 	}
 
-	total, err := r.queries.CountUsers(ctx)
+	total, err := r.queries.CountUsers(ctx, search)
 	if err != nil {
 		return nil, 0, err
 	}

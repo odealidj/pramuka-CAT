@@ -41,8 +41,8 @@ func (s *eventService) GetEventById(ctx context.Context, id uuid.UUID) (domain.E
 	return s.repo.GetEventById(ctx, id)
 }
 
-func (s *eventService) ListEvents(ctx context.Context, page int32, limit int32) ([]domain.Event, int64, error) {
-	return s.repo.ListEvents(ctx, page, limit)
+func (s *eventService) ListEvents(ctx context.Context, page int32, limit int32, search string) ([]domain.Event, int64, error) {
+	return s.repo.ListEvents(ctx, page, limit, search)
 }
 
 func (s *eventService) UpdateEvent(ctx context.Context, id uuid.UUID, req domain.UpdateEventRequest) (domain.Event, error) {

@@ -416,6 +416,10 @@ paths:
         in: query
         name: limit
         type: integer
+      - description: Cari nama kategori
+        in: query
+        name: search
+        type: string
       produces:
       - application/json
       responses:
@@ -527,6 +531,10 @@ paths:
         in: query
         name: limit
         type: integer
+      - description: Cari nama event
+        in: query
+        name: search
+        type: string
       produces:
       - application/json
       responses:
@@ -615,6 +623,10 @@ paths:
         in: query
         name: limit
         type: integer
+      - description: Cari teks pertanyaan
+        in: query
+        name: search
+        type: string
       produces:
       - application/json
       responses:
@@ -751,6 +763,10 @@ paths:
         in: query
         name: limit
         type: integer
+      - description: Cari nama pengguna
+        in: query
+        name: search
+        type: string
       produces:
       - application/json
       responses:

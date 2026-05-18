@@ -47,6 +47,12 @@ const docTemplate = `{
                         "description": "Limit",
                         "name": "limit",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Cari nama kategori",
+                        "name": "search",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -238,6 +244,12 @@ const docTemplate = `{
                         "description": "Limit",
                         "name": "limit",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Cari nama event",
+                        "name": "search",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -386,6 +398,12 @@ const docTemplate = `{
                         "default": 10,
                         "description": "Limit",
                         "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Cari teks pertanyaan",
+                        "name": "search",
                         "in": "query"
                     }
                 ],
@@ -621,6 +639,12 @@ const docTemplate = `{
                         "default": 10,
                         "description": "Jumlah per halaman (default: 10)",
                         "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Cari nama pengguna",
+                        "name": "search",
                         "in": "query"
                     }
                 ],

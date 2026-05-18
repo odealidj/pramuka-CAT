@@ -71,11 +71,13 @@ func (h *EventHandler) CreateEvent(c echo.Context) error {
 // @Produce     json
 // @Param       page   query     int  false  "Halaman" default(1)
 // @Param       limit  query     int  false  "Limit" default(10)
+// @Param       search query     string false "Cari nama event"
 // @Success     200    {object}  response.PaginatedResponse{data=[]domain.Event}
 // @Router      /admin/events [get]
 func (h *EventHandler) ListEvents(c echo.Context) error {
 	page, limit := response.ParsePaginationParams(c)
-	events, total, err := h.service.ListEvents(c.Request().Context(), page, limit)
+	search := c.QueryParam("search")
+	events, total, err := h.service.ListEvents(c.Request().Context(), page, limit, search)
 	if err != nil {
 		return response.Error(c, http.StatusInternalServerError, "Gagal mengambil daftar event", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}

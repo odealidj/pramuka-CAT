@@ -134,10 +134,11 @@ func (q *Queries) CountAvailableQuestionsForEventByCategory(ctx context.Context,
 
 const countCategories = `-- name: CountCategories :one
 SELECT COUNT(*) FROM categories
+WHERE $1::text = '' OR name ILIKE '%' || $1::text || '%'
 `
 
-func (q *Queries) CountCategories(ctx context.Context) (int64, error) {
-	row := q.db.QueryRowContext(ctx, countCategories)
+func (q *Queries) CountCategories(ctx context.Context, search string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countCategories, search)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -169,10 +170,11 @@ func (q *Queries) CountEventQuestions(ctx context.Context, eventID uuid.UUID) (i
 
 const countEvents = `-- name: CountEvents :one
 SELECT COUNT(*) FROM events
+WHERE $1::text = '' OR to_tsvector('indonesian', name) @@ plainto_tsquery('indonesian', $1::text)
 `
 
-func (q *Queries) CountEvents(ctx context.Context) (int64, error) {
-	row := q.db.QueryRowContext(ctx, countEvents)
+func (q *Queries) CountEvents(ctx context.Context, search string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countEvents, search)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -180,10 +182,11 @@ func (q *Queries) CountEvents(ctx context.Context) (int64, error) {
 
 const countQuestions = `-- name: CountQuestions :one
 SELECT COUNT(*) FROM questions
+WHERE $1::text = '' OR to_tsvector('indonesian', question_text) @@ plainto_tsquery('indonesian', $1::text)
 `
 
-func (q *Queries) CountQuestions(ctx context.Context) (int64, error) {
-	row := q.db.QueryRowContext(ctx, countQuestions)
+func (q *Queries) CountQuestions(ctx context.Context, search string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countQuestions, search)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -216,10 +219,11 @@ func (q *Queries) CountUserApprovals(ctx context.Context, userID uuid.NullUUID) 
 const countUsers = `-- name: CountUsers :one
 SELECT COUNT(*) FROM users
 WHERE deleted_at IS NULL
+  AND ($1::text = '' OR full_name ILIKE '%' || $1::text || '%')
 `
 
-func (q *Queries) CountUsers(ctx context.Context) (int64, error) {
-	row := q.db.QueryRowContext(ctx, countUsers)
+func (q *Queries) CountUsers(ctx context.Context, search string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countUsers, search)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -783,17 +787,19 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 
 const listCategories = `-- name: ListCategories :many
 SELECT id, name FROM categories
-ORDER BY name
+WHERE $3::text = '' OR name ILIKE '%' || $3::text || '%'
+ORDER BY name ASC
 LIMIT $1 OFFSET $2
 `
 
 type ListCategoriesParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	Limit  int32  `json:"limit"`
+	Offset int32  `json:"offset"`
+	Search string `json:"search"`
 }
 
 func (q *Queries) ListCategories(ctx context.Context, arg ListCategoriesParams) ([]Category, error) {
-	rows, err := q.db.QueryContext(ctx, listCategories, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, listCategories, arg.Limit, arg.Offset, arg.Search)
 	if err != nil {
 		return nil, err
 	}
@@ -921,17 +927,19 @@ func (q *Queries) ListEventQuestions(ctx context.Context, arg ListEventQuestions
 
 const listEvents = `-- name: ListEvents :many
 SELECT id, name, start_time, end_time, duration_minutes, passing_grade, created_at FROM events
-ORDER BY created_at DESC
+WHERE $3::text = '' OR to_tsvector('indonesian', name) @@ plainto_tsquery('indonesian', $3::text)
+ORDER BY name ASC, start_time ASC, end_time ASC
 LIMIT $1 OFFSET $2
 `
 
 type ListEventsParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	Limit  int32  `json:"limit"`
+	Offset int32  `json:"offset"`
+	Search string `json:"search"`
 }
 
 func (q *Queries) ListEvents(ctx context.Context, arg ListEventsParams) ([]Event, error) {
-	rows, err := q.db.QueryContext(ctx, listEvents, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, listEvents, arg.Limit, arg.Offset, arg.Search)
 	if err != nil {
 		return nil, err
 	}
@@ -963,17 +971,19 @@ func (q *Queries) ListEvents(ctx context.Context, arg ListEventsParams) ([]Event
 
 const listQuestions = `-- name: ListQuestions :many
 SELECT id, category_id, question_text, option_a, option_b, option_c, option_d, correct_answer, weight, created_at FROM questions
-ORDER BY created_at DESC
+WHERE $3::text = '' OR to_tsvector('indonesian', question_text) @@ plainto_tsquery('indonesian', $3::text)
+ORDER BY category_id ASC, question_text ASC
 LIMIT $1 OFFSET $2
 `
 
 type ListQuestionsParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	Limit  int32  `json:"limit"`
+	Offset int32  `json:"offset"`
+	Search string `json:"search"`
 }
 
 func (q *Queries) ListQuestions(ctx context.Context, arg ListQuestionsParams) ([]Question, error) {
-	rows, err := q.db.QueryContext(ctx, listQuestions, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, listQuestions, arg.Limit, arg.Offset, arg.Search)
 	if err != nil {
 		return nil, err
 	}
@@ -1121,17 +1131,19 @@ func (q *Queries) ListUserApprovals(ctx context.Context, arg ListUserApprovalsPa
 const listUsers = `-- name: ListUsers :many
 SELECT id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at FROM users
 WHERE deleted_at IS NULL
-ORDER BY created_at DESC
+  AND ($3::text = '' OR full_name ILIKE '%' || $3::text || '%')
+ORDER BY full_name ASC
 LIMIT $1 OFFSET $2
 `
 
 type ListUsersParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	Limit  int32  `json:"limit"`
+	Offset int32  `json:"offset"`
+	Search string `json:"search"`
 }
 
 func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error) {
-	rows, err := q.db.QueryContext(ctx, listUsers, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, listUsers, arg.Limit, arg.Offset, arg.Search)
 	if err != nil {
 		return nil, err
 	}

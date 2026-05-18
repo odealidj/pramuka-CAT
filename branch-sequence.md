@@ -24,9 +24,10 @@ graph TD
     B12 --> B13[13. refactor/response-pagination-tests]
     B13 --> B14[14. feature/auto-bobot]
     B14 --> B15[15. feature/jaeger-tracing]
+    B15 --> B16[16. feature/advanced-search-index]
     
     style B1 fill:#4F46E5,stroke:#312E81,stroke-width:2px,color:#fff
-    style B15 fill:#10B981,stroke:#064E3B,stroke-width:2px,color:#fff
+    style B16 fill:#10B981,stroke:#064E3B,stroke-width:2px,color:#fff
 ```
 
 ---
@@ -138,7 +139,7 @@ graph TD
     *   Mengintegrasikan generator Swagger UI (`github.com/swaggo/swag`).
     *   Menyediakan akses dokumentasi lengkap di endpoint `http://localhost:8080/swagger/index.html`.
 
-### 15. `feature/jaeger-tracing` *(Branch Terakhir)*
+### 15. `feature/jaeger-tracing`
 *   **Tujuan:** Mengintegrasikan **Observability** dan distributed tracing end-to-end.
 *   **Aktivitas:**
     *   Inisialisasi OpenTelemetry Tracer Provider dengan OTLP gRPC exporter ke Jaeger di `backend/pkg/tracer/tracer.go`.
@@ -146,6 +147,15 @@ graph TD
     *   Menulis custom middleware `TraceErrorMiddleware` untuk menandai respons HTTP status `>= 400` sebagai error span.
     *   Modifikasi response helper untuk menyuntikkan field `trace_id` ke dalam JSON response body pada status sukses maupun error.
     *   Pembersihan Swagger annotations dan integrasi konfigurasi Jaeger di `docker-compose.yml` dan `Makefile`.
+
+### 16. `feature/advanced-search-index` *(Branch Terakhir)*
+*   **Tujuan:** Menerapkan fitur pencarian (search) pada endpoint admin menggunakan optimasi database PostgreSQL tingkat lanjut.
+*   **Aktivitas:**
+    *   Membuat script migration database untuk mengaktifkan ekstensi `pg_trgm`.
+    *   Menambahkan Trigram Index pada kolom `full_name` di `users` dan `name` di `categories` untuk pencarian berbasis `ILIKE`.
+    *   Menambahkan Full Text Search (FTS) Index GIN (`to_tsvector`) pada kolom `question_text` di `questions` dan `name` di `events` menggunakan operator `@@`.
+    *   Memperbarui layer SQL (SQLC), Service, dan HTTP Handler untuk menerima parameter `search`.
+    *   Memperbarui Swagger Documentation API.
 
 ---
 

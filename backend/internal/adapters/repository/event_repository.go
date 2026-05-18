@@ -63,17 +63,18 @@ func (r *eventRepository) GetEventById(ctx context.Context, id uuid.UUID) (domai
 	return mapSqlcToDomainEvent(res), nil
 }
 
-func (r *eventRepository) ListEvents(ctx context.Context, page int32, limit int32) ([]domain.Event, int64, error) {
+func (r *eventRepository) ListEvents(ctx context.Context, page int32, limit int32, search string) ([]domain.Event, int64, error) {
 	offset := (page - 1) * limit
 	rows, err := r.queries.ListEvents(ctx, sqlcgen.ListEventsParams{
 		Limit:  limit,
 		Offset: offset,
+		Search: search,
 	})
 	if err != nil {
 		return nil, 0, err
 	}
 
-	total, err := r.queries.CountEvents(ctx)
+	total, err := r.queries.CountEvents(ctx, search)
 	if err != nil {
 		return nil, 0, err
 	}

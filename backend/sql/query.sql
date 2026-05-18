@@ -14,12 +14,14 @@ WHERE id = $1 AND deleted_at IS NULL LIMIT 1;
 -- name: ListUsers :many
 SELECT * FROM users
 WHERE deleted_at IS NULL
-ORDER BY created_at DESC
+  AND (sqlc.arg('search')::text = '' OR full_name ILIKE '%' || sqlc.arg('search')::text || '%')
+ORDER BY full_name ASC
 LIMIT $1 OFFSET $2;
 
 -- name: CountUsers :one
 SELECT COUNT(*) FROM users
-WHERE deleted_at IS NULL;
+WHERE deleted_at IS NULL
+  AND (sqlc.arg('search')::text = '' OR full_name ILIKE '%' || sqlc.arg('search')::text || '%');
 
 -- name: UpdateUser :one
 UPDATE users
@@ -48,11 +50,13 @@ WHERE id = $1 LIMIT 1;
 
 -- name: ListCategories :many
 SELECT * FROM categories
-ORDER BY name
+WHERE sqlc.arg('search')::text = '' OR name ILIKE '%' || sqlc.arg('search')::text || '%'
+ORDER BY name ASC
 LIMIT $1 OFFSET $2;
 
 -- name: CountCategories :one
-SELECT COUNT(*) FROM categories;
+SELECT COUNT(*) FROM categories
+WHERE sqlc.arg('search')::text = '' OR name ILIKE '%' || sqlc.arg('search')::text || '%';
 
 -- name: UpdateCategory :one
 UPDATE categories
@@ -75,11 +79,13 @@ WHERE id = $1 LIMIT 1;
 
 -- name: ListQuestions :many
 SELECT * FROM questions
-ORDER BY created_at DESC
+WHERE sqlc.arg('search')::text = '' OR to_tsvector('indonesian', question_text) @@ plainto_tsquery('indonesian', sqlc.arg('search')::text)
+ORDER BY category_id ASC, question_text ASC
 LIMIT $1 OFFSET $2;
 
 -- name: CountQuestions :one
-SELECT COUNT(*) FROM questions;
+SELECT COUNT(*) FROM questions
+WHERE sqlc.arg('search')::text = '' OR to_tsvector('indonesian', question_text) @@ plainto_tsquery('indonesian', sqlc.arg('search')::text);
 
 -- name: UpdateQuestion :one
 UPDATE questions
@@ -102,11 +108,13 @@ WHERE id = $1 LIMIT 1;
 
 -- name: ListEvents :many
 SELECT * FROM events
-ORDER BY created_at DESC
+WHERE sqlc.arg('search')::text = '' OR to_tsvector('indonesian', name) @@ plainto_tsquery('indonesian', sqlc.arg('search')::text)
+ORDER BY name ASC, start_time ASC, end_time ASC
 LIMIT $1 OFFSET $2;
 
 -- name: CountEvents :one
-SELECT COUNT(*) FROM events;
+SELECT COUNT(*) FROM events
+WHERE sqlc.arg('search')::text = '' OR to_tsvector('indonesian', name) @@ plainto_tsquery('indonesian', sqlc.arg('search')::text);
 
 -- name: UpdateEvent :one
 UPDATE events

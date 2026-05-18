@@ -57,11 +57,13 @@ func (h *QuestionHandler) CreateQuestion(c echo.Context) error {
 // @Produce     json
 // @Param       page   query     int  false  "Halaman" default(1)
 // @Param       limit  query     int  false  "Limit" default(10)
+// @Param       search query     string false "Cari teks pertanyaan"
 // @Success     200    {object}  response.PaginatedResponse{data=[]domain.Question}
 // @Router      /admin/questions [get]
 func (h *QuestionHandler) ListQuestions(c echo.Context) error {
 	page, limit := response.ParsePaginationParams(c)
-	questions, total, err := h.service.ListQuestions(c.Request().Context(), page, limit)
+	search := c.QueryParam("search")
+	questions, total, err := h.service.ListQuestions(c.Request().Context(), page, limit, search)
 	if err != nil {
 		return response.Error(c, http.StatusInternalServerError, "Gagal mengambil daftar pertanyaan", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}

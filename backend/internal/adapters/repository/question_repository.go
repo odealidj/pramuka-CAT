@@ -76,17 +76,18 @@ func (r *questionRepository) GetQuestionById(ctx context.Context, id uuid.UUID) 
 	return mapSqlcToDomainQuestion(res), nil
 }
 
-func (r *questionRepository) ListQuestions(ctx context.Context, page int32, limit int32) ([]domain.Question, int64, error) {
+func (r *questionRepository) ListQuestions(ctx context.Context, page int32, limit int32, search string) ([]domain.Question, int64, error) {
 	offset := (page - 1) * limit
 	rows, err := r.queries.ListQuestions(ctx, sqlcgen.ListQuestionsParams{
 		Limit:  limit,
 		Offset: offset,
+		Search: search,
 	})
 	if err != nil {
 		return nil, 0, err
 	}
 
-	total, err := r.queries.CountQuestions(ctx)
+	total, err := r.queries.CountQuestions(ctx, search)
 	if err != nil {
 		return nil, 0, err
 	}

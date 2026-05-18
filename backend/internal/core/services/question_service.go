@@ -40,8 +40,8 @@ func (s *questionService) GetQuestionById(ctx context.Context, id uuid.UUID) (do
 	return s.repo.GetQuestionById(ctx, id)
 }
 
-func (s *questionService) ListQuestions(ctx context.Context, page int32, limit int32) ([]domain.Question, int64, error) {
-	return s.repo.ListQuestions(ctx, page, limit)
+func (s *questionService) ListQuestions(ctx context.Context, page int32, limit int32, search string) ([]domain.Question, int64, error) {
+	return s.repo.ListQuestions(ctx, page, limit, search)
 }
 
 func (s *questionService) UpdateQuestion(ctx context.Context, id uuid.UUID, req domain.UpdateQuestionRequest) (domain.Question, error) {

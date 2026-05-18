@@ -62,11 +62,13 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 // @Produce     json
 // @Param       page   query     int  false  "Halaman (default: 1)" default(1)
 // @Param       limit  query     int  false  "Jumlah per halaman (default: 10)" default(10)
+// @Param       search query     string false "Cari nama pengguna"
 // @Success     200    {object}  response.PaginatedResponse{data=[]domain.User}
 // @Router      /admin/users [get]
 func (h *UserHandler) ListUsers(c echo.Context) error {
 	page, limit := response.ParsePaginationParams(c)
-	users, total, err := h.service.ListUsers(c.Request().Context(), page, limit)
+	search := c.QueryParam("search")
+	users, total, err := h.service.ListUsers(c.Request().Context(), page, limit, search)
 	if err != nil {
 		return response.Error(c, http.StatusInternalServerError, "Gagal mengambil daftar user", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}

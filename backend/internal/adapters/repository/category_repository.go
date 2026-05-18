@@ -38,17 +38,18 @@ func (r *categoryRepository) GetCategoryById(ctx context.Context, id int32) (dom
 	}, nil
 }
 
-func (r *categoryRepository) ListCategories(ctx context.Context, page int32, limit int32) ([]domain.Category, int64, error) {
+func (r *categoryRepository) ListCategories(ctx context.Context, page int32, limit int32, search string) ([]domain.Category, int64, error) {
 	offset := (page - 1) * limit
 	rows, err := r.queries.ListCategories(ctx, sqlcgen.ListCategoriesParams{
 		Limit:  limit,
 		Offset: offset,
+		Search: search,
 	})
 	if err != nil {
 		return nil, 0, err
 	}
 
-	total, err := r.queries.CountCategories(ctx)
+	total, err := r.queries.CountCategories(ctx, search)
 	if err != nil {
 		return nil, 0, err
 	}

@@ -10,7 +10,7 @@ import (
 type UserRepository interface {
 	CreateUser(ctx context.Context, u domain.User, passwordHash string) (domain.User, error)
 	GetUserById(ctx context.Context, id uuid.UUID) (domain.User, error)
-	ListUsers(ctx context.Context, page int32, limit int32) ([]domain.User, int64, error)
+	ListUsers(ctx context.Context, page int32, limit int32, search string) ([]domain.User, int64, error)
 	UpdateUser(ctx context.Context, id uuid.UUID, u domain.User) (domain.User, error)
 	UpdateUserPassword(ctx context.Context, id uuid.UUID, passwordHash string) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
@@ -19,7 +19,7 @@ type UserRepository interface {
 type UserService interface {
 	CreateUser(ctx context.Context, req domain.CreateUserRequest) (domain.User, error)
 	GetUserById(ctx context.Context, id uuid.UUID) (domain.User, error)
-	ListUsers(ctx context.Context, page int32, limit int32) ([]domain.User, int64, error)
+	ListUsers(ctx context.Context, page int32, limit int32, search string) ([]domain.User, int64, error)
 	UpdateUser(ctx context.Context, id uuid.UUID, req domain.UpdateUserRequest) (domain.User, error)
 	UpdateUserPassword(ctx context.Context, id uuid.UUID, req domain.UpdateUserPasswordRequest) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error

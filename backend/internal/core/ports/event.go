@@ -10,7 +10,7 @@ import (
 type EventRepository interface {
 	CreateEvent(ctx context.Context, e domain.Event) (domain.Event, error)
 	GetEventById(ctx context.Context, id uuid.UUID) (domain.Event, error)
-	ListEvents(ctx context.Context, page int32, limit int32) ([]domain.Event, int64, error)
+	ListEvents(ctx context.Context, page int32, limit int32, search string) ([]domain.Event, int64, error)
 	UpdateEvent(ctx context.Context, id uuid.UUID, e domain.Event) (domain.Event, error)
 	DeleteEvent(ctx context.Context, id uuid.UUID) error
 
@@ -29,7 +29,7 @@ type EventRepository interface {
 type EventService interface {
 	CreateEvent(ctx context.Context, req domain.CreateEventRequest) (domain.Event, error)
 	GetEventById(ctx context.Context, id uuid.UUID) (domain.Event, error)
-	ListEvents(ctx context.Context, page int32, limit int32) ([]domain.Event, int64, error)
+	ListEvents(ctx context.Context, page int32, limit int32, search string) ([]domain.Event, int64, error)
 	UpdateEvent(ctx context.Context, id uuid.UUID, req domain.UpdateEventRequest) (domain.Event, error)
 	DeleteEvent(ctx context.Context, id uuid.UUID) error
 
