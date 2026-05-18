@@ -65,8 +65,8 @@ clear-seed:
 	@echo "Menghapus Dummy Data dari Database..."
 	cd backend && go run cmd/clear_seed/main.go
 
-reset-db: migrate-down migrate-up seed
-	@echo "Database telah di-reset dan di-seed dengan sukses!"
+reset-db: clear-seed seed
+	@echo "Database telah dibersihkan dan di-seed ulang dengan sukses!"
 
 # --- Docker Build ---
 docker-build:

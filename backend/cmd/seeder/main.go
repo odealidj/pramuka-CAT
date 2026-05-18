@@ -125,6 +125,7 @@ func main() {
 		log.Printf("Berhasil mengaitkan %d soal secara spesifik ke dalam Event Tryout", countRel)
 		
 		// 6. Enroll Peserta (Simulasi pendaftaran dan persetujuan ujian)
+		var approvalIDs []uuid.UUID
 		countEnroll := 0
 		for i, pID := range pesertaIDs {
 			if i >= 2 {
@@ -136,13 +137,51 @@ func main() {
 			})
 			if err == nil {
 				// Langsung di approve oleh Admin agar siap ujuan
-				_, err = queries.ApproveUserEvent(ctx, approval.ID)
+				approved, err := queries.ApproveUserEvent(ctx, approval.ID)
 				if err == nil {
+					approvalIDs = append(approvalIDs, approved.ID)
 					countEnroll++
 				}
 			}
 		}
 		log.Printf("Berhasil menyetujui (approve) %d peserta untuk mengikuti ujian Tryout", countEnroll)
+
+		// 7. Insert Dummy User Answers (Simulasi pengerjaan soal oleh peserta)
+		countAnswers := 0
+		for _, approvalID := range approvalIDs {
+			for i, qID := range questionIDs {
+				// Cuma jawab 5 soal pertama saja
+				if i >= 5 {
+					break
+				}
+				// Asumsikan A adalah jawaban benar
+				_, err := queries.SaveUserAnswer(ctx, sqlcgen.SaveUserAnswerParams{
+					ApprovalID:     uuid.NullUUID{UUID: approvalID, Valid: true},
+					QuestionID:     uuid.NullUUID{UUID: qID, Valid: true},
+					SelectedAnswer: sql.NullString{String: "A", Valid: true},
+					IsCorrect:      sql.NullBool{Bool: true, Valid: true},
+				})
+				if err == nil {
+					countAnswers++
+				}
+			}
+		}
+		log.Printf("Berhasil menyimpan %d jawaban dummy untuk peserta ujian", countAnswers)
+	}
+
+	// 8. Insert Dummy Session untuk Admin
+	sessionID := uuid.New()
+	_, err = queries.CreateSession(ctx, sqlcgen.CreateSessionParams{
+		ID:           sessionID,
+		UserID:       admin.ID,
+		RefreshToken: "dummy_refresh_token_for_seed",
+		IsBlocked:    false,
+		ExpiresAt:    time.Now().Add(24 * time.Hour),
+	})
+	if err != nil {
+		log.Printf("Info: Gagal insert session: %v", err)
+	} else {
+		log.Printf("Berhasil insert Dummy Session untuk admin")
 	}
 
 	log.Println("Seeding Database Selesai dengan Sukses! Anda bisa mulai login di API.")
