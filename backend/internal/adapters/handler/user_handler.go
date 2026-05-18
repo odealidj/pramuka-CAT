@@ -60,8 +60,8 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 // @Tags        Admin - User
 // @Security    BearerAuth
 // @Produce     json
-// @Param       page   query     int  false  "Halaman (default: 1)"
-// @Param       limit  query     int  false  "Jumlah per halaman (default: 10)"
+// @Param       page   query     int  false  "Halaman (default: 1)" default(1)
+// @Param       limit  query     int  false  "Jumlah per halaman (default: 10)" default(10)
 // @Success     200    {object}  response.PaginatedResponse{data=[]domain.User}
 // @Router      /admin/users [get]
 func (h *UserHandler) ListUsers(c echo.Context) error {

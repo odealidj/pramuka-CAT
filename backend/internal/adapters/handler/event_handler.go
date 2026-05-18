@@ -69,8 +69,8 @@ func (h *EventHandler) CreateEvent(c echo.Context) error {
 // @Tags        Admin - Event
 // @Security    BearerAuth
 // @Produce     json
-// @Param       page   query     int  false  "Halaman"
-// @Param       limit  query     int  false  "Limit"
+// @Param       page   query     int  false  "Halaman" default(1)
+// @Param       limit  query     int  false  "Limit" default(10)
 // @Success     200    {object}  response.PaginatedResponse{data=[]domain.Event}
 // @Router      /admin/events [get]
 func (h *EventHandler) ListEvents(c echo.Context) error {

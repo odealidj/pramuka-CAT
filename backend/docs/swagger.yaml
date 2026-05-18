@@ -406,11 +406,13 @@ paths:
   /admin/categories:
     get:
       parameters:
-      - description: Halaman
+      - default: 1
+        description: Halaman
         in: query
         name: page
         type: integer
-      - description: Limit
+      - default: 10
+        description: Limit
         in: query
         name: limit
         type: integer
@@ -515,11 +517,13 @@ paths:
   /admin/events:
     get:
       parameters:
-      - description: Halaman
+      - default: 1
+        description: Halaman
         in: query
         name: page
         type: integer
-      - description: Limit
+      - default: 10
+        description: Limit
         in: query
         name: limit
         type: integer
@@ -601,11 +605,13 @@ paths:
   /admin/questions:
     get:
       parameters:
-      - description: Halaman
+      - default: 1
+        description: Halaman
         in: query
         name: page
         type: integer
-      - description: Limit
+      - default: 10
+        description: Limit
         in: query
         name: limit
         type: integer
@@ -735,11 +741,13 @@ paths:
     get:
       description: Mengambil daftar seluruh pengguna dengan paginasi
       parameters:
-      - description: 'Halaman (default: 1)'
+      - default: 1
+        description: 'Halaman (default: 1)'
         in: query
         name: page
         type: integer
-      - description: 'Jumlah per halaman (default: 10)'
+      - default: 10
+        description: 'Jumlah per halaman (default: 10)'
         in: query
         name: limit
         type: integer
@@ -1053,11 +1061,13 @@ paths:
     get:
       description: Peserta melihat event ujian yang belum berakhir
       parameters:
-      - description: Halaman
+      - default: 1
+        description: Halaman
         in: query
         name: page
         type: integer
-      - description: Limit
+      - default: 10
+        description: Limit
         in: query
         name: limit
         type: integer

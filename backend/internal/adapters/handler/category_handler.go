@@ -54,8 +54,8 @@ func (h *CategoryHandler) CreateCategory(c echo.Context) error {
 // @Tags        Admin - Kategori
 // @Security    BearerAuth
 // @Produce     json
-// @Param       page   query     int  false  "Halaman"
-// @Param       limit  query     int  false  "Limit"
+// @Param       page   query     int  false  "Halaman" default(1)
+// @Param       limit  query     int  false  "Limit" default(10)
 // @Success     200    {object}  response.PaginatedResponse{data=[]domain.Category}
 // @Router      /admin/categories [get]
 func (h *CategoryHandler) ListCategories(c echo.Context) error {

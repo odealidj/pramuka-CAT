@@ -46,8 +46,8 @@ func getUserIDFromContext(c echo.Context) (uuid.UUID, error) {
 // @Tags        Peserta - Ujian
 // @Security    BearerAuth
 // @Produce     json
-// @Param       page   query     int  false  "Halaman"
-// @Param       limit  query     int  false  "Limit"
+// @Param       page   query     int  false  "Halaman" default(1)
+// @Param       limit  query     int  false  "Limit" default(10)
 // @Success     200    {object}  response.PaginatedResponse{data=[]domain.UpcomingEvent}
 // @Router      /protected/exams/upcoming [get]
 func (h *ExamHandler) ListUpcomingEvents(c echo.Context) error {
