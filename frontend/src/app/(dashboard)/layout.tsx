@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Sidebar from '@/components/layout/Sidebar';
 import Navbar from '@/components/layout/Navbar';
 import { usePathname } from 'next/navigation';
+import AuthGuard from '@/components/auth/AuthGuard';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Mapping path → page title
 const pageTitles: Record<string, string> = {
@@ -16,14 +18,11 @@ const pageTitles: Record<string, string> = {
   '/dashboard/profile': 'Profil Saya',
 };
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function DashboardContent({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const pathname = usePathname();
   const pageTitle = pageTitles[pathname] ?? 'Halaman';
+  const { user } = useAuth();
 
   return (
     <div className="h-full flex">
@@ -31,7 +30,7 @@ export default function DashboardLayout({
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
-        role="admin"
+        role={(user?.role as 'admin' | 'peserta') ?? 'peserta'}
       />
 
       {/* Main Content Area (offset by sidebar width on desktop) */}
@@ -55,5 +54,17 @@ export default function DashboardLayout({
         </footer>
       </div>
     </div>
+  );
+}
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <AuthGuard>
+      <DashboardContent>{children}</DashboardContent>
+    </AuthGuard>
   );
 }
