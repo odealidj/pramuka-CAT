@@ -1,0 +1,427 @@
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+import {
+  Tag,
+  Plus,
+  Search,
+  Edit2,
+  Trash2,
+  RefreshCw,
+} from 'lucide-react';
+import { isAxiosError } from 'axios';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+import Spinner from '@/components/ui/Spinner';
+import Pagination from '@/components/ui/Pagination';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import Modal from '@/components/ui/Modal';
+import { ToastContainer, useToast } from '@/components/ui/Toast';
+
+import {
+  listCategoriesApi,
+  createCategoryApi,
+  updateCategoryApi,
+  deleteCategoryApi,
+} from '@/services/category.service';
+import type {
+  Category,
+  PaginationMeta,
+  CreateCategoryRequest,
+  UpdateCategoryRequest,
+  ApiErrorResponse,
+} from '@/types/auth';
+
+// ============================================================
+// Form Validation Schema
+// ============================================================
+const schema = z.object({
+  name: z.string().min(2, 'Nama minimal 2 karakter'),
+});
+type FormValues = z.infer<typeof schema>;
+
+// ============================================================
+// Helper — format date
+// ============================================================
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+// ============================================================
+// Page Component
+// ============================================================
+export default function CategoriesPage() {
+  // --- Data State ---
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [meta, setMeta] = useState<PaginationMeta | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+
+  // --- Modal & Action States ---
+  const [formModal, setFormModal] = useState<{
+    open: boolean;
+    mode: 'create' | 'edit';
+    category: Category | null;
+  }>({ open: false, mode: 'create', category: null });
+
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    category: Category | null;
+    isLoading: boolean;
+  }>({ open: false, category: null, isLoading: false });
+
+  // --- Error State for Forms ---
+  const [formApiError, setFormApiError] = useState<string | null>(null);
+
+  // --- Toast ---
+  const { toasts, toast, dismiss } = useToast();
+
+  // --- React Hook Form ---
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<FormValues>({ resolver: zodResolver(schema) });
+
+  // ============================================================
+  // Fetch Categories
+  // ============================================================
+  const fetchCategories = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // Get categories with search and page (limit 10 for paginated view)
+      const res = await listCategoriesApi(page, 10, search);
+      setCategories(res.data);
+      setMeta(res.meta);
+    } catch {
+      toast('error', 'Gagal memuat data kategori soal.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [page, search]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
+
+  // Debounced search — trigger after 500ms typing stop
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setPage(1);
+      setSearch(searchInput);
+    }, 500);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  // Set form field values when category to edit changes
+  useEffect(() => {
+    if (formModal.open && formModal.mode === 'edit' && formModal.category) {
+      setValue('name', formModal.category.name);
+    } else if (formModal.open && formModal.mode === 'create') {
+      reset({ name: '' });
+    }
+  }, [formModal, setValue, reset]);
+
+  // ============================================================
+  // Save Category (Create/Update)
+  // ============================================================
+  const handleSave = async (values: FormValues) => {
+    setFormApiError(null);
+    try {
+      if (formModal.mode === 'create') {
+        await createCategoryApi(values as CreateCategoryRequest);
+        toast('success', `Kategori "${values.name}" berhasil dibuat.`);
+      } else if (formModal.mode === 'edit' && formModal.category) {
+        await updateCategoryApi(formModal.category.id, values as UpdateCategoryRequest);
+        toast('success', `Kategori berhasil diubah menjadi "${values.name}".`);
+      }
+      setFormModal({ open: false, mode: 'create', category: null });
+      reset({ name: '' });
+      fetchCategories();
+    } catch (err) {
+      const msg = isAxiosError(err)
+        ? (err.response?.data as ApiErrorResponse)?.message ?? 'Gagal menyimpan kategori.'
+        : 'Terjadi kesalahan.';
+      setFormApiError(msg);
+    }
+  };
+
+  // ============================================================
+  // Delete Category
+  // ============================================================
+  const handleDelete = async () => {
+    if (!deleteDialog.category) return;
+    setDeleteDialog((d) => ({ ...d, isLoading: true }));
+    try {
+      await deleteCategoryApi(deleteDialog.category.id);
+      toast('success', `Kategori "${deleteDialog.category.name}" berhasil dihapus.`);
+      setDeleteDialog({ open: false, category: null, isLoading: false });
+      fetchCategories();
+    } catch {
+      toast('error', 'Gagal menghapus kategori.');
+      setDeleteDialog((d) => ({ ...d, isLoading: false }));
+    }
+  };
+
+  // ============================================================
+  // Render
+  // ============================================================
+  return (
+    <div className="space-y-6">
+
+      {/* ── Page Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-gray-900 text-xl font-bold flex items-center gap-2">
+            <Tag size={22} className="text-amber-700" />
+            Kategori Soal
+          </h1>
+          <p className="text-gray-500 text-sm mt-0.5">
+            Kelola rumpun/kategori materi untuk pengelompokan bank soal
+          </p>
+        </div>
+        <button
+          onClick={() => {
+            setFormApiError(null);
+            setFormModal({ open: true, mode: 'create', category: null });
+          }}
+          id="btn-add-category"
+          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#7C4318] to-[#9C5A22] text-white text-sm font-semibold rounded-xl shadow-sm shadow-amber-900/20 hover:from-[#5C3010] hover:to-[#7C4318] transition-all"
+        >
+          <Plus size={16} />
+          Tambah Kategori
+        </button>
+      </div>
+
+      {/* ── Stats Card ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+          <p className="text-gray-500 text-xs font-medium">Total Kategori</p>
+          <p className="text-gray-900 text-2xl font-bold mt-1">
+            {meta?.total_records ?? '—'}
+          </p>
+        </div>
+        <div className="bg-gradient-to-br from-amber-50 to-white rounded-2xl p-4 border border-amber-100 shadow-sm col-span-1 sm:col-span-2">
+          <p className="text-amber-700 text-xs font-medium">Kegunaan Kategori</p>
+          <p className="text-gray-600 text-xs sm:text-sm mt-1">
+            Kategori digunakan untuk memilah bank soal di tab Bank Soal, serta penarikan soal ujian secara acak pada Jadwal Ujian.
+          </p>
+        </div>
+      </div>
+
+      {/* ── Table Card ── */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+
+        {/* Toolbar */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 border-b border-gray-100">
+          <div className="flex-1 flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100 focus-within:ring-2 focus-within:ring-amber-500/30 focus-within:border-amber-300 focus-within:bg-white transition-all">
+            <Search size={14} className="text-gray-400 flex-shrink-0" />
+            <input
+              type="text"
+              placeholder="Cari kategori..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
+              id="search-categories"
+            />
+          </div>
+          <button
+            onClick={fetchCategories}
+            disabled={isLoading}
+            className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm transition-all disabled:opacity-50"
+            title="Refresh"
+          >
+            <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
+        </div>
+
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-50/70 border-b border-gray-100">
+                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-16">
+                  No
+                </th>
+                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Nama Kategori
+                </th>
+                <th className="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Aksi
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={3} className="py-16 text-center">
+                    <div className="flex flex-col items-center gap-3 text-gray-400">
+                      <Spinner size={24} className="text-amber-600" />
+                      <span className="text-sm">Memuat data kategori...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : categories.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="py-16 text-center">
+                    <div className="flex flex-col items-center gap-2 text-gray-400">
+                      <Tag size={36} className="text-gray-200" />
+                      <p className="text-sm font-medium text-gray-500">
+                        {search ? `Tidak ada kategori dengan kata kunci "${search}"` : 'Belum ada kategori'}
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                categories.map((category, idx) => {
+                  const rowNo = ((page - 1) * 10) + idx + 1;
+                  return (
+                    <tr
+                      key={category.id}
+                      className="hover:bg-gray-50/60 transition-colors"
+                    >
+                      {/* No */}
+                      <td className="px-5 py-3.5 text-gray-400 text-xs">{rowNo}</td>
+
+                      {/* Nama Kategori */}
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-700 flex-shrink-0">
+                            <Tag size={14} />
+                          </div>
+                          <div>
+                            <p className="text-gray-900 font-semibold text-sm">
+                              {category.name}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Aksi */}
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center justify-end gap-1">
+                          {/* Edit */}
+                          <button
+                            onClick={() => {
+                              setFormApiError(null);
+                              setFormModal({ open: true, mode: 'edit', category });
+                            }}
+                            className="p-2 rounded-lg text-gray-400 hover:text-amber-700 hover:bg-amber-50 transition-all"
+                            title="Edit kategori"
+                            aria-label="Edit kategori"
+                          >
+                            <Edit2 size={15} />
+                          </button>
+
+                          {/* Hapus */}
+                          <button
+                            onClick={() =>
+                              setDeleteDialog({ open: true, category, isLoading: false })
+                            }
+                            className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all"
+                            title="Hapus kategori"
+                            aria-label="Hapus kategori"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Footer */}
+        {meta && meta.total_pages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-t border-gray-100">
+            <p className="text-gray-400 text-xs">
+              Menampilkan {((page - 1) * 10) + 1}–
+              {Math.min(page * 10, meta.total_records)} dari{' '}
+              {meta.total_records} kategori
+            </p>
+            <Pagination
+              page={page}
+              totalPages={meta.total_pages}
+              onPageChange={setPage}
+              isLoading={isLoading}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* ── Add/Edit Category Modal ── */}
+      <Modal
+        isOpen={formModal.open}
+        onClose={() => setFormModal((s) => ({ ...s, open: false }))}
+        title={formModal.mode === 'create' ? 'Tambah Kategori Soal' : 'Edit Kategori Soal'}
+        size="sm"
+      >
+        <form onSubmit={handleSubmit(handleSave)} className="space-y-4" noValidate>
+          <div>
+            <label className="block text-gray-600 text-xs font-semibold uppercase tracking-wider mb-2">
+              Nama Kategori Soal
+            </label>
+            <input
+              type="text"
+              placeholder="Contoh: PUPK, Sandi, Tali-temali..."
+              {...register('name')}
+              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-gray-800 text-sm outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400 transition-all"
+              autoFocus
+            />
+            {errors.name && (
+              <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>
+            )}
+            {formApiError && (
+              <p className="text-red-500 text-xs mt-1">{formApiError}</p>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-2.5 pt-2 border-t border-gray-100">
+            <button
+              type="button"
+              onClick={() => setFormModal((s) => ({ ...s, open: false }))}
+              className="px-4 py-2.5 border border-gray-200 rounded-xl text-gray-600 text-sm font-semibold hover:bg-gray-50 transition-all"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-[#7C4318] to-[#9C5A22] text-white text-sm font-semibold rounded-xl hover:from-[#5C3010] hover:to-[#7C4318] transition-all disabled:opacity-60"
+            >
+              {isSubmitting ? <Spinner size={14} className="text-white" /> : null}
+              Simpan Kategori
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ── Deletion Confirm Dialog ── */}
+      <ConfirmDialog
+        isOpen={deleteDialog.open}
+        onClose={() => setDeleteDialog({ open: false, category: null, isLoading: false })}
+        onConfirm={handleDelete}
+        title="Hapus Kategori"
+        message={`Apakah Anda yakin ingin menghapus kategori "${deleteDialog.category?.name}"? Soal yang terkait dengan kategori ini akan diatur menjadi tanpa kategori.`}
+        isLoading={deleteDialog.isLoading}
+      />
+
+      {/* ── Toast Notifications ── */}
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
+    </div>
+  );
+}
