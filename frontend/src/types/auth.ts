@@ -14,7 +14,7 @@ export interface RefreshRequest {
   refresh_token: string;
 }
 
-// === Response Types ===
+// === Auth Response Types ===
 
 /** Data user tanpa password hash (mirror dari UserResponse di Go) */
 export interface UserInfo {
@@ -37,6 +37,55 @@ export interface RefreshResponse {
   refresh_token: string;
 }
 
+// === User CRUD Types ===
+
+/** Entitas User lengkap (mirror dari domain.User di Go) */
+export interface User {
+  id: string;
+  username: string;
+  full_name: string;
+  role: 'admin' | 'peserta';
+  photo_url?: string | null;
+  created_at: string;
+  deleted_at?: string | null;
+}
+
+/** Request membuat user baru */
+export interface CreateUserRequest {
+  username: string;
+  password: string;
+  full_name: string;
+  role: 'admin' | 'peserta';
+  photo_url?: string;
+}
+
+/** Request update profil user */
+export interface UpdateUserRequest {
+  username: string;
+  full_name: string;
+  role: 'admin' | 'peserta';
+  photo_url?: string;
+}
+
+/** Request ganti password user oleh admin */
+export interface UpdatePasswordRequest {
+  password: string;
+}
+
+// === Pagination Types ===
+
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total_records: number;
+  total_pages: number;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: PaginationMeta;
+}
+
 // === Standard API Response Wrapper ===
 // Mencerminkan format response standar dari pkg/response di Backend
 
@@ -45,7 +94,7 @@ export interface ApiSuccessResponse<T> {
   code: number;
   message: string;
   data: T;
-  meta?: Record<string, unknown>;
+  meta?: PaginationMeta;
   trace_id?: string;
 }
 
