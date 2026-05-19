@@ -105,3 +105,50 @@ export interface ApiErrorResponse {
   errors?: Array<{ field: string; message: string }>;
   trace_id?: string;
 }
+
+// === Category Types ===
+// Catatan: Category.ID adalah int32 (bukan UUID)
+
+export interface Category {
+  id: number;
+  name: string;
+}
+
+export interface CreateCategoryRequest {
+  name: string;
+}
+
+export interface UpdateCategoryRequest {
+  name: string;
+}
+
+// === Question Types ===
+
+export type CorrectAnswer = 'A' | 'B' | 'C' | 'D';
+
+export interface Question {
+  id: string;
+  category_id: number | null;
+  question_text: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+  correct_answer: CorrectAnswer;
+  weight: number;
+  created_at: string | null;
+}
+
+export interface CreateQuestionRequest {
+  category_id?: number | null;
+  question_text: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+  correct_answer: CorrectAnswer;
+  weight: number;
+}
+
+export type UpdateQuestionRequest = CreateQuestionRequest;
+
