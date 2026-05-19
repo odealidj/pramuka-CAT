@@ -152,3 +152,43 @@ export interface CreateQuestionRequest {
 
 export type UpdateQuestionRequest = CreateQuestionRequest;
 
+// === Event / Jadwal Ujian Types ===
+
+export interface Event {
+  id: string;
+  name: string;
+  start_time: string;   // ISO 8601
+  end_time: string;     // ISO 8601
+  duration_minutes: number;
+  passing_grade: number;
+  created_at: string;
+}
+
+export interface CreateEventRequest {
+  name: string;
+  start_time: string;   // ISO 8601
+  end_time: string;     // ISO 8601
+  duration_minutes: number;
+  passing_grade: number;
+}
+
+export type UpdateEventRequest = CreateEventRequest;
+
+export interface EventParticipant {
+  user_id: string;
+  username: string;
+  full_name: string;
+  status: string;       // "pending" | "approved"
+  is_completed: boolean;
+  score: number;
+  is_passed: boolean;
+}
+
+export interface AddEventQuestionRequest {
+  question_id: string;
+}
+
+export interface AddRandomEventQuestionsRequest {
+  category_id?: number | null;
+  amount: number;
+}
