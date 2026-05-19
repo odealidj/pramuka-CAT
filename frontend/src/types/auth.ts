@@ -192,3 +192,37 @@ export interface AddRandomEventQuestionsRequest {
   category_id?: number | null;
   amount: number;
 }
+
+// === Hasil Ujian / Exam Result Types ===
+
+/** Riwayat pendaftaran + hasil ujian peserta (dipakai admin via event participants) */
+export interface UserApproval {
+  event_id: string;
+  name: string;             // nama event
+  start_time: string;
+  end_time: string;
+  duration_minutes: number;
+  passing_grade: number;
+  approval_id: string;
+  status: string;           // "pending" | "approved" | "revoked"
+  is_completed: boolean;
+  score: number;
+  is_passed: boolean;
+  started_at: string | null;
+  completed_at: string | null;
+}
+
+/** Detail per soal — jawaban peserta + kunci jawaban (untuk review admin) */
+export interface UserAnswerDetail {
+  answer_id: string;
+  selected_answer: string;  // A | B | C | D
+  is_correct: boolean;
+  question_id: string;
+  question_text: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+  correct_answer: string;   // A | B | C | D
+  weight: number;
+}

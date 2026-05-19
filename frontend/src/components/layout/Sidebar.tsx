@@ -14,6 +14,7 @@ import {
   FlameKindling,
   X,
   ShieldCheck,
+  BarChart3,
 } from 'lucide-react';
 
 // --- Navigation Config ---
@@ -47,6 +48,12 @@ const navItems: NavItem[] = [
     label: 'Jadwal Ujian',
     href: '/dashboard/events',
     icon: <CalendarDays size={18} />,
+  },
+  {
+    label: 'Hasil Ujian',
+    href: '/dashboard/results',
+    icon: <BarChart3 size={18} />,
+    adminOnly: true,
   },
   {
     label: 'Manajemen User',

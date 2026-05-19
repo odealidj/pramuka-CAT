@@ -13,6 +13,7 @@ const pageTitles: Record<string, string> = {
   '/dashboard/questions': 'Bank Soal',
   '/dashboard/categories': 'Kategori Soal',
   '/dashboard/events': 'Jadwal Ujian',
+  '/dashboard/results': 'Hasil Ujian',
   '/dashboard/users': 'Manajemen Pengguna',
   '/dashboard/settings': 'Pengaturan',
   '/dashboard/profile': 'Profil Saya',
