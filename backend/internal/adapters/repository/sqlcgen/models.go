@@ -25,6 +25,7 @@ type Event struct {
 	DurationMinutes int32        `json:"duration_minutes"`
 	PassingGrade    string       `json:"passing_grade"`
 	CreatedAt       sql.NullTime `json:"created_at"`
+	DeletedAt       sql.NullTime `json:"deleted_at"`
 }
 
 type EventQuestion struct {
@@ -43,6 +44,7 @@ type Question struct {
 	CorrectAnswer string        `json:"correct_answer"`
 	Weight        int32         `json:"weight"`
 	CreatedAt     sql.NullTime  `json:"created_at"`
+	DeletedAt     sql.NullTime  `json:"deleted_at"`
 }
 
 type Session struct {

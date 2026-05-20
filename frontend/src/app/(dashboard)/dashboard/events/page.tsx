@@ -191,7 +191,7 @@ function EventCard({
             </span>
             <span className="flex items-center gap-1">
               <Trophy size={11} className="text-emerald-500" />
-              KKM <strong className="text-gray-700">{event.passing_grade}%</strong>
+              Batas Lulus <strong className="text-gray-700">{event.passing_grade}%</strong>
             </span>
           </div>
         </div>

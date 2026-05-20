@@ -18,7 +18,7 @@ INSERT INTO event_questions (event_id, question_id)
 SELECT $1, q.id
 FROM questions q
 JOIN categories c ON q.category_id = c.id
-WHERE c.deleted_at IS NULL
+WHERE c.deleted_at IS NULL AND q.deleted_at IS NULL
   AND q.id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1)
 ORDER BY RANDOM()
 LIMIT $2
@@ -39,7 +39,7 @@ INSERT INTO event_questions (event_id, question_id)
 SELECT $1, q.id
 FROM questions q
 JOIN categories c ON q.category_id = c.id
-WHERE q.category_id = $2 AND c.deleted_at IS NULL
+WHERE q.category_id = $2 AND c.deleted_at IS NULL AND q.deleted_at IS NULL
   AND q.id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1)
 ORDER BY RANDOM()
 LIMIT $3
@@ -106,8 +106,8 @@ func (q *Queries) CalculateScore(ctx context.Context, approvalID uuid.NullUUID) 
 }
 
 const checkDuplicateEvent = `-- name: CheckDuplicateEvent :one
-SELECT id, name, start_time, end_time, duration_minutes, passing_grade, created_at FROM events
-WHERE name = $1 AND start_time = $2 AND end_time = $3
+SELECT id, name, start_time, end_time, duration_minutes, passing_grade, created_at, deleted_at FROM events
+WHERE deleted_at IS NULL AND name = $1 AND start_time = $2 AND end_time = $3
   AND ($4::uuid IS NULL OR id <> $4::uuid)
 LIMIT 1
 `
@@ -135,14 +135,15 @@ func (q *Queries) CheckDuplicateEvent(ctx context.Context, arg CheckDuplicateEve
 		&i.DurationMinutes,
 		&i.PassingGrade,
 		&i.CreatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const checkDuplicateQuestion = `-- name: CheckDuplicateQuestion :one
-SELECT q.id, q.category_id, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_answer, q.weight, q.created_at FROM questions q
+SELECT q.id, q.category_id, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_answer, q.weight, q.created_at, q.deleted_at FROM questions q
 JOIN categories c ON q.category_id = c.id
-WHERE c.deleted_at IS NULL
+WHERE c.deleted_at IS NULL AND q.deleted_at IS NULL
   AND REGEXP_REPLACE(q.question_text, '^[[:space:][:digit:].)*#_-]+', '') ILIKE REGEXP_REPLACE($1::text, '^[[:space:][:digit:].)*#_-]+', '')
   AND ($2::uuid IS NULL OR q.id <> $2::uuid)
 LIMIT 1
@@ -167,6 +168,7 @@ func (q *Queries) CheckDuplicateQuestion(ctx context.Context, arg CheckDuplicate
 		&i.CorrectAnswer,
 		&i.Weight,
 		&i.CreatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
@@ -174,7 +176,7 @@ func (q *Queries) CheckDuplicateQuestion(ctx context.Context, arg CheckDuplicate
 const countAvailableQuestionsForEventAll = `-- name: CountAvailableQuestionsForEventAll :one
 SELECT COUNT(*) FROM questions q
 JOIN categories c ON q.category_id = c.id
-WHERE c.deleted_at IS NULL
+WHERE c.deleted_at IS NULL AND q.deleted_at IS NULL
   AND q.id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1)
 `
 
@@ -188,7 +190,7 @@ func (q *Queries) CountAvailableQuestionsForEventAll(ctx context.Context, eventI
 const countAvailableQuestionsForEventByCategory = `-- name: CountAvailableQuestionsForEventByCategory :one
 SELECT COUNT(*) FROM questions q
 JOIN categories c ON q.category_id = c.id
-WHERE q.category_id = $2 AND c.deleted_at IS NULL
+WHERE q.category_id = $2 AND c.deleted_at IS NULL AND q.deleted_at IS NULL
   AND q.id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1)
 `
 
@@ -242,7 +244,7 @@ func (q *Queries) CountEventQuestions(ctx context.Context, eventID uuid.UUID) (i
 
 const countEvents = `-- name: CountEvents :one
 SELECT COUNT(*) FROM events
-WHERE $1::text = '' OR to_tsvector('indonesian', name) @@ plainto_tsquery('indonesian', $1::text)
+WHERE deleted_at IS NULL AND ($1::text = '' OR to_tsvector('indonesian', name) @@ plainto_tsquery('indonesian', $1::text))
 `
 
 func (q *Queries) CountEvents(ctx context.Context, search string) (int64, error) {
@@ -255,7 +257,7 @@ func (q *Queries) CountEvents(ctx context.Context, search string) (int64, error)
 const countQuestions = `-- name: CountQuestions :one
 SELECT COUNT(*) FROM questions q
 JOIN categories c ON q.category_id = c.id
-WHERE c.deleted_at IS NULL
+WHERE c.deleted_at IS NULL AND q.deleted_at IS NULL
   AND ($1::int IS NULL OR q.category_id = $1::int)
   AND ($2::text = '' OR to_tsvector('indonesian', q.question_text) @@ plainto_tsquery('indonesian', $2::text))
 `
@@ -286,7 +288,7 @@ func (q *Queries) CountQuestionsByCategory(ctx context.Context, categoryID sql.N
 
 const countUpcomingEvents = `-- name: CountUpcomingEvents :one
 SELECT COUNT(*) FROM events
-WHERE end_time > NOW()
+WHERE end_time > NOW() AND deleted_at IS NULL
 `
 
 func (q *Queries) CountUpcomingEvents(ctx context.Context) (int64, error) {
@@ -337,7 +339,7 @@ func (q *Queries) CreateCategory(ctx context.Context, name string) (Category, er
 const createEvent = `-- name: CreateEvent :one
 INSERT INTO events (name, start_time, end_time, duration_minutes, passing_grade)
 VALUES ($1, $2, $3, $4, $5)
-RETURNING id, name, start_time, end_time, duration_minutes, passing_grade, created_at
+RETURNING id, name, start_time, end_time, duration_minutes, passing_grade, created_at, deleted_at
 `
 
 type CreateEventParams struct {
@@ -365,6 +367,7 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 		&i.DurationMinutes,
 		&i.PassingGrade,
 		&i.CreatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
@@ -387,7 +390,7 @@ func (q *Queries) CreateEventQuestion(ctx context.Context, arg CreateEventQuesti
 const createQuestion = `-- name: CreateQuestion :one
 INSERT INTO questions (category_id, question_text, option_a, option_b, option_c, option_d, correct_answer, weight)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-RETURNING id, category_id, question_text, option_a, option_b, option_c, option_d, correct_answer, weight, created_at
+RETURNING id, category_id, question_text, option_a, option_b, option_c, option_d, correct_answer, weight, created_at, deleted_at
 `
 
 type CreateQuestionParams struct {
@@ -424,6 +427,7 @@ func (q *Queries) CreateQuestion(ctx context.Context, arg CreateQuestionParams) 
 		&i.CorrectAnswer,
 		&i.Weight,
 		&i.CreatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
@@ -511,7 +515,8 @@ func (q *Queries) DeleteCategory(ctx context.Context, id int32) error {
 }
 
 const deleteEvent = `-- name: DeleteEvent :exec
-DELETE FROM events
+UPDATE events
+SET deleted_at = NOW()
 WHERE id = $1
 `
 
@@ -536,7 +541,8 @@ func (q *Queries) DeleteEventQuestion(ctx context.Context, arg DeleteEventQuesti
 }
 
 const deleteQuestion = `-- name: DeleteQuestion :exec
-DELETE FROM questions
+UPDATE questions
+SET deleted_at = NOW()
 WHERE id = $1
 `
 
@@ -725,9 +731,9 @@ func (q *Queries) GetCategoryByName(ctx context.Context, name string) (Category,
 }
 
 const getEventById = `-- name: GetEventById :one
-SELECT e.id, e.name, e.start_time, e.end_time, e.duration_minutes, e.passing_grade, e.created_at, (SELECT COUNT(*)::int FROM event_questions eq WHERE eq.event_id = e.id) as total_questions
+SELECT e.id, e.name, e.start_time, e.end_time, e.duration_minutes, e.passing_grade, e.created_at, e.deleted_at, (SELECT COUNT(*)::int FROM event_questions eq WHERE eq.event_id = e.id) as total_questions
 FROM events e
-WHERE e.id = $1 LIMIT 1
+WHERE e.id = $1 AND e.deleted_at IS NULL LIMIT 1
 `
 
 type GetEventByIdRow struct {
@@ -738,6 +744,7 @@ type GetEventByIdRow struct {
 	DurationMinutes int32        `json:"duration_minutes"`
 	PassingGrade    string       `json:"passing_grade"`
 	CreatedAt       sql.NullTime `json:"created_at"`
+	DeletedAt       sql.NullTime `json:"deleted_at"`
 	TotalQuestions  int32        `json:"total_questions"`
 }
 
@@ -752,6 +759,7 @@ func (q *Queries) GetEventById(ctx context.Context, id uuid.UUID) (GetEventByIdR
 		&i.DurationMinutes,
 		&i.PassingGrade,
 		&i.CreatedAt,
+		&i.DeletedAt,
 		&i.TotalQuestions,
 	)
 	return i, err
@@ -772,8 +780,8 @@ func (q *Queries) GetEventTotalWeight(ctx context.Context, eventID uuid.UUID) (s
 }
 
 const getQuestionById = `-- name: GetQuestionById :one
-SELECT id, category_id, question_text, option_a, option_b, option_c, option_d, correct_answer, weight, created_at FROM questions
-WHERE id = $1 LIMIT 1
+SELECT id, category_id, question_text, option_a, option_b, option_c, option_d, correct_answer, weight, created_at, deleted_at FROM questions
+WHERE id = $1 AND deleted_at IS NULL LIMIT 1
 `
 
 func (q *Queries) GetQuestionById(ctx context.Context, id uuid.UUID) (Question, error) {
@@ -790,6 +798,7 @@ func (q *Queries) GetQuestionById(ctx context.Context, id uuid.UUID) (Question, 
 		&i.CorrectAnswer,
 		&i.Weight,
 		&i.CreatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
@@ -1017,7 +1026,7 @@ func (q *Queries) ListEventParticipants(ctx context.Context, arg ListEventPartic
 }
 
 const listEventQuestions = `-- name: ListEventQuestions :many
-SELECT q.id, q.category_id, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_answer, q.weight, q.created_at FROM questions q
+SELECT q.id, q.category_id, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_answer, q.weight, q.created_at, q.deleted_at FROM questions q
 JOIN event_questions eq ON q.id = eq.question_id
 WHERE eq.event_id = $1
 ORDER BY q.created_at ASC
@@ -1050,6 +1059,7 @@ func (q *Queries) ListEventQuestions(ctx context.Context, arg ListEventQuestions
 			&i.CorrectAnswer,
 			&i.Weight,
 			&i.CreatedAt,
+			&i.DeletedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -1065,9 +1075,9 @@ func (q *Queries) ListEventQuestions(ctx context.Context, arg ListEventQuestions
 }
 
 const listEvents = `-- name: ListEvents :many
-SELECT e.id, e.name, e.start_time, e.end_time, e.duration_minutes, e.passing_grade, e.created_at, (SELECT COUNT(*)::int FROM event_questions eq WHERE eq.event_id = e.id) as total_questions
+SELECT e.id, e.name, e.start_time, e.end_time, e.duration_minutes, e.passing_grade, e.created_at, e.deleted_at, (SELECT COUNT(*)::int FROM event_questions eq WHERE eq.event_id = e.id) as total_questions
 FROM events e
-WHERE $3::text = '' OR to_tsvector('indonesian', e.name) @@ plainto_tsquery('indonesian', $3::text)
+WHERE e.deleted_at IS NULL AND ($3::text = '' OR to_tsvector('indonesian', e.name) @@ plainto_tsquery('indonesian', $3::text))
 ORDER BY e.name ASC, e.start_time ASC, e.end_time ASC
 LIMIT $1 OFFSET $2
 `
@@ -1086,6 +1096,7 @@ type ListEventsRow struct {
 	DurationMinutes int32        `json:"duration_minutes"`
 	PassingGrade    string       `json:"passing_grade"`
 	CreatedAt       sql.NullTime `json:"created_at"`
+	DeletedAt       sql.NullTime `json:"deleted_at"`
 	TotalQuestions  int32        `json:"total_questions"`
 }
 
@@ -1106,6 +1117,7 @@ func (q *Queries) ListEvents(ctx context.Context, arg ListEventsParams) ([]ListE
 			&i.DurationMinutes,
 			&i.PassingGrade,
 			&i.CreatedAt,
+			&i.DeletedAt,
 			&i.TotalQuestions,
 		); err != nil {
 			return nil, err
@@ -1122,9 +1134,9 @@ func (q *Queries) ListEvents(ctx context.Context, arg ListEventsParams) ([]ListE
 }
 
 const listQuestions = `-- name: ListQuestions :many
-SELECT q.id, q.category_id, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_answer, q.weight, q.created_at FROM questions q
+SELECT q.id, q.category_id, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_answer, q.weight, q.created_at, q.deleted_at FROM questions q
 JOIN categories c ON q.category_id = c.id
-WHERE c.deleted_at IS NULL
+WHERE c.deleted_at IS NULL AND q.deleted_at IS NULL
   AND ($3::int IS NULL OR q.category_id = $3::int)
   AND ($4::text = '' OR to_tsvector('indonesian', q.question_text) @@ plainto_tsquery('indonesian', $4::text))
 ORDER BY q.category_id ASC, q.question_text ASC
@@ -1163,6 +1175,7 @@ func (q *Queries) ListQuestions(ctx context.Context, arg ListQuestionsParams) ([
 			&i.CorrectAnswer,
 			&i.Weight,
 			&i.CreatedAt,
+			&i.DeletedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -1178,9 +1191,9 @@ func (q *Queries) ListQuestions(ctx context.Context, arg ListQuestionsParams) ([
 }
 
 const listUpcomingEvents = `-- name: ListUpcomingEvents :many
-SELECT e.id, e.name, e.start_time, e.end_time, e.duration_minutes, e.passing_grade, e.created_at, (SELECT COUNT(*)::int FROM event_questions eq WHERE eq.event_id = e.id) as total_questions
+SELECT e.id, e.name, e.start_time, e.end_time, e.duration_minutes, e.passing_grade, e.created_at, e.deleted_at, (SELECT COUNT(*)::int FROM event_questions eq WHERE eq.event_id = e.id) as total_questions
 FROM events e
-WHERE e.end_time > NOW()
+WHERE e.end_time > NOW() AND e.deleted_at IS NULL
 ORDER BY e.start_time ASC
 LIMIT $1 OFFSET $2
 `
@@ -1198,6 +1211,7 @@ type ListUpcomingEventsRow struct {
 	DurationMinutes int32        `json:"duration_minutes"`
 	PassingGrade    string       `json:"passing_grade"`
 	CreatedAt       sql.NullTime `json:"created_at"`
+	DeletedAt       sql.NullTime `json:"deleted_at"`
 	TotalQuestions  int32        `json:"total_questions"`
 }
 
@@ -1218,6 +1232,7 @@ func (q *Queries) ListUpcomingEvents(ctx context.Context, arg ListUpcomingEvents
 			&i.DurationMinutes,
 			&i.PassingGrade,
 			&i.CreatedAt,
+			&i.DeletedAt,
 			&i.TotalQuestions,
 		); err != nil {
 			return nil, err
@@ -1440,8 +1455,8 @@ func (q *Queries) UpdateCategory(ctx context.Context, arg UpdateCategoryParams) 
 const updateEvent = `-- name: UpdateEvent :one
 UPDATE events
 SET name = $2, start_time = $3, end_time = $4, duration_minutes = $5, passing_grade = $6
-WHERE id = $1
-RETURNING id, name, start_time, end_time, duration_minutes, passing_grade, created_at
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING id, name, start_time, end_time, duration_minutes, passing_grade, created_at, deleted_at
 `
 
 type UpdateEventParams struct {
@@ -1471,6 +1486,7 @@ func (q *Queries) UpdateEvent(ctx context.Context, arg UpdateEventParams) (Event
 		&i.DurationMinutes,
 		&i.PassingGrade,
 		&i.CreatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }
@@ -1478,8 +1494,8 @@ func (q *Queries) UpdateEvent(ctx context.Context, arg UpdateEventParams) (Event
 const updateQuestion = `-- name: UpdateQuestion :one
 UPDATE questions
 SET category_id = $2, question_text = $3, option_a = $4, option_b = $5, option_c = $6, option_d = $7, correct_answer = $8, weight = $9
-WHERE id = $1
-RETURNING id, category_id, question_text, option_a, option_b, option_c, option_d, correct_answer, weight, created_at
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING id, category_id, question_text, option_a, option_b, option_c, option_d, correct_answer, weight, created_at, deleted_at
 `
 
 type UpdateQuestionParams struct {
@@ -1518,6 +1534,7 @@ func (q *Queries) UpdateQuestion(ctx context.Context, arg UpdateQuestionParams) 
 		&i.CorrectAnswer,
 		&i.Weight,
 		&i.CreatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }

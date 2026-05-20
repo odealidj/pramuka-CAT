@@ -59,7 +59,11 @@ func (h *EventHandler) CreateEvent(c echo.Context) error {
 
 	e, err := h.service.CreateEvent(c.Request().Context(), req)
 	if err != nil {
-		return response.Error(c, http.StatusInternalServerError, "Gagal membuat event", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
+		errMsg := err.Error()
+		if errMsg == "jadwal ujian dengan nama dan rentang waktu yang sama sudah terdaftar" || errMsg == "waktu selesai (end_time) tidak boleh sebelum waktu mulai (start_time)" {
+			return response.Error(c, http.StatusBadRequest, errMsg, nil)
+		}
+		return response.Error(c, http.StatusInternalServerError, "Gagal membuat event", []response.ErrorDetail{{Field: "server", Message: errMsg}})
 	}
 
 	return response.Success(c, http.StatusCreated, "Event berhasil dibuat", e)
@@ -118,7 +122,14 @@ func (h *EventHandler) UpdateEvent(c echo.Context) error {
 
 	e, err := h.service.UpdateEvent(c.Request().Context(), id, req)
 	if err != nil {
-		return response.Error(c, http.StatusInternalServerError, "Gagal memperbarui event", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
+		errMsg := err.Error()
+		if errMsg == "jadwal ujian dengan nama dan rentang waktu yang sama sudah terdaftar" || errMsg == "waktu selesai (end_time) tidak boleh sebelum waktu mulai (start_time)" {
+			return response.Error(c, http.StatusBadRequest, errMsg, nil)
+		}
+		if errMsg == "event tidak ditemukan" {
+			return response.Error(c, http.StatusNotFound, errMsg, nil)
+		}
+		return response.Error(c, http.StatusInternalServerError, "Gagal memperbarui event", []response.ErrorDetail{{Field: "server", Message: errMsg}})
 	}
 
 	return response.Success(c, http.StatusOK, "Event berhasil diperbarui", e)
