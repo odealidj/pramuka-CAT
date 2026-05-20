@@ -87,9 +87,17 @@ sequenceDiagram
 
     A->>F: Input Soal Baru (Soal, Opsi, Kunci, Bobot)
     F->>B: POST /api/v1/admin/questions
-    B->>DB: Insert Question Data
-    DB-->>B: OK
-    B-->>F: Success (Soal Tersimpan)
+    B->>DB: Cek Duplikasi Teks (Regex Case-Insensitive)
+    alt Teks Duplikat
+        DB-->>B: Ditemukan Duplikat
+        B-->>F: Error 400 (Bad Request: "Soal serupa sudah terdaftar")
+        F->>A: Tampilkan Alert Premium (Form Tetap Terbuka)
+    else Teks Unik
+        DB-->>B: Bebas Duplikat
+        B->>DB: Insert Question Data
+        DB-->>B: OK
+        B-->>F: Success (Soal Tersimpan & Menampilkan Single-Item View)
+    end
 
     A->>F: Setup Event Baru (Waktu, Passing Grade, Rule Soal)
     F->>B: POST /api/v1/admin/events

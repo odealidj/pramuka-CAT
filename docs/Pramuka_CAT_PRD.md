@@ -40,7 +40,8 @@ Aplikasi memiliki 2 jenis peran utama:
 4. **Manajemen Soal (Bank Soal - CRUD):**
    - Membuat, membaca, mengubah, dan menghapus soal berbasis teks.
    - Menentukan opsi jawaban A, B, C, D dan mengatur mana yang menjadi kunci jawaban.
-   - **Kategori Materi Soal (Tagging):** Admin dapat mengelompokkan soal berdasarkan kategori (contoh: Pengetahuan Umum Kepramukaan/PUPK, Sandi, Tali-temali, Sejarah).
+   - **Validasi Duplikasi Soal:** Sistem mencegah masuknya soal dengan teks yang sama (mengabaikan perbedaan huruf kapital dan variasi penomoran seperti "1.", "2)", dsb) serta mencegah opsi jawaban yang duplikat dalam satu soal.
+   - **Kategori Materi Soal (Tagging):** Admin dapat mengelompokkan soal berdasarkan kategori (contoh: Pengetahuan Umum Kepramukaan/PUPK, Sandi, Tali-temali, Sejarah). Jika kategori tidak dipilih, sistem otomatis memasukkannya ke kategori "Umum".
    - **Sistem Bobot Soal (Manual & Auto):** Admin dapat mengatur bobot spesifik untuk setiap soal (misal: soal mudah berbobot 10, soal sulit berbobot 20). Jika Admin tidak melakukan _setup_ bobot secara manual, sistem akan otomatis menerapkan **Auto-Bobot** di mana setiap soal yang diujikan memiliki bobot yang sama rata sehingga total nilai sempurna mengacu pada skala standar (contoh: 10 soal, masing-masing otomatis berbobot 10 agar total skor 100).
 5. **Manajemen Jadwal/Sesi (Event Setup):**
    - Membuat jadwal pelaksanaan ujian (Event diterbitkan).

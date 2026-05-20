@@ -112,6 +112,7 @@ Tabel referensi sederhana (Kamus Kategori) untuk memudahkan Admin memfilter bank
 Pusat dari Bank Soal.
 - Setiap baris memiliki 4 opsi teks (`option_a` - `option_d`).
 - Kolom `correct_answer` hanya menyimpan satu huruf (A/B/C/D) sebagai kunci jawaban mutlak.
+- Terdapat validasi keunikan teks soal (mengabaikan spasi, huruf kapital, dan format penomoran) yang dijalankan pada level aplikasi/kueri untuk mencegah redudansi bank soal.
 - Kolom `weight` krusial untuk fitur **Sistem Bobot Soal**, defaultnya bisa diisi `1` atau sesuai instruksi Admin.
 
 ### d. Tabel `events`
