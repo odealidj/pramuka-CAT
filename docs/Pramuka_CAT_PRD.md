@@ -16,7 +16,7 @@ Aplikasi memiliki 2 jenis peran utama:
 2. **Peserta (Anggota Pramuka):** Mengikuti ujian sesuai jadwal yang telah ditentukan dan disetujui.
 
 ### 3.2. Fitur Peserta (Anggota Pramuka)
-1. **Registrasi & Login:** Peserta dapat mendaftar akun baru menggunakan identitas pramuka dan melakukan login ke dalam sistem.
+1. **Registrasi & Login:** Peserta dapat mendaftar akun baru menggunakan identitas pramuka (di mana `Nomor Peserta` digunakan sebagai `username` untuk *login*) dan melakukan login ke dalam sistem.
 2. **Manajemen Profil:** Peserta dapat melihat dan melengkapi profil, termasuk mengunggah foto profil.
 3. **Dashboard Peserta:** Menampilkan daftar sesi/jadwal ujian yang tersedia dan status persetujuan (approval) ujian mereka.
 4. **Pelaksanaan Ujian:**
@@ -37,8 +37,9 @@ Aplikasi memiliki 2 jenis peran utama:
 3. **Approval Peserta Ujian:**
    - Admin dapat memvalidasi dan menyetujui (Approve) peserta agar bisa mengikuti event ujian tertentu.
    - Admin memiliki fitur pembatalan (Revoke/Batal) persetujuan, sehingga peserta tersebut terkunci dan tidak bisa mengerjakan soal.
+   - Admin dimudahkan dengan antarmuka manajemen peserta *full-page* berskala besar yang dilengkapi fitur pencarian (*Search*) berdasarkan "Nama" atau "Nomor Peserta" (`username`), serta *Pagination* terintegrasi langsung ke *backend* (*server-side pagination*).
 4. **Manajemen Soal (Bank Soal - CRUD):**
-   - Membuat, membaca, mengubah, dan menghapus soal berbasis teks.
+   - Membuat, membaca, mengubah, dan menghapus soal berbasis teks. Manajemen Bank Soal ini didukung dengan fitur pencarian dan filter *real-time*.
    - Menentukan opsi jawaban A, B, C, D dan mengatur mana yang menjadi kunci jawaban.
    - **Validasi Duplikasi Soal:** Sistem mencegah masuknya soal dengan teks yang sama (mengabaikan perbedaan huruf kapital dan variasi penomoran seperti "1.", "2)", dsb) serta mencegah opsi jawaban yang duplikat dalam satu soal. Pengecekan hanya dilakukan terhadap soal dari **kategori yang masih aktif** — soal dari kategori yang sudah dihapus (diarsipkan) tidak ikut diperiksa sehingga tidak memblokir input soal baru.
    - **Kategori Materi Soal (Tagging):** Admin dapat mengelompokkan soal berdasarkan kategori (contoh: Pengetahuan Umum Kepramukaan/PUPK, Sandi, Tali-temali, Sejarah).

@@ -83,9 +83,9 @@ func (h *QuestionHandler) ListQuestions(c echo.Context) error {
 	if err != nil {
 		return response.Error(c, http.StatusInternalServerError, "Gagal mengambil daftar pertanyaan", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}
-	
+
 	if questions == nil {
-	    questions = []domain.Question{}
+		questions = []domain.Question{}
 	}
 
 	meta := response.BuildMeta(page, limit, total)

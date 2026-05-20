@@ -120,6 +120,7 @@ export interface ApiErrorResponse {
 export interface Category {
   id: number;
   name: string;
+  question_count: number;
 }
 
 export interface CreateCategoryRequest {

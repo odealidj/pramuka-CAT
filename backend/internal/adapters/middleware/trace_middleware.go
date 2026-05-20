@@ -57,4 +57,3 @@ func TraceErrorMiddleware() echo.MiddlewareFunc {
 		}
 	}
 }
-

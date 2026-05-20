@@ -219,12 +219,19 @@ func (q *Queries) CountCategories(ctx context.Context, search string) (int64, er
 }
 
 const countEventParticipants = `-- name: CountEventParticipants :one
-SELECT COUNT(*) FROM user_event_approvals
-WHERE event_id = $1
+SELECT COUNT(*) FROM user_event_approvals uea
+JOIN users u ON u.id = uea.user_id
+WHERE uea.event_id = $1
+  AND ($2::text = '' OR u.username ILIKE '%' || $2::text || '%' OR u.full_name ILIKE '%' || $2::text || '%')
 `
 
-func (q *Queries) CountEventParticipants(ctx context.Context, eventID uuid.NullUUID) (int64, error) {
-	row := q.db.QueryRowContext(ctx, countEventParticipants, eventID)
+type CountEventParticipantsParams struct {
+	EventID uuid.NullUUID `json:"event_id"`
+	Search  string        `json:"search"`
+}
+
+func (q *Queries) CountEventParticipants(ctx context.Context, arg CountEventParticipantsParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countEventParticipants, arg.EventID, arg.Search)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -326,13 +333,18 @@ func (q *Queries) CountUsers(ctx context.Context, search string) (int64, error) 
 const createCategory = `-- name: CreateCategory :one
 INSERT INTO categories (name)
 VALUES ($1)
-RETURNING id, name, deleted_at
+RETURNING id, name, deleted_at, created_at
 `
 
 func (q *Queries) CreateCategory(ctx context.Context, name string) (Category, error) {
 	row := q.db.QueryRowContext(ctx, createCategory, name)
 	var i Category
-	err := row.Scan(&i.ID, &i.Name, &i.DeletedAt)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.DeletedAt,
+		&i.CreatedAt,
+	)
 	return i, err
 }
 
@@ -707,26 +719,36 @@ func (q *Queries) GetApprovalStatus(ctx context.Context, arg GetApprovalStatusPa
 }
 
 const getCategoryById = `-- name: GetCategoryById :one
-SELECT id, name, deleted_at FROM categories
+SELECT id, name, deleted_at, created_at FROM categories
 WHERE id = $1 AND deleted_at IS NULL LIMIT 1
 `
 
 func (q *Queries) GetCategoryById(ctx context.Context, id int32) (Category, error) {
 	row := q.db.QueryRowContext(ctx, getCategoryById, id)
 	var i Category
-	err := row.Scan(&i.ID, &i.Name, &i.DeletedAt)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.DeletedAt,
+		&i.CreatedAt,
+	)
 	return i, err
 }
 
 const getCategoryByName = `-- name: GetCategoryByName :one
-SELECT id, name, deleted_at FROM categories
+SELECT id, name, deleted_at, created_at FROM categories
 WHERE name ILIKE $1 AND deleted_at IS NULL LIMIT 1
 `
 
 func (q *Queries) GetCategoryByName(ctx context.Context, name string) (Category, error) {
 	row := q.db.QueryRowContext(ctx, getCategoryByName, name)
 	var i Category
-	err := row.Scan(&i.ID, &i.Name, &i.DeletedAt)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.DeletedAt,
+		&i.CreatedAt,
+	)
 	return i, err
 }
 
@@ -934,9 +956,9 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 }
 
 const listCategories = `-- name: ListCategories :many
-SELECT id, name, deleted_at FROM categories
+SELECT id, name, deleted_at, created_at FROM categories
 WHERE deleted_at IS NULL AND ($3::text = '' OR name ILIKE '%' || $3::text || '%')
-ORDER BY name ASC
+ORDER BY created_at ASC
 LIMIT $1 OFFSET $2
 `
 
@@ -955,7 +977,12 @@ func (q *Queries) ListCategories(ctx context.Context, arg ListCategoriesParams) 
 	items := []Category{}
 	for rows.Next() {
 		var i Category
-		if err := rows.Scan(&i.ID, &i.Name, &i.DeletedAt); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.DeletedAt,
+			&i.CreatedAt,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -974,6 +1001,7 @@ SELECT u.id, u.username, u.full_name, uea.status, uea.is_completed, uea.score, u
 FROM users u
 JOIN user_event_approvals uea ON u.id = uea.user_id
 WHERE uea.event_id = $1
+  AND ($4::text = '' OR u.username ILIKE '%' || $4::text || '%' OR u.full_name ILIKE '%' || $4::text || '%')
 ORDER BY u.full_name ASC
 LIMIT $2 OFFSET $3
 `
@@ -982,6 +1010,7 @@ type ListEventParticipantsParams struct {
 	EventID uuid.NullUUID `json:"event_id"`
 	Limit   int32         `json:"limit"`
 	Offset  int32         `json:"offset"`
+	Search  string        `json:"search"`
 }
 
 type ListEventParticipantsRow struct {
@@ -995,7 +1024,12 @@ type ListEventParticipantsRow struct {
 }
 
 func (q *Queries) ListEventParticipants(ctx context.Context, arg ListEventParticipantsParams) ([]ListEventParticipantsRow, error) {
-	rows, err := q.db.QueryContext(ctx, listEventParticipants, arg.EventID, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, listEventParticipants,
+		arg.EventID,
+		arg.Limit,
+		arg.Offset,
+		arg.Search,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -1437,7 +1471,7 @@ const updateCategory = `-- name: UpdateCategory :one
 UPDATE categories
 SET name = $2
 WHERE id = $1 AND deleted_at IS NULL
-RETURNING id, name, deleted_at
+RETURNING id, name, deleted_at, created_at
 `
 
 type UpdateCategoryParams struct {
@@ -1448,7 +1482,12 @@ type UpdateCategoryParams struct {
 func (q *Queries) UpdateCategory(ctx context.Context, arg UpdateCategoryParams) (Category, error) {
 	row := q.db.QueryRowContext(ctx, updateCategory, arg.ID, arg.Name)
 	var i Category
-	err := row.Scan(&i.ID, &i.Name, &i.DeletedAt)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.DeletedAt,
+		&i.CreatedAt,
+	)
 	return i, err
 }
 

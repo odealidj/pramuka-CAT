@@ -51,7 +51,7 @@ WHERE id = $1 AND deleted_at IS NULL LIMIT 1;
 -- name: ListCategories :many
 SELECT * FROM categories
 WHERE deleted_at IS NULL AND (sqlc.arg('search')::text = '' OR name ILIKE '%' || sqlc.arg('search')::text || '%')
-ORDER BY name ASC
+ORDER BY created_at ASC
 LIMIT $1 OFFSET $2;
 
 -- name: CountCategories :one
@@ -203,12 +203,15 @@ SELECT u.id, u.username, u.full_name, uea.status, uea.is_completed, uea.score, u
 FROM users u
 JOIN user_event_approvals uea ON u.id = uea.user_id
 WHERE uea.event_id = $1
+  AND (sqlc.arg('search')::text = '' OR u.username ILIKE '%' || sqlc.arg('search')::text || '%' OR u.full_name ILIKE '%' || sqlc.arg('search')::text || '%')
 ORDER BY u.full_name ASC
 LIMIT $2 OFFSET $3;
 
 -- name: CountEventParticipants :one
-SELECT COUNT(*) FROM user_event_approvals
-WHERE event_id = $1;
+SELECT COUNT(*) FROM user_event_approvals uea
+JOIN users u ON u.id = uea.user_id
+WHERE uea.event_id = $1
+  AND (sqlc.arg('search')::text = '' OR u.username ILIKE '%' || sqlc.arg('search')::text || '%' OR u.full_name ILIKE '%' || sqlc.arg('search')::text || '%');
 
 -- name: ListUpcomingEvents :many
 SELECT e.*, (SELECT COUNT(*)::int FROM event_questions eq WHERE eq.event_id = e.id) as total_questions

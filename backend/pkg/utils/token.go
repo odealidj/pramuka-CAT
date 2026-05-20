@@ -79,12 +79,12 @@ func ValidateToken(tokenString string, isRefresh bool) (*TokenPayload, error) {
 		if !ok {
 			return nil, fmt.Errorf("payload session_id tidak valid")
 		}
-		
+
 		sessionID, err := uuid.Parse(sessionIDStr)
 		if err != nil {
 			return nil, fmt.Errorf("format session_id salah")
 		}
-		
+
 		payload := &TokenPayload{
 			SessionID: sessionID,
 		}
@@ -94,11 +94,11 @@ func ValidateToken(tokenString string, isRefresh bool) (*TokenPayload, error) {
 			userIDStr, _ := claims["user_id"].(string)
 			userID, _ := uuid.Parse(userIDStr)
 			role, _ := claims["role"].(string)
-			
+
 			payload.UserID = userID
 			payload.Role = role
 		}
-		
+
 		return payload, nil
 	}
 

@@ -72,9 +72,11 @@ func (r *categoryRepository) ListCategories(ctx context.Context, page int32, lim
 
 	var res []domain.Category
 	for _, c := range rows {
+		count, _ := r.queries.CountQuestionsByCategory(ctx, sql.NullInt32{Int32: c.ID, Valid: true})
 		res = append(res, domain.Category{
-			ID:   c.ID,
-			Name: c.Name,
+			ID:            c.ID,
+			Name:          c.Name,
+			QuestionCount: count,
 		})
 	}
 	return res, total, nil

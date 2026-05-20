@@ -20,7 +20,7 @@ type EventRepository interface {
 	ListEventQuestions(ctx context.Context, eventID uuid.UUID, page int32, limit int32) ([]domain.Question, int64, error)
 	RemoveEventQuestion(ctx context.Context, eventID uuid.UUID, questionID uuid.UUID) error
 
-	ListEventParticipants(ctx context.Context, eventID uuid.UUID, page int32, limit int32) ([]domain.EventParticipant, int64, error)
+	ListEventParticipants(ctx context.Context, eventID uuid.UUID, page int32, limit int32, search string) ([]domain.EventParticipant, int64, error)
 	ApproveUserEvent(ctx context.Context, approvalID uuid.UUID) error
 	RevokeUserEvent(ctx context.Context, approvalID uuid.UUID) error
 	GetAllEventParticipantsForExport(ctx context.Context, eventID uuid.UUID) ([]domain.EventParticipantExport, error)
@@ -41,7 +41,7 @@ type EventService interface {
 	RemoveEventQuestion(ctx context.Context, eventID uuid.UUID, questionID uuid.UUID) error
 	AddRandomEventQuestions(ctx context.Context, eventID uuid.UUID, req domain.AddRandomEventQuestionsRequest) error
 
-	ListEventParticipants(ctx context.Context, eventID uuid.UUID, page int32, limit int32) ([]domain.EventParticipant, int64, error)
+	ListEventParticipants(ctx context.Context, eventID uuid.UUID, page int32, limit int32, search string) ([]domain.EventParticipant, int64, error)
 	ApproveUserEvent(ctx context.Context, approvalID uuid.UUID) error
 	RevokeUserEvent(ctx context.Context, approvalID uuid.UUID) error
 	ExportEventParticipantsExcel(ctx context.Context, eventID uuid.UUID) ([]byte, error)

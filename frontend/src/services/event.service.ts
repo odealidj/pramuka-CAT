@@ -103,10 +103,16 @@ export const removeEventQuestionApi = async (
 export const listEventParticipantsApi = async (
   eventId: string,
   page = 1,
-  limit = 50
+  limit = 50,
+  search = ''
 ): Promise<PaginatedResponse<EventParticipant>> => {
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+    ...(search ? { search } : {}),
+  });
   const res = await httpClient.get<ApiSuccessResponse<EventParticipant[]>>(
-    `/admin/events/${eventId}/participants?page=${page}&limit=${limit}`
+    `/admin/events/${eventId}/participants?${params.toString()}`
   );
   return { data: res.data.data, meta: res.data.meta! };
 };

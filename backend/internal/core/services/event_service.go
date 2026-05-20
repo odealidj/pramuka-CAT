@@ -9,9 +9,9 @@ import (
 
 	"github.com/google/uuid"
 	gofpdf "github.com/jung-kurt/gofpdf"
-	"github.com/xuri/excelize/v2"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/domain"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/ports"
+	"github.com/xuri/excelize/v2"
 )
 
 type eventService struct {
@@ -108,8 +108,8 @@ func (s *eventService) RemoveEventQuestion(ctx context.Context, eventID uuid.UUI
 	return s.repo.RemoveEventQuestion(ctx, eventID, questionID)
 }
 
-func (s *eventService) ListEventParticipants(ctx context.Context, eventID uuid.UUID, page int32, limit int32) ([]domain.EventParticipant, int64, error) {
-	return s.repo.ListEventParticipants(ctx, eventID, page, limit)
+func (s *eventService) ListEventParticipants(ctx context.Context, eventID uuid.UUID, page int32, limit int32, search string) ([]domain.EventParticipant, int64, error) {
+	return s.repo.ListEventParticipants(ctx, eventID, page, limit, search)
 }
 
 func (s *eventService) ApproveUserEvent(ctx context.Context, approvalID uuid.UUID) error {
@@ -177,8 +177,8 @@ func (s *eventService) ExportEventParticipantsExcel(ctx context.Context, eventID
 
 	// Style: header bold dengan background biru
 	styleHeader, _ := f.NewStyle(&excelize.Style{
-		Font: &excelize.Font{Bold: true, Color: "FFFFFF"},
-		Fill: excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"003366"}},
+		Font:      &excelize.Font{Bold: true, Color: "FFFFFF"},
+		Fill:      excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"003366"}},
 		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
 	})
 	f.SetRowStyle(sheet, 1, 1, styleHeader)

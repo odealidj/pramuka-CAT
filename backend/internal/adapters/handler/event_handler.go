@@ -226,6 +226,19 @@ func (h *EventHandler) RemoveEventQuestion(c echo.Context) error {
 	return response.Success(c, http.StatusOK, "Soal berhasil dihapus dari Event", nil)
 }
 
+// ListEventParticipants godoc
+// @Summary      Daftar Peserta Event
+// @Tags         Admin - Event
+// @Security     BearerAuth
+// @Produce      json
+// @Param        id     path      string  true  "UUID Event"
+// @Param        page   query     int     false "Halaman" default(1)
+// @Param        limit  query     int     false "Limit" default(10)
+// @Param        search query     string  false "Cari nama peserta atau username"
+// @Success      200    {object}  response.PaginatedResponse{data=[]domain.EventParticipant}
+// @Failure      400    {object}  response.ErrorResponse
+// @Failure      500    {object}  response.ErrorResponse
+// @Router       /admin/events/{id}/participants [get]
 func (h *EventHandler) ListEventParticipants(c echo.Context) error {
 	eventID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -233,7 +246,8 @@ func (h *EventHandler) ListEventParticipants(c echo.Context) error {
 	}
 
 	page, limit := response.ParsePaginationParams(c)
-	participants, total, err := h.service.ListEventParticipants(c.Request().Context(), eventID, page, limit)
+	search := c.QueryParam("search")
+	participants, total, err := h.service.ListEventParticipants(c.Request().Context(), eventID, page, limit, search)
 	if err != nil {
 		return response.Error(c, http.StatusInternalServerError, "Gagal mengambil daftar peserta", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}

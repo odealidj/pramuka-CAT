@@ -15,6 +15,7 @@ type Category struct {
 	ID        int32        `json:"id"`
 	Name      string       `json:"name"`
 	DeletedAt sql.NullTime `json:"deleted_at"`
+	CreatedAt sql.NullTime `json:"created_at"`
 }
 
 type Event struct {

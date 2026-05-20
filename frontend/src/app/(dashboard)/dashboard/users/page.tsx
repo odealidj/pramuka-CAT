@@ -12,6 +12,7 @@ import {
   RefreshCw,
   UserCheck,
   UserX,
+  XCircle,
 } from 'lucide-react';
 import { isAxiosError } from 'axios';
 
@@ -278,16 +279,25 @@ function UsersContent() {
 
         {/* Toolbar */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 border-b border-gray-100">
-          <div className="flex-1 flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100 focus-within:ring-2 focus-within:ring-amber-500/30 focus-within:border-amber-300 focus-within:bg-white transition-all">
+          <div className="flex-1 flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100 focus-within:ring-2 focus-within:ring-amber-500/30 focus-within:border-amber-300 focus-within:bg-white transition-all relative">
             <Search size={14} className="text-gray-400 flex-shrink-0" />
             <input
               type="text"
               placeholder="Cari nama atau username..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
+              className="flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none pr-6"
               id="search-users"
             />
+            {searchInput && (
+              <button
+                onClick={() => setSearchInput('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                title="Hapus filter"
+              >
+                <XCircle size={14} />
+              </button>
+            )}
           </div>
           <button
             onClick={fetchUsers}

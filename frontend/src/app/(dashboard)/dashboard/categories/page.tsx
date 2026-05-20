@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Tag,
   Plus,
@@ -8,6 +9,8 @@ import {
   Edit2,
   Trash2,
   RefreshCw,
+  XCircle,
+  BookOpen,
 } from 'lucide-react';
 import { isAxiosError } from 'axios';
 import { useForm } from 'react-hook-form';
@@ -57,6 +60,7 @@ function formatDate(iso: string): string {
 // Page Component
 // ============================================================
 export default function CategoriesPage() {
+  const router = useRouter();
   // --- Data State ---
   const [categories, setCategories] = useState<Category[]>([]);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
@@ -218,16 +222,25 @@ export default function CategoriesPage() {
 
         {/* Toolbar */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 border-b border-gray-100">
-          <div className="flex-1 flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100 focus-within:ring-2 focus-within:ring-amber-500/30 focus-within:border-amber-300 focus-within:bg-white transition-all">
+          <div className="flex-1 flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100 focus-within:ring-2 focus-within:ring-amber-500/30 focus-within:border-amber-300 focus-within:bg-white transition-all relative">
             <Search size={14} className="text-gray-400 flex-shrink-0" />
             <input
               type="text"
               placeholder="Cari kategori..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
+              className="flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none pr-6"
               id="search-categories"
             />
+            {searchInput && (
+              <button
+                onClick={() => setSearchInput('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                title="Hapus filter"
+              >
+                <XCircle size={14} />
+              </button>
+            )}
           </div>
           <button
             onClick={fetchCategories}
@@ -251,6 +264,9 @@ export default function CategoriesPage() {
                 <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Nama Kategori
                 </th>
+                <th className="px-5 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide w-36">
+                  Jumlah Soal
+                </th>
                 <th className="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Aksi
                 </th>
@@ -259,7 +275,7 @@ export default function CategoriesPage() {
             <tbody className="divide-y divide-gray-50">
               {isLoading ? (
                 <tr>
-                  <td colSpan={3} className="py-16 text-center">
+                  <td colSpan={4} className="py-16 text-center">
                     <div className="flex flex-col items-center gap-3 text-gray-400">
                       <Spinner size={24} className="text-amber-600" />
                       <span className="text-sm">Memuat data kategori...</span>
@@ -268,7 +284,7 @@ export default function CategoriesPage() {
                 </tr>
               ) : categories.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="py-16 text-center">
+                  <td colSpan={4} className="py-16 text-center">
                     <div className="flex flex-col items-center gap-2 text-gray-400">
                       <Tag size={36} className="text-gray-200" />
                       <p className="text-sm font-medium text-gray-500">
@@ -300,6 +316,23 @@ export default function CategoriesPage() {
                             </p>
                           </div>
                         </div>
+                      </td>
+
+                      {/* Jumlah Soal Badge */}
+                      <td className="px-5 py-3.5 text-center">
+                        <button
+                          onClick={() =>
+                            router.push(`/dashboard/questions?category_id=${category.id}&category_name=${encodeURIComponent(category.name)}`)
+                          }
+                          title={`Lihat soal kategori ${category.name}`}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all
+                            bg-amber-50 text-amber-700 border border-amber-200
+                            hover:bg-amber-100 hover:border-amber-300 hover:shadow-sm
+                            active:scale-95"
+                        >
+                          <BookOpen size={12} />
+                          {category.question_count} soal
+                        </button>
                       </td>
 
                       {/* Aksi */}
@@ -340,7 +373,7 @@ export default function CategoriesPage() {
         </div>
 
         {/* Pagination Footer */}
-        {meta && meta.total_pages > 1 && (
+        {meta && meta.total_records > 0 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-t border-gray-100">
             <p className="text-gray-400 text-xs">
               Menampilkan {((page - 1) * 10) + 1}–

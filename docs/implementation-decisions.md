@@ -50,9 +50,10 @@ Aplikasi akan menggunakan arsitektur **Client-Server** berbasis web (Web Applica
 - Pengacakan soal tidak dilakukan di sisi frontend (untuk menghindari peserta mengintip _source_ soal yang tersembunyi).
 - Saat peserta menekan "Mulai Ujian", Backend akan melakukan penarikan soal (sesuai distribusi), mengacaknya (algoritma _Fisher-Yates_ atau fungsi `RANDOM()` SQL yang di-cache), dan menyimpannya sebagai "Paket Soal Peserta X" di database/Redis. 
 
-### 3.4. Standarisasi API Response & Pagination
+### 3.4. Standarisasi API Response, Pagination & Search
 - Seluruh endpoint API mematuhi standar JSON tunggal (melalui package `pkg/response`) yang memuat properti mutlak: `success`, `code`, `message`, `data`, `meta`, dan `errors`.
 - Meta pagination (`page`, `limit`, `total_records`, dll) diotomatisasi pada lapisan handler untuk setiap request berjenis koleksi/daftar.
+- Fitur pencarian (*Search*) diimplementasikan langsung pada *query database* dengan klausul `ILIKE` yang tidak peka kapital, dan ditangani di sisi *backend* untuk meringankan beban memori *frontend* pada data besar.
 
 ### 3.5. Penilaian Otomatis (Auto-Bobot) & Skala Nilai
 - Backend menghitung skor akhir menggunakan pendekatan matematis proporsional yang berskala maksimum 100 secara default.

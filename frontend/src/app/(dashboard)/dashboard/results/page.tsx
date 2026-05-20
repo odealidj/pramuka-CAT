@@ -416,16 +416,25 @@ export default function ResultsPage() {
 
       {/* Search */}
       <div className="flex gap-3">
-        <div className="flex-1 flex items-center gap-2 bg-white rounded-xl px-3 py-2.5 border border-gray-100 shadow-sm focus-within:ring-2 focus-within:ring-amber-400/30 focus-within:border-amber-300 transition-all">
+        <div className="flex-1 flex items-center gap-2 bg-white rounded-xl px-3 py-2.5 border border-gray-100 shadow-sm focus-within:ring-2 focus-within:ring-amber-400/30 focus-within:border-amber-300 transition-all relative">
           <Search size={14} className="text-gray-400 flex-shrink-0" />
           <input
             type="text"
             placeholder="Cari nama ujian..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="flex-1 text-sm text-gray-700 placeholder:text-gray-400 outline-none bg-transparent"
+            className="flex-1 text-sm text-gray-700 placeholder:text-gray-400 outline-none bg-transparent pr-6"
             id="search-results"
           />
+          {searchInput && (
+            <button
+              onClick={() => setSearchInput('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              title="Hapus filter"
+            >
+              <XCircle size={14} />
+            </button>
+          )}
         </div>
       </div>
 

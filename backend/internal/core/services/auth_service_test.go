@@ -29,7 +29,7 @@ func TestAuthService_Login_Success(t *testing.T) {
 		Password: "Password123!",
 	}
 	userID := uuid.New()
-	
+
 	hashedPassword, _ := utils.HashPassword(req.Password)
 	dbUser := sqlcgen.User{
 		ID:           userID,
@@ -105,8 +105,8 @@ func TestAuthService_Refresh_Success(t *testing.T) {
 	}
 
 	dbUser := sqlcgen.User{
-		ID:       userID,
-		Role:     "peserta",
+		ID:   userID,
+		Role: "peserta",
 	}
 
 	mockRepo.On("GetSession", ctx, sessionID).Return(dbSession, nil)

@@ -22,7 +22,7 @@ type Querier interface {
 	CountAvailableQuestionsForEventAll(ctx context.Context, eventID uuid.UUID) (int64, error)
 	CountAvailableQuestionsForEventByCategory(ctx context.Context, arg CountAvailableQuestionsForEventByCategoryParams) (int64, error)
 	CountCategories(ctx context.Context, search string) (int64, error)
-	CountEventParticipants(ctx context.Context, eventID uuid.NullUUID) (int64, error)
+	CountEventParticipants(ctx context.Context, arg CountEventParticipantsParams) (int64, error)
 	CountEventQuestions(ctx context.Context, eventID uuid.UUID) (int64, error)
 	CountEvents(ctx context.Context, search string) (int64, error)
 	CountQuestions(ctx context.Context, arg CountQuestionsParams) (int64, error)

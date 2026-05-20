@@ -42,7 +42,7 @@ func (s *authService) Login(ctx context.Context, req domain.LoginRequest) (domai
 
 	// 3. Generate Session ID dan Token
 	sessionID := uuid.New()
-	
+
 	accessToken, err := utils.CreateAccessToken(utils.TokenPayload{
 		SessionID: sessionID,
 		UserID:    user.ID,
@@ -132,9 +132,9 @@ func (s *authService) Refresh(ctx context.Context, req domain.RefreshRequest) (d
 		return domain.RefreshResponse{}, fmt.Errorf("gagal meracik access token baru: %w", err)
 	}
 
-	// Kita bisa me-rotasi refresh token juga di sini (Opsional). 
+	// Kita bisa me-rotasi refresh token juga di sini (Opsional).
 	// Untuk saat ini, kita gunakan Refresh Token yang lama saja selama belum expired.
-	
+
 	// 6. Update Cache Redis (karena token baru terbit)
 	err = s.cache.SetSession(ctx, sessionID, user.ID, 15)
 	if err != nil {

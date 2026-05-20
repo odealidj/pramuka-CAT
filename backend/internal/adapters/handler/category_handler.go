@@ -70,9 +70,9 @@ func (h *CategoryHandler) ListCategories(c echo.Context) error {
 	if err != nil {
 		return response.Error(c, http.StatusInternalServerError, "Gagal mengambil daftar kategori", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}
-	
+
 	if categories == nil {
-	    categories = []domain.Category{}
+		categories = []domain.Category{}
 	}
 
 	meta := response.BuildMeta(page, limit, total)

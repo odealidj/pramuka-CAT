@@ -206,18 +206,22 @@ func (r *eventRepository) RemoveEventQuestion(ctx context.Context, eventID uuid.
 	})
 }
 
-func (r *eventRepository) ListEventParticipants(ctx context.Context, eventID uuid.UUID, page int32, limit int32) ([]domain.EventParticipant, int64, error) {
+func (r *eventRepository) ListEventParticipants(ctx context.Context, eventID uuid.UUID, page int32, limit int32, search string) ([]domain.EventParticipant, int64, error) {
 	offset := (page - 1) * limit
 	rows, err := r.queries.ListEventParticipants(ctx, sqlcgen.ListEventParticipantsParams{
 		EventID: uuid.NullUUID{UUID: eventID, Valid: true},
 		Limit:   limit,
 		Offset:  offset,
+		Search:  search,
 	})
 	if err != nil {
 		return nil, 0, err
 	}
 
-	total, err := r.queries.CountEventParticipants(ctx, uuid.NullUUID{UUID: eventID, Valid: true})
+	total, err := r.queries.CountEventParticipants(ctx, sqlcgen.CountEventParticipantsParams{
+		EventID: uuid.NullUUID{UUID: eventID, Valid: true},
+		Search:  search,
+	})
 	if err != nil {
 		return nil, 0, err
 	}

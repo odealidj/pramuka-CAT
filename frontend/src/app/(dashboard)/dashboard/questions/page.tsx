@@ -14,6 +14,7 @@ import {
   ChevronUp,
   CheckCircle2,
   Clock,
+  XCircle,
 } from "lucide-react";
 import { isAxiosError } from "axios";
 import Spinner from "@/components/ui/Spinner";
@@ -92,16 +93,6 @@ function QuestionRow({
             <p className="text-gray-900 text-sm font-medium leading-snug line-clamp-2">
               {question.question_text}
             </p>
-            <div className="flex items-center gap-2 flex-wrap">
-              {category ? (
-                <span className="inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-                  <Tag size={10} />
-                  {category.name}
-                </span>
-              ) : (
-                <span className="text-xs text-gray-300">Tanpa kategori</span>
-              )}
-            </div>
           </div>
         </td>
         <td className="px-5 py-3.5 align-top hidden md:table-cell">
@@ -253,6 +244,17 @@ function QuestionsContent() {
       router.replace(`/dashboard/questions?${params.toString()}`);
     }
   }, [searchParams, router]);
+
+  // Handle category_id dari redirect halaman Kategori Soal
+  useEffect(() => {
+    const catId = searchParams.get("category_id");
+    if (catId) {
+      setPage(1);
+      setCategoryIdFilter(Number(catId));
+    }
+  // Hanya jalankan sekali saat mount — intentional
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ============================================================
   // Fetch
@@ -443,16 +445,25 @@ function QuestionsContent() {
         {/* Toolbar */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 border-b border-gray-100">
           <div className="flex-1 flex flex-col sm:flex-row gap-3">
-            <div className="flex-1 flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100 focus-within:ring-2 focus-within:ring-amber-500/30 focus-within:border-amber-300 focus-within:bg-white transition-all">
+            <div className="flex-1 flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100 focus-within:ring-2 focus-within:ring-amber-500/30 focus-within:border-amber-300 focus-within:bg-white transition-all relative">
               <Search size={14} className="text-gray-400 flex-shrink-0" />
               <input
                 type="text"
                 placeholder="Cari teks soal..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
+                className="flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none pr-6"
                 id="search-questions"
               />
+              {searchInput && (
+                <button
+                  onClick={() => setSearchInput("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  title="Hapus filter"
+                >
+                  <XCircle size={14} />
+                </button>
+              )}
             </div>
             
             <div className="w-full sm:w-48">
@@ -509,6 +520,45 @@ function QuestionsContent() {
           </div>
         </div>
 
+        {/* Banner kategori aktif dari redirect */}
+        {categoryIdFilter !== undefined && searchParams.get('category_id') && (
+          <div className="mx-5 mb-3 flex items-center gap-3 px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium">
+            {/* Kembali ke Kategori Soal */}
+            <button
+              onClick={() => router.push('/dashboard/categories')}
+              className="flex items-center gap-1.5 text-amber-700 hover:text-amber-900 transition-colors font-semibold shrink-0"
+              title="Kembali ke halaman Kategori Soal"
+            >
+              ← Kategori Soal
+            </button>
+
+            {/* Separator */}
+            <span className="text-amber-300">/</span>
+
+            {/* Label filter aktif */}
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Tag size={12} className="flex-shrink-0" />
+              <span className="truncate">
+                Menampilkan soal kategori: <strong>{searchParams.get('category_name') ?? 'Kategori terpilih'}</strong>
+              </span>
+            </div>
+
+            {/* Hapus filter */}
+            <button
+              onClick={() => {
+                setCategoryIdFilter(undefined);
+                setPage(1);
+                router.replace('/dashboard/questions');
+              }}
+              className="ml-auto flex items-center gap-1 text-amber-600 hover:text-amber-900 transition-colors shrink-0"
+              title="Hapus filter — tampilkan semua soal"
+            >
+              <XCircle size={14} />
+              <span className="hidden sm:inline">Hapus filter</span>
+            </button>
+          </div>
+        )}
+
         {/* Newly Added Question Banner */}
         {justAddedQuestion && (
           <div className="bg-amber-50 border-b border-amber-100 px-5 py-3 flex items-center justify-between gap-4 animate-fade-in">
@@ -536,7 +586,7 @@ function QuestionsContent() {
                   No
                 </th>
                 <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                  Soal & Kategori
+                  Soal
                 </th>
                 <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide hidden md:table-cell">
                   Jawaban

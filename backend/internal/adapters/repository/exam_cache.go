@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/redis/go-redis/v9"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/domain"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/ports"
+	"github.com/redis/go-redis/v9"
 )
 
 type examCache struct {

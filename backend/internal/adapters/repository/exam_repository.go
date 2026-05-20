@@ -91,13 +91,13 @@ func (r *examRepository) ListUserApprovals(ctx context.Context, userID uuid.UUID
 	for _, row := range rows {
 		passingGrade, _ := strconv.ParseFloat(row.PassingGrade, 64)
 		score, _ := strconv.ParseFloat(row.Score.String, 64)
-		
+
 		var startedAt *time.Time
 		if row.StartedAt.Valid {
 			t := row.StartedAt.Time
 			startedAt = &t
 		}
-		
+
 		var completedAt *time.Time
 		if row.CompletedAt.Valid {
 			t := row.CompletedAt.Time
@@ -138,7 +138,7 @@ func (r *examRepository) GetApprovalStatus(ctx context.Context, userID uuid.UUID
 		t := row.StartedAt.Time
 		startedAt = &t
 	}
-	
+
 	var completedAt *time.Time
 	if row.CompletedAt.Valid {
 		t := row.CompletedAt.Time

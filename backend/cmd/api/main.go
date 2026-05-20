@@ -170,7 +170,7 @@ func main() {
 	protected := api.Group("/protected")
 	// Pasang Middleware: Wajib bawa Token & Sesi masih ada di Redis
 	protected.Use(appMiddleware.RequireAuth(authCache))
-	
+
 	examHandler.RegisterParticipantRoutes(protected)
 	authHandler.RegisterProtectedRoutes(protected)
 	userHandler.RegisterParticipantRoutes(protected)
@@ -182,7 +182,7 @@ func main() {
 	protected.GET("/profile", func(c echo.Context) error {
 		payload := c.Get(appMiddleware.AuthorizationPayloadKey)
 		return c.JSON(http.StatusOK, map[string]interface{}{
-			"message": "Akses Diterima! Anda sedang melihat profil rahasia.",
+			"message":   "Akses Diterima! Anda sedang melihat profil rahasia.",
 			"user_data": payload,
 		})
 	})
@@ -200,7 +200,7 @@ func main() {
 	adminGroup := api.Group("/admin")
 	adminGroup.Use(appMiddleware.RequireAuth(authCache))
 	adminGroup.Use(appMiddleware.RequireRole("admin"))
-	
+
 	categoryHandler.RegisterAdminRoutes(adminGroup)
 	questionHandler.RegisterAdminRoutes(adminGroup)
 	eventHandler.RegisterAdminRoutes(adminGroup)

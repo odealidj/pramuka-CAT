@@ -105,12 +105,12 @@ func main() {
 		DurationMinutes: 120,
 		PassingGrade:    "70.00",
 	})
-	
+
 	if err != nil {
 		log.Printf("Info: Gagal insert event (mungkin duplikat atau issue lain): %v", err)
 	} else {
 		log.Printf("Berhasil insert Event: %s", event.Name)
-		
+
 		// 5. Relasi Soal ke Event (event_questions)
 		countRel := 0
 		for _, qID := range questionIDs {
@@ -123,7 +123,7 @@ func main() {
 			}
 		}
 		log.Printf("Berhasil mengaitkan %d soal secara spesifik ke dalam Event Tryout", countRel)
-		
+
 		// 6. Enroll Peserta (Simulasi pendaftaran dan persetujuan ujian)
 		var approvalIDs []uuid.UUID
 		countEnroll := 0

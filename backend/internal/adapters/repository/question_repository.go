@@ -78,7 +78,7 @@ func (r *questionRepository) GetQuestionById(ctx context.Context, id uuid.UUID) 
 
 func (r *questionRepository) ListQuestions(ctx context.Context, page int32, limit int32, search string, categoryId *int32) ([]domain.Question, int64, error) {
 	offset := (page - 1) * limit
-	
+
 	catID := sql.NullInt32{}
 	if categoryId != nil {
 		catID = sql.NullInt32{Int32: *categoryId, Valid: true}

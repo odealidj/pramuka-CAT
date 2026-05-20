@@ -74,7 +74,7 @@ func (h *AuthHandler) Logout(c echo.Context) error {
 // @Router      /auth/login [post]
 func (h *AuthHandler) Login(c echo.Context) error {
 	var req domain.LoginRequest
-	
+
 	// Bind payload JSON ke Struct
 	if err := c.Bind(&req); err != nil {
 		return response.Error(c, http.StatusBadRequest, "Format request tidak valid", nil)
@@ -101,7 +101,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 // @Router      /auth/refresh [post]
 func (h *AuthHandler) Refresh(c echo.Context) error {
 	var req domain.RefreshRequest
-	
+
 	// Bind payload JSON ke Struct
 	if err := c.Bind(&req); err != nil {
 		return response.Error(c, http.StatusBadRequest, "Format request tidak valid", nil)
