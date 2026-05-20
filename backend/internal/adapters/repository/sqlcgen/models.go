@@ -12,8 +12,9 @@ import (
 )
 
 type Category struct {
-	ID   int32  `json:"id"`
-	Name string `json:"name"`
+	ID        int32        `json:"id"`
+	Name      string       `json:"name"`
+	DeletedAt sql.NullTime `json:"deleted_at"`
 }
 
 type Event struct {

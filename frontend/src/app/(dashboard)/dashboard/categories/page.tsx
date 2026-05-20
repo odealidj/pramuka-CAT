@@ -211,12 +211,6 @@ export default function CategoriesPage() {
             {meta?.total_records ?? '—'}
           </p>
         </div>
-        <div className="bg-gradient-to-br from-amber-50 to-white rounded-2xl p-4 border border-amber-100 shadow-sm col-span-1 sm:col-span-2">
-          <p className="text-amber-700 text-xs font-medium">Kegunaan Kategori</p>
-          <p className="text-gray-600 text-xs sm:text-sm mt-1">
-            Kategori digunakan untuk memilah bank soal di tab Bank Soal, serta penarikan soal ujian secara acak pada Jadwal Ujian.
-          </p>
-        </div>
       </div>
 
       {/* ── Table Card ── */}

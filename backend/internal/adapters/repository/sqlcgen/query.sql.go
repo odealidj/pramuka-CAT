@@ -164,7 +164,7 @@ func (q *Queries) CountAvailableQuestionsForEventByCategory(ctx context.Context,
 
 const countCategories = `-- name: CountCategories :one
 SELECT COUNT(*) FROM categories
-WHERE $1::text = '' OR name ILIKE '%' || $1::text || '%'
+WHERE deleted_at IS NULL AND ($1::text = '' OR name ILIKE '%' || $1::text || '%')
 `
 
 func (q *Queries) CountCategories(ctx context.Context, search string) (int64, error) {
@@ -281,13 +281,13 @@ func (q *Queries) CountUsers(ctx context.Context, search string) (int64, error) 
 const createCategory = `-- name: CreateCategory :one
 INSERT INTO categories (name)
 VALUES ($1)
-RETURNING id, name
+RETURNING id, name, deleted_at
 `
 
 func (q *Queries) CreateCategory(ctx context.Context, name string) (Category, error) {
 	row := q.db.QueryRowContext(ctx, createCategory, name)
 	var i Category
-	err := row.Scan(&i.ID, &i.Name)
+	err := row.Scan(&i.ID, &i.Name, &i.DeletedAt)
 	return i, err
 }
 
@@ -457,7 +457,8 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 }
 
 const deleteCategory = `-- name: DeleteCategory :exec
-DELETE FROM categories
+UPDATE categories
+SET deleted_at = NOW()
 WHERE id = $1
 `
 
@@ -657,26 +658,26 @@ func (q *Queries) GetApprovalStatus(ctx context.Context, arg GetApprovalStatusPa
 }
 
 const getCategoryById = `-- name: GetCategoryById :one
-SELECT id, name FROM categories
-WHERE id = $1 LIMIT 1
+SELECT id, name, deleted_at FROM categories
+WHERE id = $1 AND deleted_at IS NULL LIMIT 1
 `
 
 func (q *Queries) GetCategoryById(ctx context.Context, id int32) (Category, error) {
 	row := q.db.QueryRowContext(ctx, getCategoryById, id)
 	var i Category
-	err := row.Scan(&i.ID, &i.Name)
+	err := row.Scan(&i.ID, &i.Name, &i.DeletedAt)
 	return i, err
 }
 
 const getCategoryByName = `-- name: GetCategoryByName :one
-SELECT id, name FROM categories
-WHERE name ILIKE $1 LIMIT 1
+SELECT id, name, deleted_at FROM categories
+WHERE name ILIKE $1 AND deleted_at IS NULL LIMIT 1
 `
 
 func (q *Queries) GetCategoryByName(ctx context.Context, name string) (Category, error) {
 	row := q.db.QueryRowContext(ctx, getCategoryByName, name)
 	var i Category
-	err := row.Scan(&i.ID, &i.Name)
+	err := row.Scan(&i.ID, &i.Name, &i.DeletedAt)
 	return i, err
 }
 
@@ -868,8 +869,8 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 }
 
 const listCategories = `-- name: ListCategories :many
-SELECT id, name FROM categories
-WHERE $3::text = '' OR name ILIKE '%' || $3::text || '%'
+SELECT id, name, deleted_at FROM categories
+WHERE deleted_at IS NULL AND ($3::text = '' OR name ILIKE '%' || $3::text || '%')
 ORDER BY name ASC
 LIMIT $1 OFFSET $2
 `
@@ -889,7 +890,7 @@ func (q *Queries) ListCategories(ctx context.Context, arg ListCategoriesParams) 
 	items := []Category{}
 	for rows.Next() {
 		var i Category
-		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+		if err := rows.Scan(&i.ID, &i.Name, &i.DeletedAt); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -1337,8 +1338,8 @@ func (q *Queries) SetStartedAt(ctx context.Context, id uuid.UUID) error {
 const updateCategory = `-- name: UpdateCategory :one
 UPDATE categories
 SET name = $2
-WHERE id = $1
-RETURNING id, name
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING id, name, deleted_at
 `
 
 type UpdateCategoryParams struct {
@@ -1349,7 +1350,7 @@ type UpdateCategoryParams struct {
 func (q *Queries) UpdateCategory(ctx context.Context, arg UpdateCategoryParams) (Category, error) {
 	row := q.db.QueryRowContext(ctx, updateCategory, arg.ID, arg.Name)
 	var i Category
-	err := row.Scan(&i.ID, &i.Name)
+	err := row.Scan(&i.ID, &i.Name, &i.DeletedAt)
 	return i, err
 }
 

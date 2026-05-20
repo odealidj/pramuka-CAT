@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/domain"
@@ -43,6 +44,9 @@ func (h *CategoryHandler) CreateCategory(c echo.Context) error {
 
 	category, err := h.service.CreateCategory(c.Request().Context(), req)
 	if err != nil {
+		if strings.Contains(err.Error(), "kosong") || strings.Contains(err.Error(), "sudah ada") {
+			return response.Error(c, http.StatusBadRequest, err.Error(), nil)
+		}
 		return response.Error(c, http.StatusInternalServerError, "Gagal membuat kategori", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}
 
@@ -99,6 +103,9 @@ func (h *CategoryHandler) UpdateCategory(c echo.Context) error {
 
 	category, err := h.service.UpdateCategory(c.Request().Context(), int32(id), req)
 	if err != nil {
+		if strings.Contains(err.Error(), "kosong") || strings.Contains(err.Error(), "sudah ada") || strings.Contains(err.Error(), "tidak ditemukan") {
+			return response.Error(c, http.StatusBadRequest, err.Error(), nil)
+		}
 		return response.Error(c, http.StatusInternalServerError, "Gagal memperbarui kategori", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}
 

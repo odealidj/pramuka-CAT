@@ -20,6 +20,13 @@ func (s *categoryService) CreateCategory(ctx context.Context, req domain.CreateC
 	if req.Name == "" {
 		return domain.Category{}, fmt.Errorf("nama kategori tidak boleh kosong")
 	}
+
+	// Cek apakah nama kategori sudah ada
+	_, err := s.repo.GetCategoryByName(ctx, req.Name)
+	if err == nil {
+		return domain.Category{}, fmt.Errorf("kategori dengan nama '%s' sudah ada", req.Name)
+	}
+
 	return s.repo.CreateCategory(ctx, req.Name)
 }
 
@@ -40,6 +47,13 @@ func (s *categoryService) UpdateCategory(ctx context.Context, id int32, req doma
 	if err != nil {
 		return domain.Category{}, fmt.Errorf("kategori tidak ditemukan")
 	}
+
+	// Cek apakah nama kategori sudah dipakai oleh kategori lain
+	existing, err := s.repo.GetCategoryByName(ctx, req.Name)
+	if err == nil && existing.ID != id {
+		return domain.Category{}, fmt.Errorf("kategori dengan nama '%s' sudah ada", req.Name)
+	}
+
 	return s.repo.UpdateCategory(ctx, id, req.Name)
 }
 

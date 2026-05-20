@@ -46,31 +46,32 @@ RETURNING *;
 
 -- name: GetCategoryById :one
 SELECT * FROM categories
-WHERE id = $1 LIMIT 1;
+WHERE id = $1 AND deleted_at IS NULL LIMIT 1;
 
 -- name: ListCategories :many
 SELECT * FROM categories
-WHERE sqlc.arg('search')::text = '' OR name ILIKE '%' || sqlc.arg('search')::text || '%'
+WHERE deleted_at IS NULL AND (sqlc.arg('search')::text = '' OR name ILIKE '%' || sqlc.arg('search')::text || '%')
 ORDER BY name ASC
 LIMIT $1 OFFSET $2;
 
 -- name: CountCategories :one
 SELECT COUNT(*) FROM categories
-WHERE sqlc.arg('search')::text = '' OR name ILIKE '%' || sqlc.arg('search')::text || '%';
+WHERE deleted_at IS NULL AND (sqlc.arg('search')::text = '' OR name ILIKE '%' || sqlc.arg('search')::text || '%');
 
 -- name: UpdateCategory :one
 UPDATE categories
 SET name = $2
-WHERE id = $1
+WHERE id = $1 AND deleted_at IS NULL
 RETURNING *;
 
 -- name: DeleteCategory :exec
-DELETE FROM categories
+UPDATE categories
+SET deleted_at = NOW()
 WHERE id = $1;
 
 -- name: GetCategoryByName :one
 SELECT * FROM categories
-WHERE name ILIKE $1 LIMIT 1;
+WHERE name ILIKE $1 AND deleted_at IS NULL LIMIT 1;
 
 -- name: CountQuestionsByCategory :one
 SELECT COUNT(*) FROM questions
