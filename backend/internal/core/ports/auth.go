@@ -15,6 +15,7 @@ type AuthRepository interface {
 	CreateSession(ctx context.Context, arg sqlcgen.CreateSessionParams) (sqlcgen.Session, error)
 	GetSession(ctx context.Context, id uuid.UUID) (sqlcgen.Session, error)
 	BlockSession(ctx context.Context, id uuid.UUID) error
+	CreateUser(ctx context.Context, arg sqlcgen.CreateUserParams) (sqlcgen.User, error)
 }
 
 // AuthCache mendefinisikan kontrak interaksi dengan cache in-memory (Redis)
@@ -29,4 +30,5 @@ type AuthService interface {
 	Login(ctx context.Context, req domain.LoginRequest) (domain.LoginResponse, error)
 	Refresh(ctx context.Context, req domain.RefreshRequest) (domain.RefreshResponse, error)
 	Logout(ctx context.Context, sessionID uuid.UUID) error
+	Register(ctx context.Context, req domain.RegisterRequest) (domain.RegisterResponse, error)
 }

@@ -163,3 +163,38 @@ func (s *authService) Logout(ctx context.Context, sessionID uuid.UUID) error {
 
 	return nil
 }
+
+// Register menangani pendaftaran akun peserta baru secara mandiri
+func (s *authService) Register(ctx context.Context, req domain.RegisterRequest) (domain.RegisterResponse, error) {
+	// Cek apakah username sudah ada
+	_, err := s.repo.GetUserByUsername(ctx, req.Username)
+	if err == nil {
+		return domain.RegisterResponse{}, fmt.Errorf("username sudah digunakan")
+	}
+
+	hashedPassword, err := utils.HashPassword(req.Password)
+	if err != nil {
+		return domain.RegisterResponse{}, fmt.Errorf("gagal memproses password")
+	}
+
+	// Create user dengan role default "peserta"
+	user, err := s.repo.CreateUser(ctx, sqlcgen.CreateUserParams{
+		Username:     req.Username,
+		PasswordHash: hashedPassword,
+		FullName:     req.FullName,
+		Role:         "peserta",
+		// PhotoUrl dibiarkan kosong (invalid NullString)
+	})
+	if err != nil {
+		return domain.RegisterResponse{}, fmt.Errorf("gagal membuat akun: %w", err)
+	}
+
+	return domain.RegisterResponse{
+		User: domain.UserResponse{
+			ID:       user.ID,
+			Username: user.Username,
+			FullName: user.FullName,
+			Role:     user.Role,
+		},
+	}, nil
+}

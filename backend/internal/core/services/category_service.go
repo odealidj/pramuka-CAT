@@ -49,6 +49,15 @@ func (s *categoryService) DeleteCategory(ctx context.Context, id int32) error {
 	if err != nil {
 		return fmt.Errorf("kategori tidak ditemukan")
 	}
-	// PostgreSQL akan menangani pembatasan jika masih ada soal yang merujuk kategori ini (karena constraint foreign key)
+
+	// Cek apakah kategori masih memiliki soal
+	count, err := s.repo.CountQuestionsByCategory(ctx, id)
+	if err != nil {
+		return fmt.Errorf("gagal memeriksa soal pada kategori ini")
+	}
+	if count > 0 {
+		return fmt.Errorf("kategori tidak dapat dihapus karena masih memiliki %d soal. Pindahkan atau hapus soal terlebih dahulu", count)
+	}
+
 	return s.repo.DeleteCategory(ctx, id)
 }

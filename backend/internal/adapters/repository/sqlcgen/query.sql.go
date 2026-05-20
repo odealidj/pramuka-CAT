@@ -102,6 +102,36 @@ func (q *Queries) CalculateScore(ctx context.Context, approvalID uuid.NullUUID) 
 	return total_score, err
 }
 
+const checkDuplicateQuestion = `-- name: CheckDuplicateQuestion :one
+SELECT id, category_id, question_text, option_a, option_b, option_c, option_d, correct_answer, weight, created_at FROM questions
+WHERE REGEXP_REPLACE(question_text, '^[[:space:][:digit:].)*#_-]+', '') ILIKE REGEXP_REPLACE($1::text, '^[[:space:][:digit:].)*#_-]+', '')
+  AND ($2::uuid IS NULL OR id <> $2::uuid)
+LIMIT 1
+`
+
+type CheckDuplicateQuestionParams struct {
+	QuestionText string        `json:"question_text"`
+	ExcludeID    uuid.NullUUID `json:"exclude_id"`
+}
+
+func (q *Queries) CheckDuplicateQuestion(ctx context.Context, arg CheckDuplicateQuestionParams) (Question, error) {
+	row := q.db.QueryRowContext(ctx, checkDuplicateQuestion, arg.QuestionText, arg.ExcludeID)
+	var i Question
+	err := row.Scan(
+		&i.ID,
+		&i.CategoryID,
+		&i.QuestionText,
+		&i.OptionA,
+		&i.OptionB,
+		&i.OptionC,
+		&i.OptionD,
+		&i.CorrectAnswer,
+		&i.Weight,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const countAvailableQuestionsForEventAll = `-- name: CountAvailableQuestionsForEventAll :one
 SELECT COUNT(*) FROM questions
 WHERE id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1)
@@ -182,11 +212,30 @@ func (q *Queries) CountEvents(ctx context.Context, search string) (int64, error)
 
 const countQuestions = `-- name: CountQuestions :one
 SELECT COUNT(*) FROM questions
-WHERE $1::text = '' OR to_tsvector('indonesian', question_text) @@ plainto_tsquery('indonesian', $1::text)
+WHERE 
+  ($1::int IS NULL OR category_id = $1::int)
+  AND ($2::text = '' OR to_tsvector('indonesian', question_text) @@ plainto_tsquery('indonesian', $2::text))
 `
 
-func (q *Queries) CountQuestions(ctx context.Context, search string) (int64, error) {
-	row := q.db.QueryRowContext(ctx, countQuestions, search)
+type CountQuestionsParams struct {
+	CategoryID sql.NullInt32 `json:"category_id"`
+	Search     string        `json:"search"`
+}
+
+func (q *Queries) CountQuestions(ctx context.Context, arg CountQuestionsParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countQuestions, arg.CategoryID, arg.Search)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countQuestionsByCategory = `-- name: CountQuestionsByCategory :one
+SELECT COUNT(*) FROM questions
+WHERE category_id = $1
+`
+
+func (q *Queries) CountQuestionsByCategory(ctx context.Context, categoryID sql.NullInt32) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countQuestionsByCategory, categoryID)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -559,6 +608,27 @@ func (q *Queries) GetAllEventParticipantsForExport(ctx context.Context, eventID 
 	return items, nil
 }
 
+const getApprovalById = `-- name: GetApprovalById :one
+SELECT id, user_id, event_id, status, is_completed, score, is_passed, started_at, completed_at FROM user_event_approvals WHERE id = $1
+`
+
+func (q *Queries) GetApprovalById(ctx context.Context, id uuid.UUID) (UserEventApproval, error) {
+	row := q.db.QueryRowContext(ctx, getApprovalById, id)
+	var i UserEventApproval
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.EventID,
+		&i.Status,
+		&i.IsCompleted,
+		&i.Score,
+		&i.IsPassed,
+		&i.StartedAt,
+		&i.CompletedAt,
+	)
+	return i, err
+}
+
 const getApprovalStatus = `-- name: GetApprovalStatus :one
 SELECT id, user_id, event_id, status, is_completed, score, is_passed, started_at, completed_at FROM user_event_approvals
 WHERE user_id = $1 AND event_id = $2 LIMIT 1
@@ -593,6 +663,18 @@ WHERE id = $1 LIMIT 1
 
 func (q *Queries) GetCategoryById(ctx context.Context, id int32) (Category, error) {
 	row := q.db.QueryRowContext(ctx, getCategoryById, id)
+	var i Category
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
+const getCategoryByName = `-- name: GetCategoryByName :one
+SELECT id, name FROM categories
+WHERE name ILIKE $1 LIMIT 1
+`
+
+func (q *Queries) GetCategoryByName(ctx context.Context, name string) (Category, error) {
+	row := q.db.QueryRowContext(ctx, getCategoryByName, name)
 	var i Category
 	err := row.Scan(&i.ID, &i.Name)
 	return i, err
@@ -971,19 +1053,27 @@ func (q *Queries) ListEvents(ctx context.Context, arg ListEventsParams) ([]Event
 
 const listQuestions = `-- name: ListQuestions :many
 SELECT id, category_id, question_text, option_a, option_b, option_c, option_d, correct_answer, weight, created_at FROM questions
-WHERE $3::text = '' OR to_tsvector('indonesian', question_text) @@ plainto_tsquery('indonesian', $3::text)
+WHERE 
+  ($3::int IS NULL OR category_id = $3::int)
+  AND ($4::text = '' OR to_tsvector('indonesian', question_text) @@ plainto_tsquery('indonesian', $4::text))
 ORDER BY category_id ASC, question_text ASC
 LIMIT $1 OFFSET $2
 `
 
 type ListQuestionsParams struct {
-	Limit  int32  `json:"limit"`
-	Offset int32  `json:"offset"`
-	Search string `json:"search"`
+	Limit      int32         `json:"limit"`
+	Offset     int32         `json:"offset"`
+	CategoryID sql.NullInt32 `json:"category_id"`
+	Search     string        `json:"search"`
 }
 
 func (q *Queries) ListQuestions(ctx context.Context, arg ListQuestionsParams) ([]Question, error) {
-	rows, err := q.db.QueryContext(ctx, listQuestions, arg.Limit, arg.Offset, arg.Search)
+	rows, err := q.db.QueryContext(ctx, listQuestions,
+		arg.Limit,
+		arg.Offset,
+		arg.CategoryID,
+		arg.Search,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -1175,6 +1265,30 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 	return items, nil
 }
 
+const revokeUserEvent = `-- name: RevokeUserEvent :one
+UPDATE user_event_approvals
+SET status = 'revoked'
+WHERE id = $1
+RETURNING id, user_id, event_id, status, is_completed, score, is_passed, started_at, completed_at
+`
+
+func (q *Queries) RevokeUserEvent(ctx context.Context, id uuid.UUID) (UserEventApproval, error) {
+	row := q.db.QueryRowContext(ctx, revokeUserEvent, id)
+	var i UserEventApproval
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.EventID,
+		&i.Status,
+		&i.IsCompleted,
+		&i.Score,
+		&i.IsPassed,
+		&i.StartedAt,
+		&i.CompletedAt,
+	)
+	return i, err
+}
+
 const saveUserAnswer = `-- name: SaveUserAnswer :one
 INSERT INTO user_answers (approval_id, question_id, selected_answer, is_correct)
 VALUES ($1, $2, $3, $4)
@@ -1209,6 +1323,15 @@ func (q *Queries) SaveUserAnswer(ctx context.Context, arg SaveUserAnswerParams) 
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const setStartedAt = `-- name: SetStartedAt :exec
+UPDATE user_event_approvals SET started_at = NOW() WHERE id = $1 AND started_at IS NULL
+`
+
+func (q *Queries) SetStartedAt(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, setStartedAt, id)
+	return err
 }
 
 const updateCategory = `-- name: UpdateCategory :one
@@ -1366,5 +1489,19 @@ type UpdateUserPasswordParams struct {
 
 func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) error {
 	_, err := q.db.ExecContext(ctx, updateUserPassword, arg.ID, arg.PasswordHash)
+	return err
+}
+
+const updateUserPhoto = `-- name: UpdateUserPhoto :exec
+UPDATE users SET photo_url = $2 WHERE id = $1
+`
+
+type UpdateUserPhotoParams struct {
+	ID       uuid.UUID      `json:"id"`
+	PhotoUrl sql.NullString `json:"photo_url"`
+}
+
+func (q *Queries) UpdateUserPhoto(ctx context.Context, arg UpdateUserPhotoParams) error {
+	_, err := q.db.ExecContext(ctx, updateUserPhoto, arg.ID, arg.PhotoUrl)
 	return err
 }

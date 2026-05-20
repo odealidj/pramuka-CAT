@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import {
   CalendarDays,
   Plus,
@@ -143,8 +144,10 @@ function EventCard({
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-export default function EventsPage() {
+// ─── Page Content ─────────────────────────────────────────────────────────────
+function EventsContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [events, setEvents] = useState<Event[]>([]);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -180,6 +183,16 @@ export default function EventsPage() {
   }, [page, search]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { fetchEvents(); }, [fetchEvents]);
+
+  // Handle "new=true" from Quick Actions
+  useEffect(() => {
+    if (searchParams.get('new') === 'true') {
+      setFormModal({ open: true, mode: 'create', event: null });
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('new');
+      router.replace(`/dashboard/events?${params.toString()}`);
+    }
+  }, [searchParams, router]);
 
   // Debounced search
   useEffect(() => {
@@ -379,5 +392,13 @@ export default function EventsPage() {
 
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
     </div>
+  );
+}
+
+export default function EventsPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center p-8"><Spinner size={32} className="text-amber-600" /></div>}>
+      <EventsContent />
+    </Suspense>
   );
 }

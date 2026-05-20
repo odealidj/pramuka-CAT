@@ -251,6 +251,10 @@ func (r *examRepository) GetUserAnswersDetail(ctx context.Context, approvalID uu
 	return results, nil
 }
 
+func (r *examRepository) SetStartedAt(ctx context.Context, approvalID uuid.UUID) error {
+	return r.queries.SetStartedAt(ctx, approvalID)
+}
+
 // mapSqlcToDomainEvent is already defined in event_repository.go; here we need a local time helper
 func examRepoTimeOrZero(t time.Time, valid bool) time.Time {
 	if !valid {

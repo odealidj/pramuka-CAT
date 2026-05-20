@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/odealidj/pramuka-CAT/backend/internal/adapters/repository/sqlcgen"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/domain"
@@ -36,6 +37,21 @@ func (r *categoryRepository) GetCategoryById(ctx context.Context, id int32) (dom
 		ID:   c.ID,
 		Name: c.Name,
 	}, nil
+}
+
+func (r *categoryRepository) GetCategoryByName(ctx context.Context, name string) (domain.Category, error) {
+	c, err := r.queries.GetCategoryByName(ctx, name)
+	if err != nil {
+		return domain.Category{}, err
+	}
+	return domain.Category{
+		ID:   c.ID,
+		Name: c.Name,
+	}, nil
+}
+
+func (r *categoryRepository) CountQuestionsByCategory(ctx context.Context, categoryID int32) (int64, error) {
+	return r.queries.CountQuestionsByCategory(ctx, sql.NullInt32{Int32: categoryID, Valid: true})
 }
 
 func (r *categoryRepository) ListCategories(ctx context.Context, page int32, limit int32, search string) ([]domain.Category, int64, error) {

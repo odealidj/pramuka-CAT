@@ -22,6 +22,7 @@ import {
   removeEventQuestionApi,
   listEventParticipantsApi,
   approveParticipantApi,
+  revokeParticipantApi,
   getExportUrl,
 } from '@/services/event.service';
 import { listQuestionsApi } from '@/services/question.service';
@@ -85,6 +86,7 @@ export default function EventDetailDrawer({
   const [participants, setParticipants] = useState<EventParticipant[]>([]);
   const [loadingP, setLoadingP] = useState(false);
   const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [revokingId, setRevokingId] = useState<string | null>(null);
 
   // ─── Fetch helpers ──────────────────────────────────────────────────────────
   const fetchEventQuestions = useCallback(async () => {
@@ -193,6 +195,20 @@ export default function EventDetailDrawer({
       onToast('error', 'Gagal menyetujui peserta.');
     } finally {
       setApprovingId(null);
+    }
+  };
+
+  const handleRevoke = async (approvalId: string) => {
+    if (!event) return;
+    setRevokingId(approvalId);
+    try {
+      await revokeParticipantApi(event.id, approvalId);
+      onToast('success', 'Persetujuan peserta berhasil dibatalkan (Revoked).');
+      await fetchParticipants();
+    } catch {
+      onToast('error', 'Gagal membatalkan persetujuan peserta.');
+    } finally {
+      setRevokingId(null);
     }
   };
 
@@ -483,20 +499,37 @@ export default function EventDetailDrawer({
                             )}
                           </td>
                           <td className="px-3 py-3 text-right">
-                            {p.status.toLowerCase() === 'pending' && (
-                              <button
-                                onClick={() => handleApprove(p.user_id)}
-                                disabled={approvingId === p.user_id}
-                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-all disabled:opacity-50 ml-auto"
-                              >
-                                {approvingId === p.user_id ? (
-                                  <Spinner size={11} className="text-white" />
-                                ) : (
-                                  <CheckCircle size={11} />
-                                )}
-                                Approve
-                              </button>
-                            )}
+                            <div className="flex items-center justify-end gap-2">
+                              {p.status.toLowerCase() === 'pending' && (
+                                <button
+                                  onClick={() => handleApprove(p.user_id)}
+                                  disabled={approvingId === p.user_id}
+                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-all disabled:opacity-50"
+                                >
+                                  {approvingId === p.user_id ? (
+                                    <Spinner size={11} className="text-white" />
+                                  ) : (
+                                    <CheckCircle size={11} />
+                                  )}
+                                  Approve
+                                </button>
+                              )}
+                              
+                              {(p.status.toLowerCase() === 'pending' || p.status.toLowerCase() === 'approved') && (
+                                <button
+                                  onClick={() => handleRevoke(p.user_id)}
+                                  disabled={revokingId === p.user_id}
+                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-100 text-red-700 border border-red-200 text-xs font-semibold hover:bg-red-200 transition-all disabled:opacity-50"
+                                >
+                                  {revokingId === p.user_id ? (
+                                    <Spinner size={11} className="text-red-700" />
+                                  ) : (
+                                    <XCircle size={11} />
+                                  )}
+                                  Revoke
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))}

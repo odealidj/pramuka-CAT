@@ -20,10 +20,11 @@ type EventRepository interface {
 
 	ListEventParticipants(ctx context.Context, eventID uuid.UUID, page int32, limit int32) ([]domain.EventParticipant, int64, error)
 	ApproveUserEvent(ctx context.Context, approvalID uuid.UUID) error
+	RevokeUserEvent(ctx context.Context, approvalID uuid.UUID) error
+	GetAllEventParticipantsForExport(ctx context.Context, eventID uuid.UUID) ([]domain.EventParticipantExport, error)
 
 	AddRandomEventQuestions(ctx context.Context, eventID uuid.UUID, categoryID *int32, amount int32) error
 	CountAvailableQuestions(ctx context.Context, eventID uuid.UUID, categoryID *int32) (int64, error)
-	GetAllEventParticipantsForExport(ctx context.Context, eventID uuid.UUID) ([]domain.EventParticipantExport, error)
 }
 
 type EventService interface {
@@ -40,6 +41,7 @@ type EventService interface {
 
 	ListEventParticipants(ctx context.Context, eventID uuid.UUID, page int32, limit int32) ([]domain.EventParticipant, int64, error)
 	ApproveUserEvent(ctx context.Context, approvalID uuid.UUID) error
+	RevokeUserEvent(ctx context.Context, approvalID uuid.UUID) error
 	ExportEventParticipantsExcel(ctx context.Context, eventID uuid.UUID) ([]byte, error)
 	ExportEventParticipantsPDF(ctx context.Context, eventID uuid.UUID) ([]byte, error)
 }

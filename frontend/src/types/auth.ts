@@ -14,6 +14,13 @@ export interface RefreshRequest {
   refresh_token: string;
 }
 
+export interface RegisterRequest {
+  username: string;
+  password: string;
+  full_name: string;
+}
+
+
 // === Auth Response Types ===
 
 /** Data user tanpa password hash (mirror dari UserResponse di Go) */
@@ -22,6 +29,7 @@ export interface UserInfo {
   username: string;
   full_name: string;
   role: 'admin' | 'peserta';
+  photo_url?: string | null;
 }
 
 /** Response sukses dari POST /auth/login */

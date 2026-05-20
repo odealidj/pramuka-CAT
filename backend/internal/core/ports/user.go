@@ -13,6 +13,7 @@ type UserRepository interface {
 	ListUsers(ctx context.Context, page int32, limit int32, search string) ([]domain.User, int64, error)
 	UpdateUser(ctx context.Context, id uuid.UUID, u domain.User) (domain.User, error)
 	UpdateUserPassword(ctx context.Context, id uuid.UUID, passwordHash string) error
+	UpdateUserPhoto(ctx context.Context, id uuid.UUID, photoUrl string) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 }
 
@@ -22,5 +23,6 @@ type UserService interface {
 	ListUsers(ctx context.Context, page int32, limit int32, search string) ([]domain.User, int64, error)
 	UpdateUser(ctx context.Context, id uuid.UUID, req domain.UpdateUserRequest) (domain.User, error)
 	UpdateUserPassword(ctx context.Context, id uuid.UUID, req domain.UpdateUserPasswordRequest) error
+	UpdateUserPhoto(ctx context.Context, id uuid.UUID, photoUrl string) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 }

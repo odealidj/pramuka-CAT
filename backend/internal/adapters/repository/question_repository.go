@@ -76,18 +76,28 @@ func (r *questionRepository) GetQuestionById(ctx context.Context, id uuid.UUID) 
 	return mapSqlcToDomainQuestion(res), nil
 }
 
-func (r *questionRepository) ListQuestions(ctx context.Context, page int32, limit int32, search string) ([]domain.Question, int64, error) {
+func (r *questionRepository) ListQuestions(ctx context.Context, page int32, limit int32, search string, categoryId *int32) ([]domain.Question, int64, error) {
 	offset := (page - 1) * limit
+	
+	catID := sql.NullInt32{}
+	if categoryId != nil {
+		catID = sql.NullInt32{Int32: *categoryId, Valid: true}
+	}
+
 	rows, err := r.queries.ListQuestions(ctx, sqlcgen.ListQuestionsParams{
-		Limit:  limit,
-		Offset: offset,
-		Search: search,
+		Limit:      limit,
+		Offset:     offset,
+		Search:     search,
+		CategoryID: catID,
 	})
 	if err != nil {
 		return nil, 0, err
 	}
 
-	total, err := r.queries.CountQuestions(ctx, search)
+	total, err := r.queries.CountQuestions(ctx, sqlcgen.CountQuestionsParams{
+		Search:     search,
+		CategoryID: catID,
+	})
 	if err != nil {
 		return nil, 0, err
 	}
@@ -124,4 +134,23 @@ func (r *questionRepository) UpdateQuestion(ctx context.Context, id uuid.UUID, q
 
 func (r *questionRepository) DeleteQuestion(ctx context.Context, id uuid.UUID) error {
 	return r.queries.DeleteQuestion(ctx, id)
+}
+
+func (r *questionRepository) CheckDuplicateQuestion(ctx context.Context, text string, excludeID *uuid.UUID) (bool, error) {
+	var excludeIDNull uuid.NullUUID
+	if excludeID != nil {
+		excludeIDNull = uuid.NullUUID{UUID: *excludeID, Valid: true}
+	}
+
+	_, err := r.queries.CheckDuplicateQuestion(ctx, sqlcgen.CheckDuplicateQuestionParams{
+		QuestionText: text,
+		ExcludeID:    excludeIDNull,
+	})
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }

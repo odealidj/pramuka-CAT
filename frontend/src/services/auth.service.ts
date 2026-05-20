@@ -9,7 +9,23 @@ import type {
   LoginRequest,
   LoginResponse,
   RefreshResponse,
+  RegisterRequest,
+  User,
 } from '@/types/auth';
+
+/**
+ * Melakukan pendaftaran (registrasi) akun baru
+ * POST /api/v1/auth/register
+ */
+export const registerApi = async (
+  payload: RegisterRequest
+): Promise<User> => {
+  const res = await httpClient.post<ApiSuccessResponse<User>>(
+    '/auth/register',
+    payload
+  );
+  return res.data.data;
+};
 
 /**
  * Melakukan login ke Backend API

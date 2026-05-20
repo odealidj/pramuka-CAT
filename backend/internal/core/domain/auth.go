@@ -10,6 +10,18 @@ type LoginRequest struct {
 	Password string `json:"password" validate:"required" extensions:"x-order=1"`
 }
 
+// RegisterRequest merepresentasikan data JSON yang dikirim saat peserta mendaftar
+type RegisterRequest struct {
+	Username string `json:"username" validate:"required"`
+	Password string `json:"password" validate:"required,min=6"`
+	FullName string `json:"full_name" validate:"required"`
+}
+
+// RegisterResponse adalah balasan sukses registrasi
+type RegisterResponse struct {
+	User UserResponse `json:"user"`
+}
+
 // UserResponse adalah representasi data user tanpa password hash
 type UserResponse struct {
 	ID       uuid.UUID `json:"id"`

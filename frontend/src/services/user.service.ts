@@ -75,3 +75,20 @@ export const updateUserPasswordApi = async (
 export const deleteUserApi = async (id: string): Promise<void> => {
   await httpClient.delete(`/admin/users/${id}`);
 };
+
+/** POST /users/me/photo */
+export const uploadPhotoApi = async (file: File): Promise<{ photo_url: string }> => {
+  const formData = new FormData();
+  formData.append('photo', file);
+
+  const res = await httpClient.post<ApiSuccessResponse<{ photo_url: string }>>(
+    '/users/me/photo',
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  );
+  return res.data.data;
+};

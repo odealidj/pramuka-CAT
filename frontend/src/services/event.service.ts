@@ -118,6 +118,13 @@ export const approveParticipantApi = async (
   await httpClient.put(`/admin/events/${eventId}/participants/${approvalId}/approve`, {});
 };
 
+export const revokeParticipantApi = async (
+  eventId: string,
+  approvalId: string
+): Promise<void> => {
+  await httpClient.put(`/admin/events/${eventId}/participants/${approvalId}/revoke`, {});
+};
+
 // ─── Export ───────────────────────────────────────────────────────────────────
 
 /** Returns the download URL — caller opens it in a new tab */

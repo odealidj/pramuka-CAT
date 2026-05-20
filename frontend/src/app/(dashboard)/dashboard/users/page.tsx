@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import {
   Users,
   UserPlus,
@@ -60,9 +61,11 @@ function formatDate(iso: string): string {
 }
 
 // ============================================================
-// Page Component
+// Page Component Content
 // ============================================================
-export default function UsersPage() {
+function UsersContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   // --- Data State ---
   const [users, setUsers] = useState<User[]>([]);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
@@ -115,6 +118,16 @@ export default function UsersPage() {
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
+
+  // Handle "new=true" from Quick Actions
+  useEffect(() => {
+    if (searchParams.get('new') === 'true') {
+      setFormModal({ open: true, mode: 'create', user: null });
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('new');
+      router.replace(`/dashboard/users?${params.toString()}`);
+    }
+  }, [searchParams, router]);
 
   // Debounced search — trigger after 500ms typing stop
   useEffect(() => {
@@ -481,5 +494,13 @@ export default function UsersPage() {
       {/* ── Toast Notifications ── */}
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
     </div>
+  );
+}
+
+export default function UsersPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center p-8"><Spinner size={32} className="text-amber-600" /></div>}>
+      <UsersContent />
+    </Suspense>
   );
 }

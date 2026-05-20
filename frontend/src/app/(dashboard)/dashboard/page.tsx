@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   Users,
   BookOpen,
@@ -6,19 +7,26 @@ import {
   TrendingUp,
   Activity,
   ArrowUpRight,
-} from 'lucide-react';
+} from "lucide-react";
 
 // --- Stat Card ---
 interface StatCardProps {
   title: string;
   value: string;
   change: string;
-  changeType: 'up' | 'down' | 'neutral';
+  changeType: "up" | "down" | "neutral";
   icon: React.ReactNode;
   color: string;
 }
 
-function StatCard({ title, value, change, changeType, icon, color }: StatCardProps) {
+function StatCard({
+  title,
+  value,
+  change,
+  changeType,
+  icon,
+  color,
+}: StatCardProps) {
   return (
     <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 card-lift">
       <div className="flex items-start justify-between gap-3">
@@ -28,11 +36,11 @@ function StatCard({ title, value, change, changeType, icon, color }: StatCardPro
           <div className="flex items-center gap-1 mt-2">
             <span
               className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                changeType === 'up'
-                  ? 'bg-emerald-50 text-emerald-600'
-                  : changeType === 'down'
-                  ? 'bg-red-50 text-red-500'
-                  : 'bg-gray-100 text-gray-500'
+                changeType === "up"
+                  ? "bg-emerald-50 text-emerald-600"
+                  : changeType === "down"
+                    ? "bg-red-50 text-red-500"
+                    : "bg-gray-100 text-gray-500"
               }`}
             >
               {change}
@@ -40,9 +48,7 @@ function StatCard({ title, value, change, changeType, icon, color }: StatCardPro
             <span className="text-gray-400 text-xs">dari bulan lalu</span>
           </div>
         </div>
-        <div className={`p-3 rounded-2xl ${color} flex-shrink-0`}>
-          {icon}
-        </div>
+        <div className={`p-3 rounded-2xl ${color} flex-shrink-0`}>{icon}</div>
       </div>
     </div>
   );
@@ -58,12 +64,21 @@ function ActivityItem({
   name: string;
   action: string;
   time: string;
-  status: 'approved' | 'pending' | 'completed';
+  status: "approved" | "pending" | "completed";
 }) {
   const statusConfig = {
-    approved: { label: 'Disetujui', cls: 'bg-emerald-50 text-emerald-600 border-emerald-100' },
-    pending: { label: 'Menunggu', cls: 'bg-amber-50 text-amber-600 border-amber-100' },
-    completed: { label: 'Selesai', cls: 'bg-blue-50 text-blue-600 border-blue-100' },
+    approved: {
+      label: "Disetujui",
+      cls: "bg-emerald-50 text-emerald-600 border-emerald-100",
+    },
+    pending: {
+      label: "Menunggu",
+      cls: "bg-amber-50 text-amber-600 border-amber-100",
+    },
+    completed: {
+      label: "Selesai",
+      cls: "bg-blue-50 text-blue-600 border-blue-100",
+    },
   };
   const s = statusConfig[status];
 
@@ -77,7 +92,9 @@ function ActivityItem({
         <p className="text-gray-400 text-xs truncate">{action}</p>
       </div>
       <div className="flex flex-col items-end gap-1 flex-shrink-0">
-        <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${s.cls}`}>
+        <span
+          className={`text-xs font-medium px-2 py-0.5 rounded-full border ${s.cls}`}
+        >
           {s.label}
         </span>
         <span className="text-gray-400 text-xs">{time}</span>
@@ -90,45 +107,70 @@ function ActivityItem({
 export default function DashboardPage() {
   const stats: StatCardProps[] = [
     {
-      title: 'Total Peserta',
-      value: '248',
-      change: '+12%',
-      changeType: 'up',
+      title: "Total Peserta",
+      value: "248",
+      change: "+12%",
+      changeType: "up",
       icon: <Users size={20} className="text-violet-600" />,
-      color: 'bg-violet-50',
+      color: "bg-violet-50",
     },
     {
-      title: 'Bank Soal',
-      value: '1,432',
-      change: '+34 soal',
-      changeType: 'up',
+      title: "Bank Soal",
+      value: "1,432",
+      change: "+34 soal",
+      changeType: "up",
       icon: <BookOpen size={20} className="text-amber-600" />,
-      color: 'bg-amber-50',
+      color: "bg-amber-50",
     },
     {
-      title: 'Event Aktif',
-      value: '5',
-      change: '+2 baru',
-      changeType: 'up',
+      title: "Event Aktif",
+      value: "5",
+      change: "+2 baru",
+      changeType: "up",
       icon: <CalendarDays size={20} className="text-blue-600" />,
-      color: 'bg-blue-50',
+      color: "bg-blue-50",
     },
     {
-      title: 'Ujian Selesai',
-      value: '186',
-      change: '+18%',
-      changeType: 'up',
+      title: "Ujian Selesai",
+      value: "186",
+      change: "+18%",
+      changeType: "up",
       icon: <ClipboardCheck size={20} className="text-emerald-600" />,
-      color: 'bg-emerald-50',
+      color: "bg-emerald-50",
     },
   ];
 
   const activities = [
-    { name: 'Raka Sanjaya', action: 'Mendaftar event: Ujian Penegak 2025', time: '5 menit lalu', status: 'pending' as const },
-    { name: 'Dewi Putri', action: 'Menyelesaikan ujian dengan skor 92', time: '23 menit lalu', status: 'completed' as const },
-    { name: 'Ahmad Yusuf', action: 'Persetujuan ujian disetujui admin', time: '1 jam lalu', status: 'approved' as const },
-    { name: 'Siti Rahma', action: 'Mendaftar event: Uji Kompetensi Penggalang', time: '2 jam lalu', status: 'pending' as const },
-    { name: 'Budi Santoso', action: 'Menyelesaikan ujian dengan skor 78', time: '3 jam lalu', status: 'completed' as const },
+    {
+      name: "Raka Sanjaya",
+      action: "Mendaftar event: Ujian Penegak 2025",
+      time: "5 menit lalu",
+      status: "pending" as const,
+    },
+    {
+      name: "Dewi Putri",
+      action: "Menyelesaikan ujian dengan skor 92",
+      time: "23 menit lalu",
+      status: "completed" as const,
+    },
+    {
+      name: "Ahmad Yusuf",
+      action: "Persetujuan ujian disetujui admin",
+      time: "1 jam lalu",
+      status: "approved" as const,
+    },
+    {
+      name: "Siti Rahma",
+      action: "Mendaftar event: Uji Kompetensi Penggalang",
+      time: "2 jam lalu",
+      status: "pending" as const,
+    },
+    {
+      name: "Budi Santoso",
+      action: "Menyelesaikan ujian dengan skor 78",
+      time: "3 jam lalu",
+      status: "completed" as const,
+    },
   ];
 
   return (
@@ -145,8 +187,8 @@ export default function DashboardPage() {
           </p>
           <h2 className="text-white text-2xl font-bold mb-1">Admin Pramuka</h2>
           <p className="text-amber-100/70 text-sm max-w-md">
-            Ada <span className="text-amber-300 font-semibold">7 peserta</span> yang menunggu
-            persetujuan untuk mengikuti ujian hari ini.
+            Ada <span className="text-amber-300 font-semibold">7 peserta</span>{" "}
+            yang menunggu persetujuan untuk mengikuti ujian hari ini.
           </p>
         </div>
       </div>
@@ -158,7 +200,13 @@ export default function DashboardPage() {
             <TrendingUp size={16} className="text-amber-600" />
             Statistik Sistem
           </h3>
-          <span className="text-gray-400 text-xs">Update: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long' })}</span>
+          <span className="text-gray-400 text-xs">
+            Update:{" "}
+            {new Date().toLocaleDateString("id-ID", {
+              day: "numeric",
+              month: "long",
+            })}
+          </span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           {stats.map((stat) => (
@@ -194,12 +242,32 @@ export default function DashboardPage() {
           </h3>
           <div className="space-y-3">
             {[
-              { label: 'Tambah Soal Baru', href: '/dashboard/questions/new', color: 'bg-amber-50 text-amber-700 hover:bg-amber-100', icon: '📝' },
-              { label: 'Buat Event Ujian', href: '/dashboard/events/new', color: 'bg-blue-50 text-blue-700 hover:bg-blue-100', icon: '📅' },
-              { label: 'Tambah Peserta', href: '/dashboard/users/new', color: 'bg-violet-50 text-violet-700 hover:bg-violet-100', icon: '👤' },
-              { label: 'Approval Peserta', href: '/dashboard/events', color: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100', icon: '✅' },
+              {
+                label: "Tambah Soal Baru",
+                href: "/dashboard/questions?new=true",
+                color: "bg-amber-50 text-amber-700 hover:bg-amber-100",
+                icon: "📝",
+              },
+              {
+                label: "Buat Event Ujian",
+                href: "/dashboard/events?new=true",
+                color: "bg-blue-50 text-blue-700 hover:bg-blue-100",
+                icon: "📅",
+              },
+              {
+                label: "Tambah Peserta",
+                href: "/dashboard/users?new=true",
+                color: "bg-violet-50 text-violet-700 hover:bg-violet-100",
+                icon: "👤",
+              },
+              {
+                label: "Approval Peserta",
+                href: "/dashboard/events",
+                color: "bg-emerald-50 text-emerald-700 hover:bg-emerald-100",
+                icon: "✅",
+              },
             ].map((action) => (
-              <a
+              <Link
                 key={action.href}
                 href={action.href}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${action.color}`}
@@ -207,7 +275,7 @@ export default function DashboardPage() {
                 <span className="text-base">{action.icon}</span>
                 {action.label}
                 <ArrowUpRight size={14} className="ml-auto opacity-50" />
-              </a>
+              </Link>
             ))}
           </div>
         </div>

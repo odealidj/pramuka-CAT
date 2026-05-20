@@ -3,11 +3,12 @@ package handler
 import (
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	appMiddleware "github.com/odealidj/pramuka-CAT/backend/internal/adapters/middleware"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/domain"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/ports"
 	"github.com/odealidj/pramuka-CAT/backend/pkg/response"
+	"github.com/odealidj/pramuka-CAT/backend/pkg/utils"
 )
 
 type AuthHandler struct {
@@ -26,6 +27,7 @@ func (h *AuthHandler) RegisterRoutes(g *echo.Group) {
 	authGroup := g.Group("/auth")
 	authGroup.POST("/login", h.Login)
 	authGroup.POST("/refresh", h.Refresh)
+	authGroup.POST("/register", h.Register)
 }
 
 func (h *AuthHandler) RegisterProtectedRoutes(g *echo.Group) {
@@ -43,13 +45,16 @@ func (h *AuthHandler) RegisterProtectedRoutes(g *echo.Group) {
 // @Failure     401  {object}  response.ErrorResponse
 // @Router      /protected/auth/logout [post]
 func (h *AuthHandler) Logout(c echo.Context) error {
-	sessionIDStr := c.Get("session_id").(string)
-	sessionID, err := uuid.Parse(sessionIDStr)
-	if err != nil {
-		return response.Error(c, http.StatusBadRequest, "Sesi tidak valid", nil)
+	payloadValue := c.Get(appMiddleware.AuthorizationPayloadKey)
+	if payloadValue == nil {
+		return response.Error(c, http.StatusUnauthorized, "Tidak terautentikasi", nil)
+	}
+	payload, ok := payloadValue.(*utils.TokenPayload)
+	if !ok {
+		return response.Error(c, http.StatusInternalServerError, "Terjadi kesalahan internal server", nil)
 	}
 
-	err = h.service.Logout(c.Request().Context(), sessionID)
+	err := h.service.Logout(c.Request().Context(), payload.SessionID)
 	if err != nil {
 		return response.Error(c, http.StatusInternalServerError, "Gagal logout", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}
@@ -109,4 +114,28 @@ func (h *AuthHandler) Refresh(c echo.Context) error {
 	}
 
 	return response.Success(c, http.StatusOK, "Token berhasil diperbarui", resp)
+}
+
+// Register godoc
+// @Summary     Register Peserta
+// @Description Mendaftarkan akun peserta baru
+// @Tags        Auth
+// @Accept      json
+// @Produce     json
+// @Param       body  body      domain.RegisterRequest   true  "Data Registrasi"
+// @Success     201   {object}  response.SuccessResponse{data=domain.RegisterResponse}
+// @Failure     400   {object}  response.ErrorResponse
+// @Router      /auth/register [post]
+func (h *AuthHandler) Register(c echo.Context) error {
+	var req domain.RegisterRequest
+	if err := c.Bind(&req); err != nil {
+		return response.Error(c, http.StatusBadRequest, "Format request tidak valid", nil)
+	}
+
+	resp, err := h.service.Register(c.Request().Context(), req)
+	if err != nil {
+		return response.Error(c, http.StatusBadRequest, "Registrasi gagal", []response.ErrorDetail{{Field: "username", Message: err.Error()}})
+	}
+
+	return response.Success(c, http.StatusCreated, "Registrasi berhasil", resp)
 }

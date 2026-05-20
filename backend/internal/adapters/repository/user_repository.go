@@ -116,6 +116,19 @@ func (r *userRepository) UpdateUserPassword(ctx context.Context, id uuid.UUID, p
 	})
 }
 
+func (r *userRepository) UpdateUserPhoto(ctx context.Context, id uuid.UUID, photoUrl string) error {
+	var nPhoto sql.NullString
+	if photoUrl != "" {
+		nPhoto = sql.NullString{String: photoUrl, Valid: true}
+	} else {
+		nPhoto = sql.NullString{Valid: false}
+	}
+	return r.queries.UpdateUserPhoto(ctx, sqlcgen.UpdateUserPhotoParams{
+		ID:       id,
+		PhotoUrl: nPhoto,
+	})
+}
+
 func (r *userRepository) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	return r.queries.DeleteUser(ctx, id)
 }

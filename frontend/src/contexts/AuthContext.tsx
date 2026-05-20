@@ -41,6 +41,7 @@ interface AuthContextValue {
   isLoading: boolean;
   login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  updateUser: (data: Partial<UserInfo>) => void;
 }
 
 // ============================================================
@@ -150,6 +151,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [router]);
 
+  const updateUser = useCallback((data: Partial<UserInfo>) => {
+    setUser((prev) => {
+      if (!prev) return null;
+      const updated = { ...prev, ...data };
+      sessionStorage.setItem('pramuka_cat_user_info', JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
   const isAuthenticated = !!user && !!getInMemoryToken();
 
   const value = useMemo<AuthContextValue>(
@@ -159,8 +169,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoading,
       login,
       logout,
+      updateUser,
     }),
-    [user, isAuthenticated, isLoading, login, logout]
+    [user, isAuthenticated, isLoading, login, logout, updateUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

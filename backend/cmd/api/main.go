@@ -90,7 +90,7 @@ func main() {
 	categoryHandler := handler.NewCategoryHandler(categoryService)
 
 	questionRepo := repository.NewQuestionRepository(queries)
-	questionService := services.NewQuestionService(questionRepo)
+	questionService := services.NewQuestionService(questionRepo, categoryRepo)
 	questionHandler := handler.NewQuestionHandler(questionService)
 
 	eventRepo := repository.NewEventRepository(queries)
@@ -98,7 +98,8 @@ func main() {
 	eventHandler := handler.NewEventHandler(eventService)
 
 	examRepo := repository.NewExamRepository(queries)
-	examService := services.NewExamService(examRepo)
+	examCache := repository.NewExamCache(rdb)
+	examService := services.NewExamService(examRepo, examCache)
 	examHandler := handler.NewExamHandler(examService)
 
 	userRepo := repository.NewUserRepository(queries)
@@ -171,6 +172,11 @@ func main() {
 	protected.Use(appMiddleware.RequireAuth(authCache))
 	
 	examHandler.RegisterParticipantRoutes(protected)
+	authHandler.RegisterProtectedRoutes(protected)
+	userHandler.RegisterParticipantRoutes(protected)
+
+	// Serve the uploads directory statically
+	e.Static("/uploads", "./uploads")
 
 	// Endpoint ini bisa diakses siapa saja yang punya Token valid (Admin maupun Peserta)
 	protected.GET("/profile", func(c echo.Context) error {

@@ -32,6 +32,25 @@ const schema = z.object({
     const n = Number(v);
     return n <= 100;
   }, 'Bobot maksimal 100'),
+}).superRefine((data, ctx) => {
+  const options = [
+    { name: 'Pilihan A', val: data.option_a?.trim().toLowerCase(), path: 'option_a' as const },
+    { name: 'Pilihan B', val: data.option_b?.trim().toLowerCase(), path: 'option_b' as const },
+    { name: 'Pilihan C', val: data.option_c?.trim().toLowerCase(), path: 'option_c' as const },
+    { name: 'Pilihan D', val: data.option_d?.trim().toLowerCase(), path: 'option_d' as const },
+  ];
+
+  for (let i = 0; i < options.length; i++) {
+    for (let j = i + 1; j < options.length; j++) {
+      if (options[i].val && options[j].val && options[i].val === options[j].val) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `${options[j].name} tidak boleh sama dengan ${options[i].name}`,
+          path: [options[j].path],
+        });
+      }
+    }
+  }
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -205,7 +224,7 @@ export default function QuestionFormModal({
               disabled={isSubmitting}
               className={`${inputCls()} appearance-none cursor-pointer`}
             >
-              <option value="">— Tanpa Kategori —</option>
+              <option value="">— Otomatis (Umum) —</option>
               {categories.map((c) => (
                 <option key={c.id} value={String(c.id)}>
                   {c.name}
@@ -250,42 +269,53 @@ export default function QuestionFormModal({
             {optionFields.map(({ key, field }) => {
               const isCorrect = correctAnswer === key;
               const optCfg = answerOptions.find((o) => o.key === key)!;
+              const hasError = !!errors[field];
               return (
                 <div
                   key={key}
-                  className={`flex items-center gap-3 p-2 rounded-xl border transition-all ${
-                    isCorrect
+                  className={`flex flex-col p-2 rounded-xl border transition-all ${
+                    hasError
+                      ? 'border-red-300 bg-red-50/60 focus-within:ring-2 focus-within:ring-red-200'
+                      : isCorrect
                       ? 'border-emerald-300 bg-emerald-50/60'
-                      : 'border-gray-200 bg-white'
+                      : 'border-gray-200 bg-white focus-within:ring-2 focus-within:ring-amber-500/30 focus-within:border-amber-400'
                   }`}
                 >
-                  {/* Letter badge */}
-                  <div
-                    className={`w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ${optCfg.color}`}
-                  >
-                    {key}
+                  <div className="flex items-center gap-3 w-full">
+                    {/* Letter badge */}
+                    <div
+                      className={`w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ${optCfg.color}`}
+                    >
+                      {key}
+                    </div>
+                    {/* Input */}
+                    <input
+                      type="text"
+                      placeholder={`Pilihan ${key}...`}
+                      disabled={isSubmitting}
+                      {...register(field)}
+                      className="flex-1 text-sm text-gray-800 outline-none bg-transparent placeholder:text-gray-400"
+                    />
+                    {/* Correct answer toggle */}
+                    <button
+                      type="button"
+                      onClick={() => setValue('correct_answer', key)}
+                      className={`flex-shrink-0 p-1.5 rounded-lg transition-all ${
+                        isCorrect
+                          ? 'text-emerald-600 bg-emerald-100'
+                          : 'text-gray-300 hover:text-emerald-500 hover:bg-emerald-50'
+                      }`}
+                      title={`Jadikan pilihan ${key} sebagai jawaban benar`}
+                    >
+                      <CheckCircle2 size={18} />
+                    </button>
                   </div>
-                  {/* Input */}
-                  <input
-                    type="text"
-                    placeholder={`Pilihan ${key}...`}
-                    disabled={isSubmitting}
-                    {...register(field)}
-                    className="flex-1 text-sm text-gray-800 outline-none bg-transparent placeholder:text-gray-400"
-                  />
-                  {/* Correct answer toggle */}
-                  <button
-                    type="button"
-                    onClick={() => setValue('correct_answer', key)}
-                    className={`flex-shrink-0 p-1.5 rounded-lg transition-all ${
-                      isCorrect
-                        ? 'text-emerald-600 bg-emerald-100'
-                        : 'text-gray-300 hover:text-emerald-500 hover:bg-emerald-50'
-                    }`}
-                    title={`Jadikan pilihan ${key} sebagai jawaban benar`}
-                  >
-                    <CheckCircle2 size={18} />
-                  </button>
+                  {hasError && (
+                    <p className="text-red-500 text-xs mt-1 ml-10 flex items-center gap-1">
+                      <AlertCircle size={11} />
+                      {errors[field]?.message}
+                    </p>
+                  )}
                 </div>
               );
             })}
@@ -293,7 +323,7 @@ export default function QuestionFormModal({
           {/* Show validation errors for options */}
           {(errors.option_a || errors.option_b || errors.option_c || errors.option_d) && (
             <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
-              <AlertCircle size={11} /> Semua pilihan jawaban wajib diisi
+              <AlertCircle size={11} /> Periksa kembali pilihan jawaban Anda (wajib diisi dan tidak boleh duplikat)
             </p>
           )}
           {/* Hidden input for correct_answer registration */}

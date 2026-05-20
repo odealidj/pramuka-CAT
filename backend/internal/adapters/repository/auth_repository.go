@@ -38,3 +38,7 @@ func (r *authRepository) GetSession(ctx context.Context, id uuid.UUID) (sqlcgen.
 func (r *authRepository) BlockSession(ctx context.Context, id uuid.UUID) error {
 	return r.queries.BlockSession(ctx, id)
 }
+
+func (r *authRepository) CreateUser(ctx context.Context, arg sqlcgen.CreateUserParams) (sqlcgen.User, error) {
+	return r.queries.CreateUser(ctx, arg)
+}

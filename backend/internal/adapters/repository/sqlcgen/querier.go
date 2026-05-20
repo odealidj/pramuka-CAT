@@ -6,6 +6,7 @@ package sqlcgen
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/google/uuid"
 )
@@ -16,13 +17,15 @@ type Querier interface {
 	ApproveUserEvent(ctx context.Context, id uuid.UUID) (UserEventApproval, error)
 	BlockSession(ctx context.Context, id uuid.UUID) error
 	CalculateScore(ctx context.Context, approvalID uuid.NullUUID) (string, error)
+	CheckDuplicateQuestion(ctx context.Context, arg CheckDuplicateQuestionParams) (Question, error)
 	CountAvailableQuestionsForEventAll(ctx context.Context, eventID uuid.UUID) (int64, error)
 	CountAvailableQuestionsForEventByCategory(ctx context.Context, arg CountAvailableQuestionsForEventByCategoryParams) (int64, error)
 	CountCategories(ctx context.Context, search string) (int64, error)
 	CountEventParticipants(ctx context.Context, eventID uuid.NullUUID) (int64, error)
 	CountEventQuestions(ctx context.Context, eventID uuid.UUID) (int64, error)
 	CountEvents(ctx context.Context, search string) (int64, error)
-	CountQuestions(ctx context.Context, search string) (int64, error)
+	CountQuestions(ctx context.Context, arg CountQuestionsParams) (int64, error)
+	CountQuestionsByCategory(ctx context.Context, categoryID sql.NullInt32) (int64, error)
 	CountUpcomingEvents(ctx context.Context) (int64, error)
 	CountUserApprovals(ctx context.Context, userID uuid.NullUUID) (int64, error)
 	CountUsers(ctx context.Context, search string) (int64, error)
@@ -40,8 +43,10 @@ type Querier interface {
 	EnrollUserToEvent(ctx context.Context, arg EnrollUserToEventParams) (UserEventApproval, error)
 	FinishExam(ctx context.Context, arg FinishExamParams) error
 	GetAllEventParticipantsForExport(ctx context.Context, eventID uuid.NullUUID) ([]GetAllEventParticipantsForExportRow, error)
+	GetApprovalById(ctx context.Context, id uuid.UUID) (UserEventApproval, error)
 	GetApprovalStatus(ctx context.Context, arg GetApprovalStatusParams) (UserEventApproval, error)
 	GetCategoryById(ctx context.Context, id int32) (Category, error)
+	GetCategoryByName(ctx context.Context, name string) (Category, error)
 	GetEventById(ctx context.Context, id uuid.UUID) (Event, error)
 	GetEventTotalWeight(ctx context.Context, eventID uuid.UUID) (string, error)
 	GetQuestionById(ctx context.Context, id uuid.UUID) (Question, error)
@@ -57,12 +62,15 @@ type Querier interface {
 	ListUpcomingEvents(ctx context.Context, arg ListUpcomingEventsParams) ([]Event, error)
 	ListUserApprovals(ctx context.Context, arg ListUserApprovalsParams) ([]ListUserApprovalsRow, error)
 	ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error)
+	RevokeUserEvent(ctx context.Context, id uuid.UUID) (UserEventApproval, error)
 	SaveUserAnswer(ctx context.Context, arg SaveUserAnswerParams) (UserAnswer, error)
+	SetStartedAt(ctx context.Context, id uuid.UUID) error
 	UpdateCategory(ctx context.Context, arg UpdateCategoryParams) (Category, error)
 	UpdateEvent(ctx context.Context, arg UpdateEventParams) (Event, error)
 	UpdateQuestion(ctx context.Context, arg UpdateQuestionParams) (Question, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
 	UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) error
+	UpdateUserPhoto(ctx context.Context, arg UpdateUserPhotoParams) error
 }
 
 var _ Querier = (*Queries)(nil)

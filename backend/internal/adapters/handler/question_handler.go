@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -44,7 +45,13 @@ func (h *QuestionHandler) CreateQuestion(c echo.Context) error {
 
 	q, err := h.service.CreateQuestion(c.Request().Context(), req)
 	if err != nil {
-		return response.Error(c, http.StatusInternalServerError, "Gagal membuat pertanyaan", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
+		statusCode := http.StatusInternalServerError
+		errMsg := "Gagal membuat pertanyaan"
+		if err.Error() == "soal dengan pertanyaan serupa sudah terdaftar" || err.Error() == "teks pertanyaan tidak boleh kosong" {
+			statusCode = http.StatusBadRequest
+			errMsg = err.Error()
+		}
+		return response.Error(c, statusCode, errMsg, []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}
 
 	return response.Success(c, http.StatusCreated, "Pertanyaan berhasil dibuat", q)
@@ -63,7 +70,16 @@ func (h *QuestionHandler) CreateQuestion(c echo.Context) error {
 func (h *QuestionHandler) ListQuestions(c echo.Context) error {
 	page, limit := response.ParsePaginationParams(c)
 	search := c.QueryParam("search")
-	questions, total, err := h.service.ListQuestions(c.Request().Context(), page, limit, search)
+	var categoryId *int32
+	if catStr := c.QueryParam("category_id"); catStr != "" {
+		var cat int
+		_, err := fmt.Sscanf(catStr, "%d", &cat)
+		if err == nil {
+			cInt := int32(cat)
+			categoryId = &cInt
+		}
+	}
+	questions, total, err := h.service.ListQuestions(c.Request().Context(), page, limit, search, categoryId)
 	if err != nil {
 		return response.Error(c, http.StatusInternalServerError, "Gagal mengambil daftar pertanyaan", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}
@@ -123,7 +139,13 @@ func (h *QuestionHandler) UpdateQuestion(c echo.Context) error {
 
 	q, err := h.service.UpdateQuestion(c.Request().Context(), id, req)
 	if err != nil {
-		return response.Error(c, http.StatusInternalServerError, "Gagal memperbarui pertanyaan", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
+		statusCode := http.StatusInternalServerError
+		errMsg := "Gagal memperbarui pertanyaan"
+		if err.Error() == "soal dengan pertanyaan serupa sudah terdaftar" {
+			statusCode = http.StatusBadRequest
+			errMsg = err.Error()
+		}
+		return response.Error(c, statusCode, errMsg, []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}
 
 	return response.Success(c, http.StatusOK, "Pertanyaan berhasil diperbarui", q)

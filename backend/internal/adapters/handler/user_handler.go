@@ -1,13 +1,20 @@
 package handler
 
 import (
+	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	appMiddleware "github.com/odealidj/pramuka-CAT/backend/internal/adapters/middleware"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/domain"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/ports"
 	"github.com/odealidj/pramuka-CAT/backend/pkg/response"
+	"github.com/odealidj/pramuka-CAT/backend/pkg/utils"
 )
 
 type UserHandler struct {
@@ -26,6 +33,11 @@ func (h *UserHandler) RegisterAdminRoutes(adminGroup *echo.Group) {
 	usersGroup.PUT("/:id", h.UpdateUser)
 	usersGroup.PUT("/:id/password", h.UpdateUserPassword)
 	usersGroup.DELETE("/:id", h.DeleteUser)
+}
+
+func (h *UserHandler) RegisterParticipantRoutes(participantGroup *echo.Group) {
+	usersGroup := participantGroup.Group("/users")
+	usersGroup.POST("/me/photo", h.UploadPhoto)
 }
 
 // CreateUser godoc
@@ -189,4 +201,72 @@ func (h *UserHandler) DeleteUser(c echo.Context) error {
 	}
 
 	return response.Success(c, http.StatusOK, "User berhasil dihapus", nil)
+}
+
+// UploadPhoto godoc
+// @Summary     Unggah Foto Profil
+// @Description Peserta mengunggah foto profil ke local storage
+// @Tags        Peserta - User
+// @Security    BearerAuth
+// @Accept      multipart/form-data
+// @Produce     json
+// @Param       photo formData file true "File Foto (JPG/PNG)"
+// @Success     200   {object} response.SuccessResponse
+// @Failure     400   {object} response.ErrorResponse
+// @Router      /users/me/photo [post]
+func (h *UserHandler) UploadPhoto(c echo.Context) error {
+	payloadValue := c.Get(appMiddleware.AuthorizationPayloadKey)
+	if payloadValue == nil {
+		return response.Error(c, http.StatusUnauthorized, "Tidak terautentikasi", nil)
+	}
+	payload, ok := payloadValue.(*utils.TokenPayload)
+	if !ok {
+		return response.Error(c, http.StatusInternalServerError, "Terjadi kesalahan internal server", nil)
+	}
+
+	file, err := c.FormFile("photo")
+	if err != nil {
+		return response.Error(c, http.StatusBadRequest, "Gagal mengunggah foto", nil)
+	}
+
+	if file.Size > 5*1024*1024 {
+		return response.Error(c, http.StatusBadRequest, "Ukuran foto maksimal 5MB", nil)
+	}
+
+	ext := strings.ToLower(filepath.Ext(file.Filename))
+	if ext != ".jpg" && ext != ".jpeg" && ext != ".png" {
+		return response.Error(c, http.StatusBadRequest, "Format foto harus JPG atau PNG", nil)
+	}
+
+	src, err := file.Open()
+	if err != nil {
+		return response.Error(c, http.StatusInternalServerError, "Gagal memproses file", nil)
+	}
+	defer src.Close()
+
+	uploadDir := "./uploads"
+	if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
+		return response.Error(c, http.StatusInternalServerError, "Gagal membuat direktori upload", nil)
+	}
+
+	newFileName := fmt.Sprintf("%s%s", uuid.New().String(), ext)
+	dstPath := filepath.Join(uploadDir, newFileName)
+
+	dst, err := os.Create(dstPath)
+	if err != nil {
+		return response.Error(c, http.StatusInternalServerError, "Gagal menyimpan foto", nil)
+	}
+	defer dst.Close()
+
+	if _, err = io.Copy(dst, src); err != nil {
+		return response.Error(c, http.StatusInternalServerError, "Gagal menyimpan konten foto", nil)
+	}
+
+	photoURL := "/uploads/" + newFileName
+	err = h.service.UpdateUserPhoto(c.Request().Context(), payload.UserID, photoURL)
+	if err != nil {
+		return response.Error(c, http.StatusInternalServerError, "Gagal memperbarui database", nil)
+	}
+
+	return response.Success(c, http.StatusOK, "Foto profil berhasil diperbarui", map[string]string{"photo_url": photoURL})
 }

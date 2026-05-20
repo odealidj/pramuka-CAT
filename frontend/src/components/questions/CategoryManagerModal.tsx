@@ -40,6 +40,7 @@ export default function CategoryManagerModal({
     loading: false,
   });
   const [apiError, setApiError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const {
     register,
@@ -98,12 +99,18 @@ export default function CategoryManagerModal({
   const handleDelete = async () => {
     if (deleteState.id === null) return;
     setDeleteState((s) => ({ ...s, loading: true }));
+    setDeleteError(null);
     try {
       await deleteCategoryApi(deleteState.id);
+      setDeleteState({ id: null, name: '', loading: false });
       await fetchCategories();
       onCategoriesChanged();
-    } finally {
-      setDeleteState({ id: null, name: '', loading: false });
+    } catch (err) {
+      const msg = isAxiosError(err)
+        ? (err.response?.data as ApiErrorResponse)?.message ?? 'Gagal menghapus kategori.'
+        : 'Terjadi kesalahan.';
+      setDeleteError(msg);
+      setDeleteState((s) => ({ ...s, loading: false }));
     }
   };
 
@@ -195,11 +202,15 @@ export default function CategoryManagerModal({
 
       <ConfirmDialog
         isOpen={deleteState.id !== null}
-        onClose={() => setDeleteState({ id: null, name: '', loading: false })}
+        onClose={() => {
+          setDeleteState({ id: null, name: '', loading: false });
+          setDeleteError(null);
+        }}
         onConfirm={handleDelete}
         title="Hapus Kategori"
-        message={`Hapus kategori "${deleteState.name}"? Soal yang memakai kategori ini akan menjadi tanpa kategori.`}
+        message={`Yakin ingin menghapus kategori "${deleteState.name}"? Kategori hanya bisa dihapus jika tidak memiliki soal.`}
         isLoading={deleteState.loading}
+        error={deleteError ?? undefined}
       />
     </>
   );

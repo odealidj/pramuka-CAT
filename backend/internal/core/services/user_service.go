@@ -77,6 +77,14 @@ func (s *userService) UpdateUserPassword(ctx context.Context, id uuid.UUID, req 
 	return s.repo.UpdateUserPassword(ctx, id, hashedPassword)
 }
 
+func (s *userService) UpdateUserPhoto(ctx context.Context, id uuid.UUID, photoUrl string) error {
+	_, err := s.repo.GetUserById(ctx, id)
+	if err != nil {
+		return fmt.Errorf("user tidak ditemukan")
+	}
+	return s.repo.UpdateUserPhoto(ctx, id, photoUrl)
+}
+
 func (s *userService) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	_, err := s.repo.GetUserById(ctx, id)
 	if err != nil {

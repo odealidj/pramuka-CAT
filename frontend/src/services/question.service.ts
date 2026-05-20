@@ -12,16 +12,17 @@ import type {
   PaginatedResponse,
 } from '@/types/auth';
 
-/** GET /admin/questions?page=&limit=&search= */
 export const listQuestionsApi = async (
   page = 1,
   limit = 10,
-  search = ''
+  search = '',
+  categoryId?: number
 ): Promise<PaginatedResponse<Question>> => {
   const params = new URLSearchParams({
     page: String(page),
     limit: String(limit),
     ...(search ? { search } : {}),
+    ...(categoryId ? { category_id: String(categoryId) } : {}),
   });
   const res = await httpClient.get<ApiSuccessResponse<Question[]>>(
     `/admin/questions?${params.toString()}`

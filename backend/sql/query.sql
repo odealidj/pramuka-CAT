@@ -68,6 +68,14 @@ RETURNING *;
 DELETE FROM categories
 WHERE id = $1;
 
+-- name: GetCategoryByName :one
+SELECT * FROM categories
+WHERE name ILIKE $1 LIMIT 1;
+
+-- name: CountQuestionsByCategory :one
+SELECT COUNT(*) FROM questions
+WHERE category_id = $1;
+
 -- name: CreateQuestion :one
 INSERT INTO questions (category_id, question_text, option_a, option_b, option_c, option_d, correct_answer, weight)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -79,13 +87,17 @@ WHERE id = $1 LIMIT 1;
 
 -- name: ListQuestions :many
 SELECT * FROM questions
-WHERE sqlc.arg('search')::text = '' OR to_tsvector('indonesian', question_text) @@ plainto_tsquery('indonesian', sqlc.arg('search')::text)
+WHERE 
+  (sqlc.narg('category_id')::int IS NULL OR category_id = sqlc.narg('category_id')::int)
+  AND (sqlc.arg('search')::text = '' OR to_tsvector('indonesian', question_text) @@ plainto_tsquery('indonesian', sqlc.arg('search')::text))
 ORDER BY category_id ASC, question_text ASC
 LIMIT $1 OFFSET $2;
 
 -- name: CountQuestions :one
 SELECT COUNT(*) FROM questions
-WHERE sqlc.arg('search')::text = '' OR to_tsvector('indonesian', question_text) @@ plainto_tsquery('indonesian', sqlc.arg('search')::text);
+WHERE 
+  (sqlc.narg('category_id')::int IS NULL OR category_id = sqlc.narg('category_id')::int)
+  AND (sqlc.arg('search')::text = '' OR to_tsvector('indonesian', question_text) @@ plainto_tsquery('indonesian', sqlc.arg('search')::text));
 
 -- name: UpdateQuestion :one
 UPDATE questions
@@ -284,3 +296,24 @@ FROM users u
 JOIN user_event_approvals uea ON u.id = uea.user_id
 WHERE uea.event_id = $1
 ORDER BY u.full_name ASC;
+
+-- name: SetStartedAt :exec
+UPDATE user_event_approvals SET started_at = NOW() WHERE id = $1 AND started_at IS NULL;
+
+-- name: RevokeUserEvent :one
+UPDATE user_event_approvals
+SET status = 'revoked'
+WHERE id = $1
+RETURNING *;
+
+-- name: GetApprovalById :one
+SELECT * FROM user_event_approvals WHERE id = $1;
+
+-- name: UpdateUserPhoto :exec
+UPDATE users SET photo_url = $2 WHERE id = $1;
+
+-- name: CheckDuplicateQuestion :one
+SELECT * FROM questions
+WHERE REGEXP_REPLACE(question_text, '^[[:space:][:digit:].)*#_-]+', '') ILIKE REGEXP_REPLACE(sqlc.arg('question_text')::text, '^[[:space:][:digit:].)*#_-]+', '')
+  AND (sqlc.narg('exclude_id')::uuid IS NULL OR id <> sqlc.narg('exclude_id')::uuid)
+LIMIT 1;

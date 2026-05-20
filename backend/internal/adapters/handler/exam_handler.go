@@ -1,13 +1,16 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	appMiddleware "github.com/odealidj/pramuka-CAT/backend/internal/adapters/middleware"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/domain"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/ports"
 	"github.com/odealidj/pramuka-CAT/backend/pkg/response"
+	"github.com/odealidj/pramuka-CAT/backend/pkg/utils"
 )
 
 type ExamHandler struct {
@@ -36,8 +39,15 @@ func (h *ExamHandler) RegisterAdminRoutes(adminGroup *echo.Group) {
 }
 
 func getUserIDFromContext(c echo.Context) (uuid.UUID, error) {
-	userIDStr := c.Get("user_id").(string)
-	return uuid.Parse(userIDStr)
+	payloadValue := c.Get(appMiddleware.AuthorizationPayloadKey)
+	if payloadValue == nil {
+		return uuid.UUID{}, fmt.Errorf("tidak terautentikasi")
+	}
+	payload, ok := payloadValue.(*utils.TokenPayload)
+	if !ok {
+		return uuid.UUID{}, fmt.Errorf("terjadi kesalahan internal membaca sesi")
+	}
+	return payload.UserID, nil
 }
 
 // ListUpcomingEvents godoc

@@ -98,6 +98,10 @@ func (s *eventService) ApproveUserEvent(ctx context.Context, approvalID uuid.UUI
 	return s.repo.ApproveUserEvent(ctx, approvalID)
 }
 
+func (s *eventService) RevokeUserEvent(ctx context.Context, approvalID uuid.UUID) error {
+	return s.repo.RevokeUserEvent(ctx, approvalID)
+}
+
 func (s *eventService) AddRandomEventQuestions(ctx context.Context, eventID uuid.UUID, req domain.AddRandomEventQuestionsRequest) error {
 	if req.Amount > 500 {
 		return fmt.Errorf("jumlah soal maksimal untuk penarikan acak dalam satu waktu adalah 500 soal")

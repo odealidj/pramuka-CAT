@@ -9,12 +9,29 @@ import (
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/ports"
 )
 
+const defaultCategoryName = "Umum"
+
 type questionService struct {
-	repo ports.QuestionRepository
+	repo         ports.QuestionRepository
+	categoryRepo ports.CategoryRepository
 }
 
-func NewQuestionService(repo ports.QuestionRepository) ports.QuestionService {
-	return &questionService{repo: repo}
+func NewQuestionService(repo ports.QuestionRepository, categoryRepo ports.CategoryRepository) ports.QuestionService {
+	return &questionService{repo: repo, categoryRepo: categoryRepo}
+}
+
+// getOrCreateDefaultCategory mencari kategori "Umum", jika tidak ada maka dibuat otomatis.
+func (s *questionService) getOrCreateDefaultCategory(ctx context.Context) (int32, error) {
+	cat, err := s.categoryRepo.GetCategoryByName(ctx, defaultCategoryName)
+	if err == nil {
+		return cat.ID, nil
+	}
+	// Tidak ditemukan — buat baru
+	newCat, err := s.categoryRepo.CreateCategory(ctx, defaultCategoryName)
+	if err != nil {
+		return 0, fmt.Errorf("gagal membuat kategori default '%s': %w", defaultCategoryName, err)
+	}
+	return newCat.ID, nil
 }
 
 func (s *questionService) CreateQuestion(ctx context.Context, req domain.CreateQuestionRequest) (domain.Question, error) {
@@ -23,8 +40,27 @@ func (s *questionService) CreateQuestion(ctx context.Context, req domain.CreateQ
 		return domain.Question{}, fmt.Errorf("teks pertanyaan tidak boleh kosong")
 	}
 
+	// Cek duplikasi teks pertanyaan
+	isDuplicate, err := s.repo.CheckDuplicateQuestion(ctx, req.QuestionText, nil)
+	if err != nil {
+		return domain.Question{}, fmt.Errorf("gagal memvalidasi keunikan soal: %w", err)
+	}
+	if isDuplicate {
+		return domain.Question{}, fmt.Errorf("soal dengan pertanyaan serupa sudah terdaftar")
+	}
+
+	// Jika kategori tidak dipilih, gunakan kategori "Umum" (buat jika belum ada)
+	categoryID := req.CategoryID
+	if categoryID == nil {
+		id, err := s.getOrCreateDefaultCategory(ctx)
+		if err != nil {
+			return domain.Question{}, err
+		}
+		categoryID = &id
+	}
+
 	q := domain.Question{
-		CategoryID:    req.CategoryID,
+		CategoryID:    categoryID,
 		QuestionText:  req.QuestionText,
 		OptionA:       req.OptionA,
 		OptionB:       req.OptionB,
@@ -40,8 +76,8 @@ func (s *questionService) GetQuestionById(ctx context.Context, id uuid.UUID) (do
 	return s.repo.GetQuestionById(ctx, id)
 }
 
-func (s *questionService) ListQuestions(ctx context.Context, page int32, limit int32, search string) ([]domain.Question, int64, error) {
-	return s.repo.ListQuestions(ctx, page, limit, search)
+func (s *questionService) ListQuestions(ctx context.Context, page int32, limit int32, search string, categoryId *int32) ([]domain.Question, int64, error) {
+	return s.repo.ListQuestions(ctx, page, limit, search, categoryId)
 }
 
 func (s *questionService) UpdateQuestion(ctx context.Context, id uuid.UUID, req domain.UpdateQuestionRequest) (domain.Question, error) {
@@ -49,6 +85,15 @@ func (s *questionService) UpdateQuestion(ctx context.Context, id uuid.UUID, req 
 	_, err := s.repo.GetQuestionById(ctx, id)
 	if err != nil {
 		return domain.Question{}, fmt.Errorf("pertanyaan tidak ditemukan")
+	}
+
+	// Cek duplikasi teks pertanyaan (kecuali soal ini sendiri)
+	isDuplicate, err := s.repo.CheckDuplicateQuestion(ctx, req.QuestionText, &id)
+	if err != nil {
+		return domain.Question{}, fmt.Errorf("gagal memvalidasi keunikan soal: %w", err)
+	}
+	if isDuplicate {
+		return domain.Question{}, fmt.Errorf("soal dengan pertanyaan serupa sudah terdaftar")
 	}
 
 	q := domain.Question{

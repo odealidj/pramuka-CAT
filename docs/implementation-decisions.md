@@ -59,6 +59,14 @@ Aplikasi akan menggunakan arsitektur **Client-Server** berbasis web (Web Applica
 - Rumus: `(Total Bobot Jawaban Benar / Total Bobot Seluruh Soal) * 100`.
 - Pendekatan ini memungkinkan *Auto-Bobot* (ketika semua soal berbobot default 1) sekaligus mendukung perhitungan berkeadilan jika Admin mengatur bobot sulit/mudah (manual) untuk masing-masing soal.
 
+### 3.6. Manajemen Penyimpanan File (Foto Profil)
+- Mengingat aplikasi akan di-hosting pada layanan shared hosting/VPS standar (seperti Hostinger), penyimpanan file media (seperti foto profil peserta) menggunakan pendekatan **Local Storage**.
+- File diunggah ke *endpoint* khusus (`POST /api/v1/users/me/photo`) dan disimpan pada direktori `/uploads` pada server Backend. File kemudian di-*serve* secara statis untuk dibaca oleh Frontend.
+
+### 3.7. Alur Registrasi
+- Pendaftaran (*Self-Registration*) diizinkan untuk calon peserta melalui rute publik. Secara *default*, peran yang diberikan adalah `peserta`.
+- Peserta yang mendaftar dan melengkapi data tidak bisa langsung mengikuti event ujian sampai mereka di-_approve_ oleh admin pada halaman partisipan event.
+
 ## 4. Infrastruktur dan Deployment
 - Aplikasi akan di-containerisasi menggunakan **Docker** agar mudah dideploy di berbagai server (VPS atau Cloud).
 - **Dockerfile (Multi-Stage Build):** Backend Go menggunakan pola *multi-stage build*. Tahap pertama (`Builder`) mengompilasi *binary* menggunakan image Go Alpine. Tahap kedua (`Final`) hanya menyalin *binary* ke image Alpine murni yang sangat ringan, tanpa *source code* sisa.

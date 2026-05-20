@@ -180,6 +180,11 @@ func (r *eventRepository) ApproveUserEvent(ctx context.Context, approvalID uuid.
 	return err
 }
 
+func (r *eventRepository) RevokeUserEvent(ctx context.Context, approvalID uuid.UUID) error {
+	_, err := r.queries.RevokeUserEvent(ctx, approvalID)
+	return err
+}
+
 func (r *eventRepository) AddRandomEventQuestions(ctx context.Context, eventID uuid.UUID, categoryID *int32, amount int32) error {
 	if categoryID != nil {
 		return r.queries.AddRandomEventQuestionsByCategory(ctx, sqlcgen.AddRandomEventQuestionsByCategoryParams{
