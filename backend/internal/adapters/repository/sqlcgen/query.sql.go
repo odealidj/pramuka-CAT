@@ -15,9 +15,11 @@ import (
 
 const addRandomEventQuestionsAll = `-- name: AddRandomEventQuestionsAll :exec
 INSERT INTO event_questions (event_id, question_id)
-SELECT $1, id
-FROM questions
-WHERE id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1)
+SELECT $1, q.id
+FROM questions q
+JOIN categories c ON q.category_id = c.id
+WHERE c.deleted_at IS NULL
+  AND q.id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1)
 ORDER BY RANDOM()
 LIMIT $2
 `
@@ -34,10 +36,11 @@ func (q *Queries) AddRandomEventQuestionsAll(ctx context.Context, arg AddRandomE
 
 const addRandomEventQuestionsByCategory = `-- name: AddRandomEventQuestionsByCategory :exec
 INSERT INTO event_questions (event_id, question_id)
-SELECT $1, id
-FROM questions
-WHERE category_id = $2
-  AND id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1)
+SELECT $1, q.id
+FROM questions q
+JOIN categories c ON q.category_id = c.id
+WHERE q.category_id = $2 AND c.deleted_at IS NULL
+  AND q.id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1)
 ORDER BY RANDOM()
 LIMIT $3
 `
@@ -103,9 +106,11 @@ func (q *Queries) CalculateScore(ctx context.Context, approvalID uuid.NullUUID) 
 }
 
 const checkDuplicateQuestion = `-- name: CheckDuplicateQuestion :one
-SELECT id, category_id, question_text, option_a, option_b, option_c, option_d, correct_answer, weight, created_at FROM questions
-WHERE REGEXP_REPLACE(question_text, '^[[:space:][:digit:].)*#_-]+', '') ILIKE REGEXP_REPLACE($1::text, '^[[:space:][:digit:].)*#_-]+', '')
-  AND ($2::uuid IS NULL OR id <> $2::uuid)
+SELECT q.id, q.category_id, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_answer, q.weight, q.created_at FROM questions q
+JOIN categories c ON q.category_id = c.id
+WHERE c.deleted_at IS NULL
+  AND REGEXP_REPLACE(q.question_text, '^[[:space:][:digit:].)*#_-]+', '') ILIKE REGEXP_REPLACE($1::text, '^[[:space:][:digit:].)*#_-]+', '')
+  AND ($2::uuid IS NULL OR q.id <> $2::uuid)
 LIMIT 1
 `
 
@@ -133,8 +138,10 @@ func (q *Queries) CheckDuplicateQuestion(ctx context.Context, arg CheckDuplicate
 }
 
 const countAvailableQuestionsForEventAll = `-- name: CountAvailableQuestionsForEventAll :one
-SELECT COUNT(*) FROM questions
-WHERE id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1)
+SELECT COUNT(*) FROM questions q
+JOIN categories c ON q.category_id = c.id
+WHERE c.deleted_at IS NULL
+  AND q.id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1)
 `
 
 func (q *Queries) CountAvailableQuestionsForEventAll(ctx context.Context, eventID uuid.UUID) (int64, error) {
@@ -145,9 +152,10 @@ func (q *Queries) CountAvailableQuestionsForEventAll(ctx context.Context, eventI
 }
 
 const countAvailableQuestionsForEventByCategory = `-- name: CountAvailableQuestionsForEventByCategory :one
-SELECT COUNT(*) FROM questions
-WHERE category_id = $2
-  AND id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1)
+SELECT COUNT(*) FROM questions q
+JOIN categories c ON q.category_id = c.id
+WHERE q.category_id = $2 AND c.deleted_at IS NULL
+  AND q.id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1)
 `
 
 type CountAvailableQuestionsForEventByCategoryParams struct {
@@ -211,10 +219,11 @@ func (q *Queries) CountEvents(ctx context.Context, search string) (int64, error)
 }
 
 const countQuestions = `-- name: CountQuestions :one
-SELECT COUNT(*) FROM questions
-WHERE 
-  ($1::int IS NULL OR category_id = $1::int)
-  AND ($2::text = '' OR to_tsvector('indonesian', question_text) @@ plainto_tsquery('indonesian', $2::text))
+SELECT COUNT(*) FROM questions q
+JOIN categories c ON q.category_id = c.id
+WHERE c.deleted_at IS NULL
+  AND ($1::int IS NULL OR q.category_id = $1::int)
+  AND ($2::text = '' OR to_tsvector('indonesian', q.question_text) @@ plainto_tsquery('indonesian', $2::text))
 `
 
 type CountQuestionsParams struct {
@@ -1053,11 +1062,12 @@ func (q *Queries) ListEvents(ctx context.Context, arg ListEventsParams) ([]Event
 }
 
 const listQuestions = `-- name: ListQuestions :many
-SELECT id, category_id, question_text, option_a, option_b, option_c, option_d, correct_answer, weight, created_at FROM questions
-WHERE 
-  ($3::int IS NULL OR category_id = $3::int)
-  AND ($4::text = '' OR to_tsvector('indonesian', question_text) @@ plainto_tsquery('indonesian', $4::text))
-ORDER BY category_id ASC, question_text ASC
+SELECT q.id, q.category_id, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_answer, q.weight, q.created_at FROM questions q
+JOIN categories c ON q.category_id = c.id
+WHERE c.deleted_at IS NULL
+  AND ($3::int IS NULL OR q.category_id = $3::int)
+  AND ($4::text = '' OR to_tsvector('indonesian', q.question_text) @@ plainto_tsquery('indonesian', $4::text))
+ORDER BY q.category_id ASC, q.question_text ASC
 LIMIT $1 OFFSET $2
 `
 

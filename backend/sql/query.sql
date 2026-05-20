@@ -87,18 +87,20 @@ SELECT * FROM questions
 WHERE id = $1 LIMIT 1;
 
 -- name: ListQuestions :many
-SELECT * FROM questions
-WHERE 
-  (sqlc.narg('category_id')::int IS NULL OR category_id = sqlc.narg('category_id')::int)
-  AND (sqlc.arg('search')::text = '' OR to_tsvector('indonesian', question_text) @@ plainto_tsquery('indonesian', sqlc.arg('search')::text))
-ORDER BY category_id ASC, question_text ASC
+SELECT q.* FROM questions q
+JOIN categories c ON q.category_id = c.id
+WHERE c.deleted_at IS NULL
+  AND (sqlc.narg('category_id')::int IS NULL OR q.category_id = sqlc.narg('category_id')::int)
+  AND (sqlc.arg('search')::text = '' OR to_tsvector('indonesian', q.question_text) @@ plainto_tsquery('indonesian', sqlc.arg('search')::text))
+ORDER BY q.category_id ASC, q.question_text ASC
 LIMIT $1 OFFSET $2;
 
 -- name: CountQuestions :one
-SELECT COUNT(*) FROM questions
-WHERE 
-  (sqlc.narg('category_id')::int IS NULL OR category_id = sqlc.narg('category_id')::int)
-  AND (sqlc.arg('search')::text = '' OR to_tsvector('indonesian', question_text) @@ plainto_tsquery('indonesian', sqlc.arg('search')::text));
+SELECT COUNT(*) FROM questions q
+JOIN categories c ON q.category_id = c.id
+WHERE c.deleted_at IS NULL
+  AND (sqlc.narg('category_id')::int IS NULL OR q.category_id = sqlc.narg('category_id')::int)
+  AND (sqlc.arg('search')::text = '' OR to_tsvector('indonesian', q.question_text) @@ plainto_tsquery('indonesian', sqlc.arg('search')::text));
 
 -- name: UpdateQuestion :one
 UPDATE questions
@@ -249,28 +251,34 @@ JOIN questions q ON eq.question_id = q.id
 WHERE eq.event_id = $1;
 
 -- name: CountAvailableQuestionsForEventByCategory :one
-SELECT COUNT(*) FROM questions
-WHERE category_id = $2
-  AND id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1);
+SELECT COUNT(*) FROM questions q
+JOIN categories c ON q.category_id = c.id
+WHERE q.category_id = $2 AND c.deleted_at IS NULL
+  AND q.id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1);
 
 -- name: CountAvailableQuestionsForEventAll :one
-SELECT COUNT(*) FROM questions
-WHERE id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1);
+SELECT COUNT(*) FROM questions q
+JOIN categories c ON q.category_id = c.id
+WHERE c.deleted_at IS NULL
+  AND q.id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1);
 
 -- name: AddRandomEventQuestionsByCategory :exec
 INSERT INTO event_questions (event_id, question_id)
-SELECT $1, id
-FROM questions
-WHERE category_id = $2
-  AND id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1)
+SELECT $1, q.id
+FROM questions q
+JOIN categories c ON q.category_id = c.id
+WHERE q.category_id = $2 AND c.deleted_at IS NULL
+  AND q.id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1)
 ORDER BY RANDOM()
 LIMIT $3;
 
 -- name: AddRandomEventQuestionsAll :exec
 INSERT INTO event_questions (event_id, question_id)
-SELECT $1, id
-FROM questions
-WHERE id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1)
+SELECT $1, q.id
+FROM questions q
+JOIN categories c ON q.category_id = c.id
+WHERE c.deleted_at IS NULL
+  AND q.id NOT IN (SELECT question_id FROM event_questions WHERE event_id = $1)
 ORDER BY RANDOM()
 LIMIT $2;
 
@@ -314,7 +322,9 @@ SELECT * FROM user_event_approvals WHERE id = $1;
 UPDATE users SET photo_url = $2 WHERE id = $1;
 
 -- name: CheckDuplicateQuestion :one
-SELECT * FROM questions
-WHERE REGEXP_REPLACE(question_text, '^[[:space:][:digit:].)*#_-]+', '') ILIKE REGEXP_REPLACE(sqlc.arg('question_text')::text, '^[[:space:][:digit:].)*#_-]+', '')
-  AND (sqlc.narg('exclude_id')::uuid IS NULL OR id <> sqlc.narg('exclude_id')::uuid)
+SELECT q.* FROM questions q
+JOIN categories c ON q.category_id = c.id
+WHERE c.deleted_at IS NULL
+  AND REGEXP_REPLACE(q.question_text, '^[[:space:][:digit:].)*#_-]+', '') ILIKE REGEXP_REPLACE(sqlc.arg('question_text')::text, '^[[:space:][:digit:].)*#_-]+', '')
+  AND (sqlc.narg('exclude_id')::uuid IS NULL OR q.id <> sqlc.narg('exclude_id')::uuid)
 LIMIT 1;
