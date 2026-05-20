@@ -410,7 +410,7 @@ export default function CategoriesPage() {
         onClose={() => setDeleteDialog({ open: false, category: null, isLoading: false })}
         onConfirm={handleDelete}
         title="Hapus Kategori"
-        message={`Apakah Anda yakin ingin menghapus kategori "${deleteDialog.category?.name}"? Soal yang terkait dengan kategori ini akan diatur menjadi tanpa kategori.`}
+        message={`Apakah Anda yakin ingin menghapus kategori "${deleteDialog.category?.name}"? Kategori hanya dapat dihapus jika tidak ada soal yang terkait dengannya.`}
         isLoading={deleteDialog.isLoading}
       />
 
