@@ -208,7 +208,7 @@ export default function CategoryManagerModal({
         }}
         onConfirm={handleDelete}
         title="Hapus Kategori"
-        message={`Yakin ingin menghapus kategori "${deleteState.name}"? Kategori hanya bisa dihapus jika tidak memiliki soal.`}
+        message={`Yakin ingin menghapus kategori "${deleteState.name}"?`}
         isLoading={deleteState.loading}
         error={deleteError ?? undefined}
       />
