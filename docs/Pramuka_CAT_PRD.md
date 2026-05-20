@@ -40,15 +40,20 @@ Aplikasi memiliki 2 jenis peran utama:
 4. **Manajemen Soal (Bank Soal - CRUD):**
    - Membuat, membaca, mengubah, dan menghapus soal berbasis teks.
    - Menentukan opsi jawaban A, B, C, D dan mengatur mana yang menjadi kunci jawaban.
-   - **Validasi Duplikasi Soal:** Sistem mencegah masuknya soal dengan teks yang sama (mengabaikan perbedaan huruf kapital dan variasi penomoran seperti "1.", "2)", dsb) serta mencegah opsi jawaban yang duplikat dalam satu soal.
-   - **Kategori Materi Soal (Tagging):** Admin dapat mengelompokkan soal berdasarkan kategori (contoh: Pengetahuan Umum Kepramukaan/PUPK, Sandi, Tali-temali, Sejarah). Jika kategori tidak dipilih, sistem otomatis memasukkannya ke kategori "Umum".
-   - **Sistem Bobot Soal (Manual & Auto):** Admin dapat mengatur bobot spesifik untuk setiap soal (misal: soal mudah berbobot 10, soal sulit berbobot 20). Jika Admin tidak melakukan _setup_ bobot secara manual, sistem akan otomatis menerapkan **Auto-Bobot** di mana setiap soal yang diujikan memiliki bobot yang sama rata sehingga total nilai sempurna mengacu pada skala standar (contoh: 10 soal, masing-masing otomatis berbobot 10 agar total skor 100).
-5. **Manajemen Jadwal/Sesi (Event Setup):**
+   - **Validasi Duplikasi Soal:** Sistem mencegah masuknya soal dengan teks yang sama (mengabaikan perbedaan huruf kapital dan variasi penomoran seperti "1.", "2)", dsb) serta mencegah opsi jawaban yang duplikat dalam satu soal. Pengecekan hanya dilakukan terhadap soal dari **kategori yang masih aktif** — soal dari kategori yang sudah dihapus (diarsipkan) tidak ikut diperiksa sehingga tidak memblokir input soal baru.
+   - **Kategori Materi Soal (Tagging):** Admin dapat mengelompokkan soal berdasarkan kategori (contoh: Pengetahuan Umum Kepramukaan/PUPK, Sandi, Tali-temali, Sejarah).
+   - **Pengarsipan Otomatis:** Soal yang terkait dengan kategori yang dihapus secara otomatis tidak ditampilkan di Bank Soal dan tidak diikutsertakan dalam pengacakan soal Event baru. Data soal tetap tersimpan di database untuk menjaga integritas riwayat ujian peserta.
+   - **Sistem Bobot Soal (Manual \& Auto):** Admin dapat mengatur bobot spesifik untuk setiap soal (misal: soal mudah berbobot 10, soal sulit berbobot 20). Jika Admin tidak melakukan _setup_ bobot secara manual, sistem akan otomatis menerapkan **Auto-Bobot** di mana setiap soal yang diujikan memiliki bobot yang sama rata sehingga total nilai sempurna mengacu pada skala standar (contoh: 10 soal, masing-masing otomatis berbobot 10 agar total skor 100).
+5. **Manajemen Kategori Soal:**
+   - Admin dapat membuat, mengubah, dan menghapus kategori soal.
+   - **Validasi Nama Unik:** Tidak boleh ada dua kategori aktif dengan nama yang sama (tidak peka huruf kapital).
+   - **Soft Delete:** Kategori yang dihapus tidak benar-benar dihilangkan dari database, melainkan ditandai (`deleted_at`) sehingga soal-soal lamanya tetap tersimpan untuk keperluan riwayat ujian. Kategori yang sudah dihapus tidak tampil di daftar maupun _dropdown_ pemilihan kategori soal.
+6. **Manajemen Jadwal/Sesi (Event Setup):**
    - Membuat jadwal pelaksanaan ujian (Event diterbitkan).
    - **Pemilihan Soal (Distribusi):** Admin dapat mengambil sebagian soal dari Bank Soal untuk dimasukkan ke Event. Misalnya, dari 1000 soal yang ada, Admin bisa memilih 200 soal spesifik secara manual, atau mengatur agar sistem menarik jumlah soal tertentu secara acak (contoh: "Ambil 100 soal acak dari kategori Sandi").
    - Mengatur parameter waktu kapan event ujian dimulai dan ditutup.
    - Menentukan **Passing Grade (Batas Lulus)** untuk event tersebut.
-6. **Laporan & Review Jawaban (Monitoring & Export):**
+7. **Laporan & Review Jawaban (Monitoring & Export):**
    - Melihat daftar riwayat nilai dari semua peserta yang telah selesai mengerjakan.
    - Melihat rincian ujian per peserta: meninjau soal-soal apa saja yang dikerjakan peserta, apa jawaban yang dipilih peserta, dan mencocokkannya dengan kunci jawaban (via endpoint `GET /admin/exams/approvals/:approval_id/answers`).
    - **Export Laporan (Excel & PDF):** Mengunduh rekap nilai seluruh peserta pada suatu event dalam format **Excel (.xlsx)** atau **PDF** untuk keperluan pelaporan kegiatan Gugus Depan/Kwartir (via endpoint `GET /admin/events/:id/export?format=excel` atau `?format=pdf`).

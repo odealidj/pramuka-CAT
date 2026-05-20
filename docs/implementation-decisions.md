@@ -67,6 +67,29 @@ Aplikasi akan menggunakan arsitektur **Client-Server** berbasis web (Web Applica
 - Pendaftaran (*Self-Registration*) diizinkan untuk calon peserta melalui rute publik. Secara *default*, peran yang diberikan adalah `peserta`.
 - Peserta yang mendaftar dan melengkapi data tidak bisa langsung mengikuti event ujian sampai mereka di-_approve_ oleh admin pada halaman partisipan event.
 
+### 3.8. Soft Delete Kategori & Pengarsipan Soal
+Ini adalah keputusan arsitektur data yang paling kritikal untuk menjaga **integritas riwayat ujian**.
+
+#### Permasalahan
+Jika kategori dihapus secara permanen (*hard delete*), soal-soal yang terikat padanya dan riwayat ujian yang melibatkan soal tersebut akan rusak integritasnya.
+
+#### Keputusan: Soft Delete Berbasis `deleted_at` + Unique Partial Index
+- Kolom `deleted_at TIMESTAMP WITH TIME ZONE` ditambahkan ke tabel `categories`.
+- Aksi "Hapus" pada kategori **tidak menjalankan `DELETE FROM`**, melainkan `UPDATE categories SET deleted_at = NOW()`. Ini adalah *soft delete*.
+- **Unique Partial Index** dipasang di level database:
+  ```sql
+  CREATE UNIQUE INDEX categories_name_unique_idx ON categories (name) WHERE deleted_at IS NULL;
+  ```
+  Hasilnya: dua kategori aktif tidak bisa bernama sama, namun kategori yang sudah dihapus boleh memiliki nama yang sama dengan kategori aktif (memungkinkan Admin membuat ulang kategori dengan nama yang sama di kemudian hari).
+- Validasi nama unik juga dilakukan di lapisan *Service* (Go) dengan memanggil `GetCategoryByName` sebelum menyimpan, untuk menghasilkan pesan *error* yang informatif (HTTP 400) alih-alih membiarkan *error* database mentah (HTTP 500) muncul ke pengguna.
+
+#### Konsekuensi Pengarsipan Otomatis Soal
+Semua *query* yang melibatkan soal melakukan `JOIN categories c ON q.category_id = c.id WHERE c.deleted_at IS NULL`. Dampaknya:
+1. **Bank Soal (ListQuestions):** Soal dari kategori yang dihapus otomatis tidak muncul di daftar Bank Soal.
+2. **Validasi Duplikasi (CheckDuplicateQuestion):** Soal dari kategori yang dihapus tidak ikut dicek, sehingga soal baru dengan teks yang sama bisa ditambahkan ke kategori aktif.
+3. **Pengacakan Event (AddRandomEventQuestions):** Soal dari kategori yang dihapus tidak bisa tertarik secara acak ke dalam Event ujian baru.
+4. **Integritas Riwayat Terjaga:** Data soal dan jawaban peserta dari ujian masa lalu tetap utuh di database, karena tidak ada data yang benar-benar dihapus.
+
 ## 4. Infrastruktur dan Deployment
 - Aplikasi akan di-containerisasi menggunakan **Docker** agar mudah dideploy di berbagai server (VPS atau Cloud).
 - **Dockerfile (Multi-Stage Build):** Backend Go menggunakan pola *multi-stage build*. Tahap pertama (`Builder`) mengompilasi *binary* menggunakan image Go Alpine. Tahap kedua (`Final`) hanya menyalin *binary* ke image Alpine murni yang sangat ringan, tanpa *source code* sisa.

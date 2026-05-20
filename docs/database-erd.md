@@ -32,7 +32,8 @@ erDiagram
     categories ||--o{ questions : "mengelompokkan"
     categories {
         serial id PK
-        string name "Misal: PUPK, Sandi"
+        string name "Misal: PUPK, Sandi (Unique jika aktif)"
+        timestamp deleted_at "Soft Delete Indicator — NULL = aktif"
     }
 
     questions ||--o{ event_questions : "dimasukkan ke"
@@ -106,13 +107,17 @@ Tabel pendukung untuk keamanan Autentikasi ganda (Stateful JWT).
 - Kolom `is_blocked` memungkinkan Admin menendang paksa (mencabut akses jarak jauh) user yang dicurigai melakukan kecurangan tanpa menunggu token kedaluwarsa.
 
 ### c. Tabel `categories`
-Tabel referensi sederhana (Kamus Kategori) untuk memudahkan Admin memfilter bank soal berdasarkan materi tertentu.
+Tabel referensi (Kamus Kategori) untuk memudahkan Admin memfilter bank soal berdasarkan materi tertentu.
+- Terdapat kolom `deleted_at` untuk mendukung **Soft-Delete**. Kategori yang dihapus hanya ditandai, tidak benar-benar dihapus dari database, sehingga soal-soal lamanya tetap bisa direferensikan oleh riwayat ujian.
+- **Unique Partial Index** (`categories_name_unique_idx`) dibuat di PostgreSQL: `CREATE UNIQUE INDEX categories_name_unique_idx ON categories (name) WHERE deleted_at IS NULL`. Index ini memastikan **tidak ada dua kategori aktif dengan nama yang sama**, namun kategori yang sudah dihapus boleh memiliki nama yang sama dengan kategori aktif (untuk memungkinkan pembuatan kembali).
+- Kategori yang sudah dihapus (`deleted_at IS NOT NULL`) tidak tampil di daftar maupun _dropdown_ pilihan saat Admin menambah atau mengedit soal.
 
-### c. Tabel `questions`
+### d. Tabel `questions`
 Pusat dari Bank Soal.
 - Setiap baris memiliki 4 opsi teks (`option_a` - `option_d`).
 - Kolom `correct_answer` hanya menyimpan satu huruf (A/B/C/D) sebagai kunci jawaban mutlak.
-- Terdapat validasi keunikan teks soal (mengabaikan spasi, huruf kapital, dan format penomoran) yang dijalankan pada level aplikasi/kueri untuk mencegah redudansi bank soal.
+- Terdapat validasi keunikan teks soal (mengabaikan spasi, huruf kapital, dan format penomoran) yang dijalankan pada level aplikasi/kueri untuk mencegah redudansi bank soal. **Pengecekan hanya dilakukan terhadap soal dari kategori yang masih aktif** (`JOIN categories WHERE deleted_at IS NULL`).
+- Soal yang kategorinya dihapus secara otomatis **diarsipkan**: tidak ditampilkan di Bank Soal, tidak bisa dipilih untuk Event baru, dan tidak ikut divalidasi duplikasi. Data soalnya tetap ada untuk keperluan riwayat ujian.
 - Kolom `weight` krusial untuk fitur **Sistem Bobot Soal**, defaultnya bisa diisi `1` atau sesuai instruksi Admin.
 
 ### d. Tabel `events`

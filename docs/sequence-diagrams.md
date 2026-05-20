@@ -85,25 +85,67 @@ sequenceDiagram
     participant B as Backend API
     participant DB as Postgres
 
-    A->>F: Input Soal Baru (Soal, Opsi, Kunci, Bobot)
+    A->>F: Input Soal Baru (Soal, Opsi, Kunci, Bobot, Kategori)
     F->>B: POST /api/v1/admin/questions
-    B->>DB: Cek Duplikasi Teks (Regex Case-Insensitive)
-    alt Teks Duplikat
+    B->>DB: Cek Duplikasi Teks Soal
+    note over B,DB: Hanya cek soal dari kategori aktif (deleted_at IS NULL)
+    alt Teks Soal / Opsi Duplikat
         DB-->>B: Ditemukan Duplikat
-        B-->>F: Error 400 (Bad Request: "Soal serupa sudah terdaftar")
-        F->>A: Tampilkan Alert Premium (Form Tetap Terbuka)
+        B-->>F: Error 400 ("Soal serupa sudah terdaftar" / "Opsi jawaban duplikat")
+        F->>A: Tampilkan Alert (Form Tetap Terbuka)
     else Teks Unik
         DB-->>B: Bebas Duplikat
         B->>DB: Insert Question Data
         DB-->>B: OK
-        B-->>F: Success (Soal Tersimpan & Menampilkan Single-Item View)
+        B-->>F: Success (Soal Tersimpan)
+        F->>A: Tampilkan Soal yang Baru Ditambahkan (Single-Item View)
     end
 
     A->>F: Setup Event Baru (Waktu, Passing Grade, Rule Soal)
     F->>B: POST /api/v1/admin/events
     B->>DB: Insert Event & Distribusi Soal
+    note over B,DB: Soal dari kategori yang dihapus tidak diikutsertakan
     DB-->>B: OK
     B-->>F: Success (Event Diterbitkan)
+```
+
+---
+
+## 2.5. Alur Manajemen Kategori (Admin Flow)
+Alur ini menjelaskan bagaimana Admin mengelola kategori soal, termasuk mekanisme *soft delete* dan validasi nama unik.
+
+```mermaid
+sequenceDiagram
+    participant A as Admin
+    participant F as Frontend
+    participant B as Backend API
+    participant DB as Postgres
+
+    A->>F: Input Nama Kategori Baru
+    F->>B: POST /api/v1/admin/categories
+    B->>DB: Cek Nama (GetCategoryByName WHERE deleted_at IS NULL)
+    alt Nama Sudah Ada
+        DB-->>B: Ditemukan Duplikat
+        B-->>F: Error 400 ("Kategori dengan nama '...' sudah ada")
+        F->>A: Tampilkan Toast Error
+    else Nama Unik
+        DB-->>B: Bebas Duplikat
+        B->>DB: INSERT INTO categories (name)
+        DB-->>B: OK
+        B-->>F: Success (201 Created)
+        F->>A: Daftar Kategori Diperbarui
+    end
+
+    A->>F: Klik Hapus Kategori
+    F->>A: Tampilkan Dialog Konfirmasi
+    A->>F: Konfirmasi "Ya, Hapus"
+    F->>B: DELETE /api/v1/admin/categories/:id
+    B->>DB: UPDATE categories SET deleted_at = NOW() WHERE id = :id
+    note over B,DB: Soal yang terhubung tidak ikut terhapus,
+    note over B,DB: namun otomatis tidak tampil & tidak bisa dipilih untuk Event baru
+    DB-->>B: OK
+    B-->>F: Success (200 OK)
+    F->>A: Kategori Hilang dari Daftar
 ```
 
 ---
