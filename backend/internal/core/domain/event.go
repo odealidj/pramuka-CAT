@@ -14,6 +14,7 @@ type Event struct {
 	DurationMinutes int32     `json:"duration_minutes"`
 	PassingGrade    float64   `json:"passing_grade"`
 	CreatedAt       time.Time `json:"created_at"`
+	TotalQuestions  int32     `json:"total_questions"`
 }
 
 type CreateEventRequest struct {

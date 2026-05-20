@@ -28,11 +28,21 @@ import {
   deleteEventApi,
 } from '@/services/event.service';
 import type {
-  Event,
   CreateEventRequest,
   PaginationMeta,
   ApiErrorResponse,
 } from '@/types/auth';
+
+// Define a local Event type that extends the base to include total_questions
+export interface Event {
+  id: string;
+  name: string;
+  start_time: string;
+  end_time: string;
+  duration_minutes: number;
+  passing_grade: number;
+  total_questions: number;
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function fmtDate(iso: string) {
@@ -59,6 +69,39 @@ function getEventStatus(event: Event): {
   return { label: 'Selesai', color: 'text-gray-500 bg-gray-100 border-gray-200', dot: 'bg-gray-400' };
 }
 
+// ─── Live Countdown Hook ──────────────────────────────────────────────────────
+function useCountdown(endTimeISO: string, startTimeISO: string) {
+  const [minutesLeft, setMinutesLeft] = useState<number>(0);
+  const [status, setStatus] = useState<'upcoming' | 'ongoing' | 'finished'>('upcoming');
+
+  useEffect(() => {
+    const calculate = () => {
+      const now = Date.now();
+      const start = new Date(startTimeISO).getTime();
+      const end = new Date(endTimeISO).getTime();
+
+      if (now < start) {
+        setStatus('upcoming');
+        const diffMins = Math.floor((start - now) / 60000);
+        setMinutesLeft(diffMins);
+      } else if (now >= start && now <= end) {
+        setStatus('ongoing');
+        const diffMins = Math.floor((end - now) / 60000);
+        setMinutesLeft(diffMins);
+      } else {
+        setStatus('finished');
+        setMinutesLeft(0);
+      }
+    };
+
+    calculate();
+    const timer = setInterval(calculate, 60000); // Update every minute
+    return () => clearInterval(timer);
+  }, [endTimeISO, startTimeISO]);
+
+  return { minutesLeft, status };
+}
+
 // ─── Event Card ───────────────────────────────────────────────────────────────
 function EventCard({
   event,
@@ -74,6 +117,20 @@ function EventCard({
   onDetail: () => void;
 }) {
   const status = getEventStatus(event);
+  const countdown = useCountdown(event.end_time, event.start_time);
+
+  let countdownText = '';
+  let countdownColor = 'text-gray-500';
+  if (countdown.status === 'upcoming') {
+    countdownText = `Dimulai dalam ${countdown.minutesLeft} menit`;
+    countdownColor = 'text-blue-600';
+  } else if (countdown.status === 'ongoing') {
+    countdownText = `${countdown.minutesLeft} menit akan berakhir`;
+    countdownColor = 'text-emerald-600 font-medium';
+  } else {
+    countdownText = '0 menit (Selesai)';
+    countdownColor = 'text-gray-400';
+  }
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group overflow-hidden">
@@ -88,6 +145,10 @@ function EventCard({
               <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border ${status.color}`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
                 {status.label}
+              </span>
+              {/* Countdown Live Info */}
+              <span className={`text-[11px] ${countdownColor}`}>
+                {countdownText}
               </span>
             </div>
             <h3 className="text-gray-900 font-bold text-sm leading-snug">{event.name}</h3>
@@ -123,6 +184,10 @@ function EventCard({
             <span className="flex items-center gap-1">
               <Clock size={11} className="text-amber-500" />
               <strong className="text-gray-700">{event.duration_minutes}</strong> menit
+            </span>
+            <span className="flex items-center gap-1" title="Total Soal Didaftarkan">
+              <div className="w-2.5 h-2.5 rounded-full bg-blue-100 flex items-center justify-center text-[7px] text-blue-600 font-bold border border-blue-200">?</div>
+              <strong className="text-gray-700">{event.total_questions || 0}</strong> soal
             </span>
             <span className="flex items-center gap-1">
               <Trophy size={11} className="text-emerald-500" />

@@ -51,6 +51,26 @@ func (r *examRepository) ListUpcomingEvents(ctx context.Context, page int32, lim
 	return events, total, nil
 }
 
+func mapSqlcListUpcomingEventsRowToDomainEvent(e sqlcgen.ListUpcomingEventsRow) domain.Event {
+	var createdAt time.Time
+	if e.CreatedAt.Valid {
+		createdAt = e.CreatedAt.Time
+	}
+
+	passingGrade, _ := strconv.ParseFloat(e.PassingGrade, 64)
+
+	return domain.Event{
+		ID:              e.ID,
+		Name:            e.Name,
+		StartTime:       e.StartTime,
+		EndTime:         e.EndTime,
+		DurationMinutes: e.DurationMinutes,
+		PassingGrade:    passingGrade,
+		CreatedAt:       createdAt,
+		TotalQuestions:  e.TotalQuestions,
+	}
+}
+
 func (r *examRepository) ListUserApprovals(ctx context.Context, userID uuid.UUID, page int32, limit int32) ([]domain.UserApproval, int64, error) {
 	offset := (page - 1) * limit
 	rows, err := r.queries.ListUserApprovals(ctx, sqlcgen.ListUserApprovalsParams{
@@ -222,7 +242,7 @@ func (r *examRepository) GetEventById(ctx context.Context, id uuid.UUID) (domain
 	if err != nil {
 		return domain.Event{}, err
 	}
-	return mapSqlcToDomainEvent(res), nil
+	return mapSqlcGetEventByIdRowToDomainEvent(res), nil
 }
 
 func (r *examRepository) GetUserAnswersDetail(ctx context.Context, approvalID uuid.UUID) ([]domain.UserAnswerDetail, error) {

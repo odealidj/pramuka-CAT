@@ -105,6 +105,40 @@ func (q *Queries) CalculateScore(ctx context.Context, approvalID uuid.NullUUID) 
 	return total_score, err
 }
 
+const checkDuplicateEvent = `-- name: CheckDuplicateEvent :one
+SELECT id, name, start_time, end_time, duration_minutes, passing_grade, created_at FROM events
+WHERE name = $1 AND start_time = $2 AND end_time = $3
+  AND ($4::uuid IS NULL OR id <> $4::uuid)
+LIMIT 1
+`
+
+type CheckDuplicateEventParams struct {
+	Name      string        `json:"name"`
+	StartTime time.Time     `json:"start_time"`
+	EndTime   time.Time     `json:"end_time"`
+	ExcludeID uuid.NullUUID `json:"exclude_id"`
+}
+
+func (q *Queries) CheckDuplicateEvent(ctx context.Context, arg CheckDuplicateEventParams) (Event, error) {
+	row := q.db.QueryRowContext(ctx, checkDuplicateEvent,
+		arg.Name,
+		arg.StartTime,
+		arg.EndTime,
+		arg.ExcludeID,
+	)
+	var i Event
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.StartTime,
+		&i.EndTime,
+		&i.DurationMinutes,
+		&i.PassingGrade,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const checkDuplicateQuestion = `-- name: CheckDuplicateQuestion :one
 SELECT q.id, q.category_id, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_answer, q.weight, q.created_at FROM questions q
 JOIN categories c ON q.category_id = c.id
@@ -691,13 +725,25 @@ func (q *Queries) GetCategoryByName(ctx context.Context, name string) (Category,
 }
 
 const getEventById = `-- name: GetEventById :one
-SELECT id, name, start_time, end_time, duration_minutes, passing_grade, created_at FROM events
-WHERE id = $1 LIMIT 1
+SELECT e.id, e.name, e.start_time, e.end_time, e.duration_minutes, e.passing_grade, e.created_at, (SELECT COUNT(*)::int FROM event_questions eq WHERE eq.event_id = e.id) as total_questions
+FROM events e
+WHERE e.id = $1 LIMIT 1
 `
 
-func (q *Queries) GetEventById(ctx context.Context, id uuid.UUID) (Event, error) {
+type GetEventByIdRow struct {
+	ID              uuid.UUID    `json:"id"`
+	Name            string       `json:"name"`
+	StartTime       time.Time    `json:"start_time"`
+	EndTime         time.Time    `json:"end_time"`
+	DurationMinutes int32        `json:"duration_minutes"`
+	PassingGrade    string       `json:"passing_grade"`
+	CreatedAt       sql.NullTime `json:"created_at"`
+	TotalQuestions  int32        `json:"total_questions"`
+}
+
+func (q *Queries) GetEventById(ctx context.Context, id uuid.UUID) (GetEventByIdRow, error) {
 	row := q.db.QueryRowContext(ctx, getEventById, id)
-	var i Event
+	var i GetEventByIdRow
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
@@ -706,6 +752,7 @@ func (q *Queries) GetEventById(ctx context.Context, id uuid.UUID) (Event, error)
 		&i.DurationMinutes,
 		&i.PassingGrade,
 		&i.CreatedAt,
+		&i.TotalQuestions,
 	)
 	return i, err
 }
@@ -1018,9 +1065,10 @@ func (q *Queries) ListEventQuestions(ctx context.Context, arg ListEventQuestions
 }
 
 const listEvents = `-- name: ListEvents :many
-SELECT id, name, start_time, end_time, duration_minutes, passing_grade, created_at FROM events
-WHERE $3::text = '' OR to_tsvector('indonesian', name) @@ plainto_tsquery('indonesian', $3::text)
-ORDER BY name ASC, start_time ASC, end_time ASC
+SELECT e.id, e.name, e.start_time, e.end_time, e.duration_minutes, e.passing_grade, e.created_at, (SELECT COUNT(*)::int FROM event_questions eq WHERE eq.event_id = e.id) as total_questions
+FROM events e
+WHERE $3::text = '' OR to_tsvector('indonesian', e.name) @@ plainto_tsquery('indonesian', $3::text)
+ORDER BY e.name ASC, e.start_time ASC, e.end_time ASC
 LIMIT $1 OFFSET $2
 `
 
@@ -1030,15 +1078,26 @@ type ListEventsParams struct {
 	Search string `json:"search"`
 }
 
-func (q *Queries) ListEvents(ctx context.Context, arg ListEventsParams) ([]Event, error) {
+type ListEventsRow struct {
+	ID              uuid.UUID    `json:"id"`
+	Name            string       `json:"name"`
+	StartTime       time.Time    `json:"start_time"`
+	EndTime         time.Time    `json:"end_time"`
+	DurationMinutes int32        `json:"duration_minutes"`
+	PassingGrade    string       `json:"passing_grade"`
+	CreatedAt       sql.NullTime `json:"created_at"`
+	TotalQuestions  int32        `json:"total_questions"`
+}
+
+func (q *Queries) ListEvents(ctx context.Context, arg ListEventsParams) ([]ListEventsRow, error) {
 	rows, err := q.db.QueryContext(ctx, listEvents, arg.Limit, arg.Offset, arg.Search)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Event{}
+	items := []ListEventsRow{}
 	for rows.Next() {
-		var i Event
+		var i ListEventsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
@@ -1047,6 +1106,7 @@ func (q *Queries) ListEvents(ctx context.Context, arg ListEventsParams) ([]Event
 			&i.DurationMinutes,
 			&i.PassingGrade,
 			&i.CreatedAt,
+			&i.TotalQuestions,
 		); err != nil {
 			return nil, err
 		}
@@ -1118,9 +1178,10 @@ func (q *Queries) ListQuestions(ctx context.Context, arg ListQuestionsParams) ([
 }
 
 const listUpcomingEvents = `-- name: ListUpcomingEvents :many
-SELECT id, name, start_time, end_time, duration_minutes, passing_grade, created_at FROM events
-WHERE end_time > NOW()
-ORDER BY start_time ASC
+SELECT e.id, e.name, e.start_time, e.end_time, e.duration_minutes, e.passing_grade, e.created_at, (SELECT COUNT(*)::int FROM event_questions eq WHERE eq.event_id = e.id) as total_questions
+FROM events e
+WHERE e.end_time > NOW()
+ORDER BY e.start_time ASC
 LIMIT $1 OFFSET $2
 `
 
@@ -1129,15 +1190,26 @@ type ListUpcomingEventsParams struct {
 	Offset int32 `json:"offset"`
 }
 
-func (q *Queries) ListUpcomingEvents(ctx context.Context, arg ListUpcomingEventsParams) ([]Event, error) {
+type ListUpcomingEventsRow struct {
+	ID              uuid.UUID    `json:"id"`
+	Name            string       `json:"name"`
+	StartTime       time.Time    `json:"start_time"`
+	EndTime         time.Time    `json:"end_time"`
+	DurationMinutes int32        `json:"duration_minutes"`
+	PassingGrade    string       `json:"passing_grade"`
+	CreatedAt       sql.NullTime `json:"created_at"`
+	TotalQuestions  int32        `json:"total_questions"`
+}
+
+func (q *Queries) ListUpcomingEvents(ctx context.Context, arg ListUpcomingEventsParams) ([]ListUpcomingEventsRow, error) {
 	rows, err := q.db.QueryContext(ctx, listUpcomingEvents, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Event{}
+	items := []ListUpcomingEventsRow{}
 	for rows.Next() {
-		var i Event
+		var i ListUpcomingEventsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
@@ -1146,6 +1218,7 @@ func (q *Queries) ListUpcomingEvents(ctx context.Context, arg ListUpcomingEvents
 			&i.DurationMinutes,
 			&i.PassingGrade,
 			&i.CreatedAt,
+			&i.TotalQuestions,
 		); err != nil {
 			return nil, err
 		}

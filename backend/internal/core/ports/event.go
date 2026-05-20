@@ -2,6 +2,7 @@ package ports
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/domain"
@@ -10,6 +11,7 @@ import (
 type EventRepository interface {
 	CreateEvent(ctx context.Context, e domain.Event) (domain.Event, error)
 	GetEventById(ctx context.Context, id uuid.UUID) (domain.Event, error)
+	CheckDuplicateEvent(ctx context.Context, name string, startTime, endTime time.Time, excludeID *uuid.UUID) (bool, error)
 	ListEvents(ctx context.Context, page int32, limit int32, search string) ([]domain.Event, int64, error)
 	UpdateEvent(ctx context.Context, id uuid.UUID, e domain.Event) (domain.Event, error)
 	DeleteEvent(ctx context.Context, id uuid.UUID) error

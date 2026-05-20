@@ -132,8 +132,26 @@ export default function EventFormModal({
         duration_minutes: String(event.duration_minutes),
         passing_grade: String(event.passing_grade),
       });
-    } else if (!isEdit) {
-      reset({ name: '', start_time: '', end_time: '', duration_minutes: '60', passing_grade: '70' });
+    } else if (!isEdit && isOpen) { // Only set defaults when opening create mode
+      const now = new Date();
+      // Smart default: Next full hour
+      now.setHours(now.getHours() + 1);
+      now.setMinutes(0);
+      now.setSeconds(0);
+      now.setMilliseconds(0);
+      
+      const nextHour = new Date(now);
+      
+      const twoHoursLater = new Date(nextHour);
+      twoHoursLater.setHours(twoHoursLater.getHours() + 1);
+
+      reset({ 
+        name: '', 
+        start_time: isoToLocal(nextHour.toISOString()), 
+        end_time: isoToLocal(twoHoursLater.toISOString()), 
+        duration_minutes: '60', 
+        passing_grade: '70' 
+      });
     }
   }, [isEdit, event, reset, isOpen]);
 

@@ -27,6 +27,15 @@ func (s *eventService) CreateEvent(ctx context.Context, req domain.CreateEventRe
 		return domain.Event{}, fmt.Errorf("waktu selesai (end_time) tidak boleh sebelum waktu mulai (start_time)")
 	}
 
+	// Validasi Duplikat: Nama dan Waktu yang sama
+	isDuplicate, err := s.repo.CheckDuplicateEvent(ctx, req.Name, req.StartTime, req.EndTime, nil)
+	if err != nil {
+		return domain.Event{}, fmt.Errorf("gagal mengecek duplikasi jadwal ujian")
+	}
+	if isDuplicate {
+		return domain.Event{}, fmt.Errorf("jadwal ujian dengan nama dan rentang waktu yang sama sudah terdaftar")
+	}
+
 	e := domain.Event{
 		Name:            req.Name,
 		StartTime:       req.StartTime,
@@ -53,6 +62,15 @@ func (s *eventService) UpdateEvent(ctx context.Context, id uuid.UUID, req domain
 	_, err := s.repo.GetEventById(ctx, id)
 	if err != nil {
 		return domain.Event{}, fmt.Errorf("event tidak ditemukan")
+	}
+
+	// Validasi Duplikat saat Update
+	isDuplicate, err := s.repo.CheckDuplicateEvent(ctx, req.Name, req.StartTime, req.EndTime, &id)
+	if err != nil {
+		return domain.Event{}, fmt.Errorf("gagal mengecek duplikasi jadwal ujian")
+	}
+	if isDuplicate {
+		return domain.Event{}, fmt.Errorf("jadwal ujian dengan nama dan rentang waktu yang sama sudah terdaftar")
 	}
 
 	e := domain.Event{

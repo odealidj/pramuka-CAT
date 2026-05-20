@@ -118,13 +118,15 @@ VALUES ($1, $2, $3, $4, $5)
 RETURNING *;
 
 -- name: GetEventById :one
-SELECT * FROM events
-WHERE id = $1 LIMIT 1;
+SELECT e.*, (SELECT COUNT(*)::int FROM event_questions eq WHERE eq.event_id = e.id) as total_questions
+FROM events e
+WHERE e.id = $1 LIMIT 1;
 
 -- name: ListEvents :many
-SELECT * FROM events
-WHERE sqlc.arg('search')::text = '' OR to_tsvector('indonesian', name) @@ plainto_tsquery('indonesian', sqlc.arg('search')::text)
-ORDER BY name ASC, start_time ASC, end_time ASC
+SELECT e.*, (SELECT COUNT(*)::int FROM event_questions eq WHERE eq.event_id = e.id) as total_questions
+FROM events e
+WHERE sqlc.arg('search')::text = '' OR to_tsvector('indonesian', e.name) @@ plainto_tsquery('indonesian', sqlc.arg('search')::text)
+ORDER BY e.name ASC, e.start_time ASC, e.end_time ASC
 LIMIT $1 OFFSET $2;
 
 -- name: CountEvents :one
@@ -207,9 +209,10 @@ SELECT COUNT(*) FROM user_event_approvals
 WHERE event_id = $1;
 
 -- name: ListUpcomingEvents :many
-SELECT * FROM events
-WHERE end_time > NOW()
-ORDER BY start_time ASC
+SELECT e.*, (SELECT COUNT(*)::int FROM event_questions eq WHERE eq.event_id = e.id) as total_questions
+FROM events e
+WHERE e.end_time > NOW()
+ORDER BY e.start_time ASC
 LIMIT $1 OFFSET $2;
 
 -- name: CountUpcomingEvents :one
@@ -327,4 +330,10 @@ JOIN categories c ON q.category_id = c.id
 WHERE c.deleted_at IS NULL
   AND REGEXP_REPLACE(q.question_text, '^[[:space:][:digit:].)*#_-]+', '') ILIKE REGEXP_REPLACE(sqlc.arg('question_text')::text, '^[[:space:][:digit:].)*#_-]+', '')
   AND (sqlc.narg('exclude_id')::uuid IS NULL OR q.id <> sqlc.narg('exclude_id')::uuid)
+LIMIT 1;
+
+-- name: CheckDuplicateEvent :one
+SELECT * FROM events
+WHERE name = $1 AND start_time = $2 AND end_time = $3
+  AND (sqlc.narg('exclude_id')::uuid IS NULL OR id <> sqlc.narg('exclude_id')::uuid)
 LIMIT 1;

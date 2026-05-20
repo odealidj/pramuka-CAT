@@ -37,6 +37,47 @@ func mapSqlcToDomainEvent(e sqlcgen.Event) domain.Event {
 		DurationMinutes: e.DurationMinutes,
 		PassingGrade:    passingGrade,
 		CreatedAt:       createdAt,
+		TotalQuestions:  0,
+	}
+}
+
+func mapSqlcGetEventByIdRowToDomainEvent(e sqlcgen.GetEventByIdRow) domain.Event {
+	var createdAt time.Time
+	if e.CreatedAt.Valid {
+		createdAt = e.CreatedAt.Time
+	}
+
+	passingGrade, _ := strconv.ParseFloat(e.PassingGrade, 64)
+
+	return domain.Event{
+		ID:              e.ID,
+		Name:            e.Name,
+		StartTime:       e.StartTime,
+		EndTime:         e.EndTime,
+		DurationMinutes: e.DurationMinutes,
+		PassingGrade:    passingGrade,
+		CreatedAt:       createdAt,
+		TotalQuestions:  e.TotalQuestions,
+	}
+}
+
+func mapSqlcListEventsRowToDomainEvent(e sqlcgen.ListEventsRow) domain.Event {
+	var createdAt time.Time
+	if e.CreatedAt.Valid {
+		createdAt = e.CreatedAt.Time
+	}
+
+	passingGrade, _ := strconv.ParseFloat(e.PassingGrade, 64)
+
+	return domain.Event{
+		ID:              e.ID,
+		Name:            e.Name,
+		StartTime:       e.StartTime,
+		EndTime:         e.EndTime,
+		DurationMinutes: e.DurationMinutes,
+		PassingGrade:    passingGrade,
+		CreatedAt:       createdAt,
+		TotalQuestions:  e.TotalQuestions,
 	}
 }
 
@@ -60,7 +101,29 @@ func (r *eventRepository) GetEventById(ctx context.Context, id uuid.UUID) (domai
 	if err != nil {
 		return domain.Event{}, err
 	}
-	return mapSqlcToDomainEvent(res), nil
+	return mapSqlcGetEventByIdRowToDomainEvent(res), nil
+}
+
+func (r *eventRepository) CheckDuplicateEvent(ctx context.Context, name string, startTime, endTime time.Time, excludeID *uuid.UUID) (bool, error) {
+	var exclude uuid.NullUUID
+	if excludeID != nil {
+		exclude = uuid.NullUUID{UUID: *excludeID, Valid: true}
+	}
+
+	_, err := r.queries.CheckDuplicateEvent(ctx, sqlcgen.CheckDuplicateEventParams{
+		Name:      name,
+		StartTime: startTime,
+		EndTime:   endTime,
+		ExcludeID: exclude,
+	})
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }
 
 func (r *eventRepository) ListEvents(ctx context.Context, page int32, limit int32, search string) ([]domain.Event, int64, error) {
@@ -81,7 +144,7 @@ func (r *eventRepository) ListEvents(ctx context.Context, page int32, limit int3
 
 	var events []domain.Event
 	for _, row := range rows {
-		events = append(events, mapSqlcToDomainEvent(row))
+		events = append(events, mapSqlcListEventsRowToDomainEvent(row))
 	}
 	return events, total, nil
 }
