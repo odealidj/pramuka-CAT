@@ -169,6 +169,7 @@ export interface Event {
   end_time: string;     // ISO 8601
   duration_minutes: number;
   passing_grade: number;
+  total_questions?: number;
   created_at: string;
 }
 

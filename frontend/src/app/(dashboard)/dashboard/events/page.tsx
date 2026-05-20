@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   CalendarDays,
   Plus,
@@ -20,7 +21,6 @@ import Pagination from '@/components/ui/Pagination';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { ToastContainer, useToast } from '@/components/ui/Toast';
 import EventFormModal from '@/components/events/EventFormModal';
-import EventDetailDrawer from '@/components/events/EventDetailDrawer';
 import {
   listEventsApi,
   createEventApi,
@@ -28,21 +28,11 @@ import {
   deleteEventApi,
 } from '@/services/event.service';
 import type {
+  Event,
   CreateEventRequest,
   PaginationMeta,
   ApiErrorResponse,
 } from '@/types/auth';
-
-// Define a local Event type that extends the base to include total_questions
-export interface Event {
-  id: string;
-  name: string;
-  start_time: string;
-  end_time: string;
-  duration_minutes: number;
-  passing_grade: number;
-  total_questions: number;
-}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function fmtDate(iso: string) {
@@ -108,13 +98,11 @@ function EventCard({
   index,
   onEdit,
   onDelete,
-  onDetail,
 }: {
   event: Event;
   index: number;
   onEdit: () => void;
   onDelete: () => void;
-  onDetail: () => void;
 }) {
   const status = getEventStatus(event);
   const countdown = useCountdown(event.end_time, event.start_time);
@@ -197,13 +185,13 @@ function EventCard({
         </div>
 
         {/* Detail button */}
-        <button
-          onClick={onDetail}
+        <Link
+          href={`/dashboard/events/${event.id}`}
           className="mt-4 w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-gray-200 text-gray-600 text-xs font-semibold hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700 transition-all"
         >
           Kelola Soal & Peserta
           <ChevronRight size={13} />
-        </button>
+        </Link>
       </div>
     </div>
   );
@@ -223,8 +211,6 @@ function EventsContent() {
   const [formModal, setFormModal] = useState<{
     open: boolean; mode: 'create' | 'edit'; event: Event | null;
   }>({ open: false, mode: 'create', event: null });
-
-  const [detailEvent, setDetailEvent] = useState<Event | null>(null);
 
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean; event: Event | null; isLoading: boolean;
@@ -413,7 +399,6 @@ function EventsContent() {
                 setFormModal({ open: true, mode: 'edit', event });
               }}
               onDelete={() => setDeleteDialog({ open: true, event, isLoading: false })}
-              onDetail={() => setDetailEvent(event)}
             />
           ))}
         </div>
@@ -438,12 +423,6 @@ function EventsContent() {
         event={formModal.event}
         onSubmit={formModal.mode === 'create' ? handleCreate : handleUpdate}
         apiError={formApiError}
-      />
-
-      <EventDetailDrawer
-        event={detailEvent}
-        onClose={() => setDetailEvent(null)}
-        onToast={toast}
       />
 
       <ConfirmDialog
