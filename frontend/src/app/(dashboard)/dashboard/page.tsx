@@ -6,6 +6,8 @@ import {
   Users,
   BookOpen,
   CalendarDays,
+  ClipboardCheck,
+  TrendingUp,
   Activity,
   ArrowUpRight,
 } from "lucide-react";
