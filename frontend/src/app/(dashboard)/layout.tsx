@@ -6,6 +6,9 @@ import Navbar from '@/components/layout/Navbar';
 import { usePathname } from 'next/navigation';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { useAuth } from '@/contexts/AuthContext';
+import { useEffect } from 'react';
+import QuickActionModals from '@/components/dashboard/QuickActionModals';
+import { ToastContainer, useToast } from '@/components/ui/Toast';
 
 // Mapping path → page title
 const pageTitles: Record<string, string> = {
@@ -21,9 +24,22 @@ const pageTitles: Record<string, string> = {
 function DashboardContent({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [quickAction, setQuickAction] = useState<'question' | 'event' | 'user' | null>(null);
+  const { toasts, toast: addToast, dismiss } = useToast();
+  
   const pathname = usePathname();
   const pageTitle = pageTitles[pathname] ?? 'Halaman';
   const { user } = useAuth();
+
+  // Listen for quick actions from CommandPalette
+  useEffect(() => {
+    const handleQuickAction = (e: Event) => {
+      const customEvent = e as CustomEvent<string>;
+      setQuickAction(customEvent.detail as 'question' | 'event' | 'user');
+    };
+    window.addEventListener('triggerQuickAction', handleQuickAction);
+    return () => window.removeEventListener('triggerQuickAction', handleQuickAction);
+  }, []);
 
   return (
     <div className="h-full flex overflow-hidden">
@@ -56,6 +72,13 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           </p>
         </footer>
       </div>
+
+      <QuickActionModals 
+        actionToOpen={quickAction} 
+        onClose={() => setQuickAction(null)} 
+        addToast={addToast}
+      />
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
     </div>
   );
 }

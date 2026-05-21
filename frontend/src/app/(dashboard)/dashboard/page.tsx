@@ -6,13 +6,9 @@ import {
   Users,
   BookOpen,
   CalendarDays,
-  ClipboardCheck,
-  TrendingUp,
   Activity,
   ArrowUpRight,
 } from "lucide-react";
-import QuickActionModals from "@/components/dashboard/QuickActionModals";
-import { ToastContainer, useToast } from "@/components/ui/Toast";
 
 // --- Stat Card ---
 interface StatCardProps {
@@ -113,19 +109,20 @@ export default function DashboardPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [quickAction, setQuickAction] = useState<'question' | 'event' | 'user' | null>(null);
-  const { toasts, toast: addToast, dismiss } = useToast();
 
   useEffect(() => {
-    import('@/lib/api/dashboard').then(({ dashboardApi }) => {
-      dashboardApi.getStats().then((res) => {
+    const fetchData = async () => {
+      try {
+        const { dashboardApi } = await import('@/lib/api/dashboard');
+        const res = await dashboardApi.getStats();
         setData(res.data);
-        setLoading(false);
-      }).catch((err) => {
+      } catch (err: any) {
         setError(err.message || 'Gagal memuat statistik');
+      } finally {
         setLoading(false);
-      });
-    });
+      }
+    };
+    fetchData();
   }, []);
 
   if (loading) {
@@ -327,12 +324,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <QuickActionModals 
-        actionToOpen={quickAction} 
-        onClose={() => setQuickAction(null)} 
-        addToast={addToast}
-      />
-      <ToastContainer toasts={toasts} onDismiss={dismiss} />
+      {/* We removed QuickActionModals here because it is now handled globally in layout.tsx */}
     </div>
   );
 }
