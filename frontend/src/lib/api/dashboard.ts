@@ -1,4 +1,4 @@
-import axiosInstance from './axios';
+import httpClient from '../http-client';
 
 export interface DashboardStats {
   total_participants: number;
@@ -26,7 +26,7 @@ export interface DashboardResponse {
 
 export const dashboardApi = {
   getStats: async (): Promise<DashboardResponse> => {
-    const response = await axiosInstance.get('/admin/dashboard/stats');
+    const response = await httpClient.get('/admin/dashboard/stats');
     return response.data;
   },
 };
