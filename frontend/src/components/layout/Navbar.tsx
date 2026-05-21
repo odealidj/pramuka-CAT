@@ -10,6 +10,7 @@ import { getPhotoUrl } from '@/lib/constants';
 interface NavbarProps {
   onMenuToggle: () => void;
   pageTitle?: string;
+  isCollapsed?: boolean;
 }
 
 /** Menghasilkan inisial dari nama lengkap (misal: "Budi Santoso" → "BS") */
@@ -21,7 +22,7 @@ function getInitials(name: string): string {
     .join('');
 }
 
-export default function Navbar({ onMenuToggle, pageTitle = 'Dashboard' }: NavbarProps) {
+export default function Navbar({ onMenuToggle, pageTitle = 'Dashboard', isCollapsed = false }: NavbarProps) {
   const { user, logout } = useAuth();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -49,7 +50,6 @@ export default function Navbar({ onMenuToggle, pageTitle = 'Dashboard' }: Navbar
 
   const displayName = user?.full_name || user?.username || 'Pengguna';
   const initials = getInitials(displayName);
-  const roleLabel = user?.role === 'super_admin' ? 'Super Admin' : user?.role === 'admin' ? 'Admin / Panitia' : 'Peserta';
 
   return (
     <header className="sticky top-0 z-20 h-16 bg-white/80 backdrop-blur-md border-b border-gray-200/60 shadow-sm">
@@ -69,9 +69,11 @@ export default function Navbar({ onMenuToggle, pageTitle = 'Dashboard' }: Navbar
           <h1 className="text-gray-900 font-semibold text-base truncate">
             {pageTitle}
           </h1>
-          <p className="text-gray-400 text-xs hidden sm:block">
-            Pramuka CAT — {roleLabel}
-          </p>
+          {isCollapsed && (
+            <p className="text-gray-400 text-xs hidden sm:block">
+              Pramuka CAT
+            </p>
+          )}
         </div>
 
         {/* Actions */}

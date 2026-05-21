@@ -55,10 +55,10 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
       {/* Main Content Area (offset by sidebar width on desktop) */}
       <div className={`flex flex-col flex-1 h-screen overflow-hidden transition-all duration-300 ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
-        {/* Navbar */}
         <Navbar
           onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)}
           pageTitle={pageTitle}
+          isCollapsed={isCollapsed}
         />
 
         {/* Page Content */}
