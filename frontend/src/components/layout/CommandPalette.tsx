@@ -118,7 +118,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-24 sm:pt-32 px-4">
-      <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 bg-transparent" onClick={onClose} />
       
       <div 
         className="relative bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden border border-gray-100 flex flex-col transform scale-100 animate-in fade-in zoom-in duration-200"
