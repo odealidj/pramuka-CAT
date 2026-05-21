@@ -193,6 +193,7 @@ export default function Navbar({ onMenuToggle, pageTitle = 'Dashboard' }: Navbar
             )}
         </div>
       </div>
+    </div>
 
       
       {/* Command Palette */}
