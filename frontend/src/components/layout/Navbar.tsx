@@ -50,6 +50,7 @@ export default function Navbar({ onMenuToggle, pageTitle = 'Dashboard', isCollap
 
   const displayName = user?.full_name || user?.username || 'Pengguna';
   const initials = getInitials(displayName);
+  const roleLabel = user?.role === 'super_admin' ? 'Super Admin' : user?.role === 'admin' ? 'Admin / Panitia' : 'Peserta';
 
   return (
     <header className="sticky top-0 z-20 h-16 bg-white/80 backdrop-blur-md border-b border-gray-200/60 shadow-sm">
