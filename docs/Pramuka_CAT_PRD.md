@@ -11,9 +11,10 @@ Aplikasi Pramuka CAT adalah platform ujian berbasis komputer yang dirancang khus
 ## 3. Spesifikasi Kebutuhan Pengguna (User Requirements)
 
 ### 3.1. Hak Akses (Role)
-Aplikasi memiliki 2 jenis peran utama:
-1. **Admin / Panitia:** Mengelola sistem, bank soal, jadwal event, dan peserta.
-2. **Peserta (Anggota Pramuka):** Mengikuti ujian sesuai jadwal yang telah ditentukan dan disetujui.
+Aplikasi memiliki 3 jenis peran utama:
+1. **Super Admin:** Pengelola sistem tingkat atas yang memiliki akses penuh ke seluruh fitur, termasuk manajemen akun admin/panitia.
+2. **Admin / Panitia:** Mengelola sistem ujian, bank soal, jadwal event, dan peserta.
+3. **Peserta (Anggota Pramuka):** Mengikuti ujian sesuai jadwal yang telah ditentukan dan disetujui.
 
 ### 3.2. Fitur Peserta (Anggota Pramuka)
 1. **Registrasi & Login:** Peserta dapat mendaftar akun baru menggunakan identitas pramuka (di mana `Nomor Peserta` digunakan sebagai `username` untuk *login*) dan melakukan login ke dalam sistem.
@@ -29,8 +30,8 @@ Aplikasi memiliki 2 jenis peran utama:
    - Nilai akhir langsung muncul di layar sesaat setelah peserta menekan tombol selesai/submit ujian.
    - Sistem membandingkan nilai peserta dengan **Passing Grade (Batas Lulus)** event tersebut, sehingga menampilkan status **"LULUS"** atau **"TIDAK LULUS"**.
 
-### 3.3. Fitur Admin
-1. **Manajemen Admin:** Admin yang sudah ada dapat menambahkan akun admin baru ke dalam sistem.
+### 3.3. Fitur Admin & Super Admin
+1. **Manajemen Admin (Khusus Super Admin):** Super Admin dapat mendaftarkan, mengubah, atau menghapus akun admin/panitia dari dalam sistem.
 2. **Manajemen Peserta (CRUD User):**
    - Melihat daftar seluruh anggota pramuka yang terdaftar (List User).
    - Menambah, mengubah, atau menghapus data peserta (menggunakan metode **Soft-Delete** untuk menjaga integritas riwayat ujian masa lalu).

@@ -14,7 +14,7 @@ erDiagram
         string username "Nomor Gudep / NTA (Unique)"
         string password_hash
         string full_name
-        string role "ENUM: admin, peserta"
+        string role "ENUM: super_admin, admin, peserta"
         string photo_url "Nullable"
         timestamp created_at
         timestamp deleted_at "Soft Delete Indicator"
@@ -98,8 +98,9 @@ erDiagram
 ### a. Tabel `users`
 Menyimpan data identitas Peserta dan Admin.
 - Username dibuat unik (misalnya nomor NTA Pramuka) untuk mencegah duplikasi login.
-- Terdapat kolom `role` untuk membedakan otoritas.
+- Terdapat kolom `role` untuk membedakan otoritas (`super_admin`, `admin`, `peserta`). `super_admin` memiliki akses tak terbatas ke seluruh sistem termasuk manajemen admin lainnya.
 - Terdapat kolom `deleted_at` untuk mendukung **Soft-Delete**; data user yang dihapus tetap tersimpan utuh di sistem agar relasi ujian historisnya tidak rusak, namun user tersebut berstatus dinonaktifkan.
+- Menyediakan kolom `photo_url` untuk menyimpan referensi/tautan ke foto profil pengguna yang di-upload ke server lokal.
 
 ### b. Tabel `sessions`
 Tabel pendukung untuk keamanan Autentikasi ganda (Stateful JWT).
