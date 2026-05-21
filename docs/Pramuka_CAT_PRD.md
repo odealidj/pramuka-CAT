@@ -59,6 +59,24 @@ Aplikasi memiliki 3 jenis peran utama:
    - Melihat daftar riwayat nilai dari semua peserta yang telah selesai mengerjakan.
    - Melihat rincian ujian per peserta: meninjau soal-soal apa saja yang dikerjakan peserta, apa jawaban yang dipilih peserta, dan mencocokkannya dengan kunci jawaban (via endpoint `GET /admin/exams/approvals/:approval_id/answers`).
    - **Export Laporan (Excel & PDF):** Mengunduh rekap nilai seluruh peserta pada suatu event dalam format **Excel (.xlsx)** atau **PDF** untuk keperluan pelaporan kegiatan Gugus Depan/Kwartir (via endpoint `GET /admin/events/:id/export?format=excel` atau `?format=pdf`).
+8. **Dashboard Admin (Statistik Sistem):**
+   - Halaman *Dashboard* Admin menampilkan **4 kartu statistik** secara *real-time* dari Backend: jumlah total peserta terdaftar, total soal dalam bank soal, jumlah event yang sedang aktif, dan total ujian yang sudah diselesaikan.
+   - Terdapat panel **Aktivitas Terkini** yang memperlihatkan 5 log aktivitas terakhir (enroll, approval, atau penyelesaian ujian) beserta waktu relatif ("Baru saja", "X menit lalu", dst).
+   - Panel **Aksi Cepat** menyediakan pintasan langsung ke aksi-aksi yang paling sering dilakukan Admin (buat soal, buat event, tambah peserta, approval peserta).
+9. **Command Palette (Panel Perintah Cepat):**
+   - Admin/Super Admin dapat membuka panel perintah (`Ctrl+K` / `Cmd+K` atau klik tombol Cari di Navbar) untuk navigasi cepat ke seluruh halaman atau memicu aksi tanpa harus mengklik menu satu per satu.
+   - Daftar perintah difilter berdasarkan peran (`role`) pengguna yang sedang login.
+   - Mendukung navigasi keyboard penuh: tombol `↑`/`↓` untuk berpindah pilihan, `Enter` untuk memilih, `ESC` untuk menutup.
+   - Terdapat dua jenis perintah: **Navigasi** (berpindah halaman) dan **Aksi Cepat** (membuka modal buat soal/event/peserta langsung).
+
+---
+
+### 3.4. Fitur Shell / Antarmuka Utama (UI Shell)
+- **Sidebar Collapsible:** Pada tampilan *desktop*, Admin dapat mengecilkan sidebar menjadi mode ikon saja (lebar 80px) untuk memaksimalkan area kerja, atau memperluasnya kembali (lebar 256px). Transisi berjalan mulus selama 300ms.
+- **Navigasi Mobile:** Sidebar tampil sebagai *drawer* panel yang dapat dibuka via tombol hamburger di Navbar, dan ditutup dengan tombol X atau mengklik area backdrop gelap.
+- **Judul Halaman Dinamis di Navbar:** Navbar menampilkan judul halaman aktif sesuai rute. Saat sidebar di-*expand*: hanya judul halaman yang tampil (mis: `"Bank Soal"`). Saat sidebar di-*collapse*: format berubah menjadi `"Pramuka CAT — Bank Soal"` untuk tetap memberikan konteks identitas aplikasi.
+- **Sistem Notifikasi Toast:** Semua aksi yang berhasil atau gagal (membuat soal, event, peserta, dsb) memberikan umpan balik berupa notifikasi *toast* di pojok kanan bawah layar yang hilang otomatis setelah 4 detik. Toast berwarna hijau untuk sukses dan merah untuk gagal.
+- **Quick Action Modals:** Modal isian cepat untuk membuat soal/event/peserta baru, dapat dipicu dari panel Aksi Cepat di Dashboard maupun dari Command Palette, tanpa harus berpindah halaman terlebih dahulu.
 
 ---
 

@@ -11,12 +11,13 @@ erDiagram
     users ||--o{ user_event_approvals : "mendaftar/mengikuti"
     users {
         uuid id PK
-        string username "Nomor Gudep / NTA (Unique)"
+        string username "Unique jika aktif (Partial Index WHERE deleted_at IS NULL)"
         string password_hash
         string full_name
         string role "ENUM: super_admin, admin, peserta"
         string photo_url "Nullable"
         timestamp created_at
+        timestamp updated_at
         timestamp deleted_at "Soft Delete Indicator"
     }
 
@@ -33,6 +34,7 @@ erDiagram
     categories {
         serial id PK
         string name "Misal: PUPK, Sandi (Unique jika aktif)"
+        timestamp created_at
         timestamp deleted_at "Soft Delete Indicator — NULL = aktif"
     }
 
@@ -49,6 +51,7 @@ erDiagram
         char correct_answer "A, B, C, atau D"
         int weight "Bobot nilai soal"
         timestamp created_at
+        timestamp deleted_at "Soft Delete Indicator — NULL = aktif"
     }
 
     events ||--o{ event_questions : "mencakup"
@@ -61,11 +64,12 @@ erDiagram
         int duration_minutes "Durasi pengerjaan"
         decimal passing_grade "Batas lulus"
         timestamp created_at
+        timestamp deleted_at "Soft Delete Indicator — NULL = aktif"
     }
 
     event_questions {
-        uuid event_id FK
-        uuid question_id FK
+        uuid event_id PK,FK
+        uuid question_id PK,FK
     }
 
     user_event_approvals ||--o{ user_answers : "memiliki riwayat"
@@ -79,6 +83,8 @@ erDiagram
         boolean is_passed "Lulus / Tidak"
         timestamp started_at
         timestamp completed_at
+        timestamp created_at
+        timestamp updated_at
     }
 
     user_answers {
@@ -97,10 +103,11 @@ erDiagram
 
 ### a. Tabel `users`
 Menyimpan data identitas Peserta dan Admin.
-- Username dibuat unik (misalnya nomor NTA Pramuka) untuk mencegah duplikasi login.
+- Username dibuat unik menggunakan **Partial Unique Index** (`users_username_unique_idx ON users (username) WHERE deleted_at IS NULL`). Ini berarti user yang dihapus (*soft-deleted*) membebaskan username-nya sehingga bisa digunakan oleh akun baru.
 - Terdapat kolom `role` untuk membedakan otoritas (`super_admin`, `admin`, `peserta`). `super_admin` memiliki akses tak terbatas ke seluruh sistem termasuk manajemen admin lainnya.
 - Terdapat kolom `deleted_at` untuk mendukung **Soft-Delete**; data user yang dihapus tetap tersimpan utuh di sistem agar relasi ujian historisnya tidak rusak, namun user tersebut berstatus dinonaktifkan.
 - Menyediakan kolom `photo_url` untuk menyimpan referensi/tautan ke foto profil pengguna yang di-upload ke server lokal.
+- Kolom `updated_at` diperbarui otomatis setiap kali data user diubah.
 
 ### b. Tabel `sessions`
 Tabel pendukung untuk keamanan Autentikasi ganda (Stateful JWT).
@@ -120,6 +127,7 @@ Pusat dari Bank Soal.
 - Terdapat validasi keunikan teks soal (mengabaikan spasi, huruf kapital, dan format penomoran) yang dijalankan pada level aplikasi/kueri untuk mencegah redudansi bank soal. **Pengecekan hanya dilakukan terhadap soal dari kategori yang masih aktif** (`JOIN categories WHERE deleted_at IS NULL`).
 - Soal yang kategorinya dihapus secara otomatis **diarsipkan**: tidak ditampilkan di Bank Soal, tidak bisa dipilih untuk Event baru, dan tidak ikut divalidasi duplikasi. Data soalnya tetap ada untuk keperluan riwayat ujian.
 - Kolom `weight` krusial untuk fitur **Sistem Bobot Soal**, defaultnya bisa diisi `1` atau sesuai instruksi Admin.
+- Kolom `deleted_at` mendukung **Soft-Delete** langsung pada level soal: soal yang dihapus oleh Admin tidak benar-benar dihilangkan dari database, melainkan hanya ditandai sehingga riwayat ujian peserta yang pernah mengerjakan soal tersebut tetap utuh.
 
 ### d. Tabel `events`
 Tabel ini bertindak sebagai "Ruang Ujian".
@@ -140,3 +148,24 @@ Jantung dari operasional peserta ujian. Berperan ganda sebagai tabel "Pendaftara
 Tabel riwayat per jawaban. Sangat berguna untuk kebutuhan **Monitoring dan Review**.
 - Admin bisa melihat jawaban apa yang dipilih peserta di setiap nomor dan apakah statusnya `is_correct` (benar).
 - Data pada tabel ini merupakan data final yang di-_push_ dari Redis saat ujian selesai/terkumpul.
+- Terdapat **Unique Constraint** `(approval_id, question_id)`. Mekanisme penyimpanan jawaban menggunakan pola **Upsert** (`ON CONFLICT (approval_id, question_id) DO UPDATE SET`): setiap jawaban disimpan satu kali per soal per peserta, dan akan ditimpa jika peserta mengubah jawabannya sebelum submit.
+
+---
+
+## 3. Indeks Database (Performance Indexes)
+
+Beberapa index kritis ditambahkan untuk mendukung performa pencarian teks:
+
+> **Prasyarat:** Ekstensi `pg_trgm` harus diaktifkan di PostgreSQL untuk mendukung GIN Trigram indexes.
+> ```sql
+> CREATE EXTENSION IF NOT EXISTS pg_trgm;
+> ```
+
+| Nama Index | Tabel | Tipe | Kolom | Fungsi |
+|---|---|---|---|---|
+| `idx_users_full_name_trgm` | `users` | GIN Trigram | `full_name` | Pencarian peserta berdasarkan nama (fuzzy search) |
+| `categories_name_unique_idx` | `categories` | Unique Partial | `name WHERE deleted_at IS NULL` | Validasi nama unik hanya untuk kategori aktif |
+| `idx_categories_name_trgm` | `categories` | GIN Trigram | `name` | Pencarian kategori berdasarkan nama |
+| `idx_questions_question_text_fts` | `questions` | GIN Full-Text | `question_text` (tsvector `indonesian`) | Pencarian teks soal menggunakan Full-Text Search Bahasa Indonesia |
+| `idx_events_name_fts` | `events` | GIN Full-Text | `name` (tsvector `indonesian`) | Pencarian event berdasarkan nama |
+| `users_username_unique_idx` | `users` | Unique Partial | `username WHERE deleted_at IS NULL` | Username unik hanya untuk user aktif (bukan yang sudah dihapus) |

@@ -64,6 +64,7 @@ sequenceDiagram
     B->>DB: Update Refresh Token Baru di PostgreSQL
     B->>R: Cache Session ID Baru di Redis (TTL 15m)
     B-->>F: Return Tokens Baru
+```
 
 ---
 
@@ -169,18 +170,18 @@ sequenceDiagram
     participant DB as Postgres
 
     P->>F: Request Ikut Event Ujian
-    F->>B: POST /api/v1/events/{id}/enroll
+    F->>B: POST /protected/exams/enroll (body: { event_id })
     B->>DB: Insert Status = 'pending'
     B-->>F: Sukses (Menunggu Approval)
     
     A->>F: Buka Daftar Peserta Pending
-    F->>B: GET /api/v1/admin/approvals
+    F->>B: GET /admin/events/:id/participants
     B->>DB: Fetch Data
     DB-->>B: Data Peserta Pending
     B-->>F: List Peserta
     
     A->>F: Klik "Approve" untuk Peserta X
-    F->>B: PUT /api/v1/admin/approvals/{id} (status: approved)
+    F->>B: PUT /admin/events/:event_id/participants/:approval_id/approve
     B->>DB: Update Status = 'approved'
     B-->>F: OK
 ```
@@ -208,7 +209,7 @@ sequenceDiagram
     participant DB as Postgres
 
     P->>F: Klik "Mulai Ujian"
-    F->>B: POST /api/v1/exams/{id}/start
+    F->>B: GET /protected/exams/:id/start
     B->>DB: Cek Status (Apakah Approved?) & Waktu Event
     DB-->>B: Valid
     B->>DB: Tarik Soal Acak (Sesuai Konfigurasi Event)
@@ -219,7 +220,7 @@ sequenceDiagram
 
     loop Setiap Kali Memilih Jawaban
         P->>F: Pilih Opsi (A/B/C/D)
-        F->>B: PUT /api/v1/exams/{id}/answer
+        F->>B: POST /protected/exams/:id/submit-answer
         B->>R: Simpan Jawaban Sementara (Real-time)
         B-->>F: OK (Tanpa Hit DB)
     end
@@ -255,7 +256,7 @@ sequenceDiagram
         F->>F: Timer = 00:00 (Trigger Event)
     end
 
-    F->>B: POST /api/v1/exams/{id}/submit
+    F->>B: POST /protected/exams/:id/finish
     B->>R: Tarik Semua Jawaban Sementara Peserta
     R-->>B: List Jawaban
     B->>DB: Cocokkan Jawaban dengan Kunci (Kalkulasi Bobot)
@@ -264,4 +265,117 @@ sequenceDiagram
     B->>R: Hapus Data Cache Ujian Peserta
     B-->>F: Return Nilai Akhir & Status Kelulusan
     F->>P: Tampilkan Layar Hasil Ujian
+```
+
+---
+
+## 6. Alur Command Palette (Ctrl+K)
+
+```mermaid
+sequenceDiagram
+    participant U as Admin/Peserta
+    participant N as Navbar
+    participant CP as CommandPalette (Component)
+    participant L as DashboardLayout
+    participant R as Next.js Router
+
+    U->>N: Klik tombol Cari (atau tekan Ctrl+K / Cmd+K)
+    N->>CP: document.dispatchEvent('openCommandPalette')
+    CP->>CP: setIsOpen(true), fokus ke input pencarian
+
+    U->>CP: Ketik query pencarian
+    CP->>CP: Filter ITEMS berdasarkan role & query
+
+    alt Pilih Item Navigasi
+        U->>CP: Klik atau Enter pada item (mis: "Buka Dashboard")
+        CP->>R: router.push(href)
+        CP->>CP: setIsOpen(false)
+    else Pilih Item Aksi Cepat
+        U->>CP: Klik atau Enter pada item (mis: "Buat Soal Baru")
+        CP->>L: window.dispatchEvent('triggerQuickAction', { detail: 'question' })
+        L->>L: setQuickAction('question')
+        L->>L: Render QuickActionModal yang sesuai
+        CP->>CP: setIsOpen(false)
+    else Tekan ESC atau klik backdrop
+        U->>CP: ESC / klik di luar panel
+        CP->>CP: setIsOpen(false)
+    end
+```
+
+---
+
+## 7. Alur Aksi Cepat (Quick Action Modal)
+
+```mermaid
+sequenceDiagram
+    participant A as Admin
+    participant D as Dashboard / CommandPalette
+    participant L as DashboardLayout (QuickActionModals)
+    participant B as Backend API
+    participant F as Frontend Router
+
+    A->>D: Klik "Tambah Soal Baru" (Quick Actions panel atau Command Palette)
+    D->>L: window.dispatchEvent(triggerQuickAction: 'question')
+    L->>L: setQuickAction('question')
+    L->>A: Tampilkan QuestionFormModal
+
+    A->>L: Isi form & submit
+    L->>B: POST /admin/questions
+    alt Sukses
+        B-->>L: 201 Created
+        L->>A: Toast sukses ("Soal berhasil ditambahkan")
+        L->>F: router.push('/dashboard/questions')
+        L->>L: setQuickAction(null) — tutup modal
+    else Gagal (validasi/duplikat)
+        B-->>L: 400 Error
+        L->>A: Tampilkan pesan error di dalam modal (form tetap terbuka)
+    end
+```
+
+---
+
+## 8. Alur Sidebar Collapse/Expand
+
+```mermaid
+sequenceDiagram
+    participant U as Admin (Desktop)
+    participant L as DashboardLayout
+    participant S as Sidebar
+    participant N as Navbar
+
+    U->>S: Klik tombol chevron di header Sidebar
+    S->>L: onToggleCollapse()
+    L->>L: setIsCollapsed(!isCollapsed)
+    L->>S: isCollapsed={true}
+    L->>N: isCollapsed={true}
+
+    Note over S: Lebar berubah: w-64 → w-20 (transisi 300ms)
+    Note over S: Label nav items disembunyikan, hanya ikon tampil dengan tooltip
+    Note over N: Judul berubah dari "Bank Soal" → "Pramuka CAT — Bank Soal"
+    Note over L: Main content: lg:ml-64 → lg:ml-20 (offset ikut menyesuaikan)
+```
+
+---
+
+## 9. Alur Memuat Statistik Dashboard Admin
+
+```mermaid
+sequenceDiagram
+    participant A as Admin
+    participant F as Frontend (DashboardPage)
+    participant B as Backend API
+    participant DB as Postgres
+
+    A->>F: Buka halaman /dashboard
+    F->>F: setLoading(true), render skeleton/spinner
+    F->>B: GET /admin/dashboard/stats
+    B->>DB: GetTotalParticipants
+    B->>DB: GetTotalQuestions
+    B->>DB: GetTotalActiveEvents
+    B->>DB: GetTotalCompletedExams
+    B->>DB: GetRecentActivities (LIMIT 5)
+    DB-->>B: Semua data statistik
+    B-->>F: { stats: { total_participants, total_questions, active_events, completed_exams }, activities: [...] }
+    F->>F: setData(res.data), setLoading(false)
+    F->>A: Render 4 stat cards + aktivitas terkini + panel aksi cepat
 ```

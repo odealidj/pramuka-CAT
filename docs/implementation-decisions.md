@@ -68,21 +68,22 @@ Aplikasi akan menggunakan arsitektur **Client-Server** berbasis web (Web Applica
 - Pendaftaran (*Self-Registration*) diizinkan untuk calon peserta melalui rute publik. Secara *default*, peran yang diberikan adalah `peserta`.
 - Peserta yang mendaftar dan melengkapi data tidak bisa langsung mengikuti event ujian sampai mereka di-_approve_ oleh admin pada halaman partisipan event.
 
-### 3.8. Soft Delete Kategori & Pengarsipan Soal
+### 3.8. Soft Delete pada Kategori, Soal, dan Event
 Ini adalah keputusan arsitektur data yang paling kritikal untuk menjaga **integritas riwayat ujian**.
 
 #### Permasalahan
-Jika kategori dihapus secara permanen (*hard delete*), soal-soal yang terikat padanya dan riwayat ujian yang melibatkan soal tersebut akan rusak integritasnya.
+Jika entitas dihapus secara permanen (*hard delete*), soal-soal yang terikat padanya dan riwayat ujian yang melibatkan entitas tersebut akan rusak integritasnya.
 
 #### Keputusan: Soft Delete Berbasis `deleted_at` + Unique Partial Index
-- Kolom `deleted_at TIMESTAMP WITH TIME ZONE` ditambahkan ke tabel `categories`.
-- Aksi "Hapus" pada kategori **tidak menjalankan `DELETE FROM`**, melainkan `UPDATE categories SET deleted_at = NOW()`. Ini adalah *soft delete*.
-- **Unique Partial Index** dipasang di level database:
+- Kolom `deleted_at TIMESTAMP WITH TIME ZONE` ditambahkan ke tabel **`categories`**, **`questions`**, dan **`events`**.
+- Aksi "Hapus" pada ketiga entitas tersebut **tidak menjalankan `DELETE FROM`**, melainkan `UPDATE SET deleted_at = NOW()`. Ini adalah *soft delete*.
+- **Unique Partial Index** dipasang di level database untuk `categories` dan `users`:
   ```sql
   CREATE UNIQUE INDEX categories_name_unique_idx ON categories (name) WHERE deleted_at IS NULL;
+  CREATE UNIQUE INDEX users_username_unique_idx ON users (username) WHERE deleted_at IS NULL;
   ```
-  Hasilnya: dua kategori aktif tidak bisa bernama sama, namun kategori yang sudah dihapus boleh memiliki nama yang sama dengan kategori aktif (memungkinkan Admin membuat ulang kategori dengan nama yang sama di kemudian hari).
-- Validasi nama unik juga dilakukan di lapisan *Service* (Go) dengan memanggil `GetCategoryByName` sebelum menyimpan, untuk menghasilkan pesan *error* yang informatif (HTTP 400) alih-alih membiarkan *error* database mentah (HTTP 500) muncul ke pengguna.
+  Hasilnya: dua entitas aktif tidak bisa bernama/ber-username sama, namun entitas yang sudah dihapus boleh memiliki nilai yang sama (memungkinkan pembuatan ulang di kemudian hari).
+- Validasi nama unik juga dilakukan di lapisan *Service* (Go) untuk menghasilkan pesan *error* yang informatif (HTTP 400) alih-alih membiarkan *error* database mentah (HTTP 500) muncul ke pengguna.
 
 #### Konsekuensi Pengarsipan Otomatis Soal
 Semua *query* yang melibatkan soal melakukan `JOIN categories c ON q.category_id = c.id WHERE c.deleted_at IS NULL`. Dampaknya:
@@ -90,6 +91,28 @@ Semua *query* yang melibatkan soal melakukan `JOIN categories c ON q.category_id
 2. **Validasi Duplikasi (CheckDuplicateQuestion):** Soal dari kategori yang dihapus tidak ikut dicek, sehingga soal baru dengan teks yang sama bisa ditambahkan ke kategori aktif.
 3. **Pengacakan Event (AddRandomEventQuestions):** Soal dari kategori yang dihapus tidak bisa tertarik secara acak ke dalam Event ujian baru.
 4. **Integritas Riwayat Terjaga:** Data soal dan jawaban peserta dari ujian masa lalu tetap utuh di database, karena tidak ada data yang benar-benar dihapus.
+
+### 3.9. Dashboard Statistics API Endpoint
+- Endpoint `GET /admin/dashboard/stats` menyediakan agregasi data statistik sistem secara *real-time*.
+- Response mencakup 4 metrik utama: `total_participants`, `total_questions`, `active_events`, `completed_exams`.
+- Juga menyertakan array `activities` berisi 5 log aktivitas terbaru (enroll, approval, penyelesaian ujian) dengan `activity_time` dari `COALESCE(updated_at, created_at)` — memilih waktu yang paling relevan.
+- Menggunakan 5 SQL query terpisah yang dieksekusi secara berurutan di handler.
+
+### 3.10. Pola Global Layout (Global Shell Pattern)
+- `(dashboard)/layout.tsx` bertindak sebagai **Global Shell** yang bertanggung jawab atas state dan komponen yang bersifat lintas-halaman.
+- **State yang dikelola di Layout:** `isCollapsed` (sidebar desktop), `isSidebarOpen` (mobile drawer), `quickAction` (modal aksi cepat aktif), dan `toasts` (antrian notifikasi).
+- **Singleton UI di Layout:** Komponen `<CommandPalette>`, `<QuickActionModals>`, dan `<ToastContainer>` di-render satu kali di layout, bukan di masing-masing halaman. Ini mencegah *re-mounting* komponen saat navigasi antar halaman dan memastikan toast tetap tampil meskipun halaman berpindah.
+
+### 3.11. Pola Komunikasi Lintas-Komponen via CustomEvent
+- Untuk menghindari *prop drilling* yang dalam, komunikasi antara komponen yang tidak memiliki relasi langsung menggunakan mekanisme **CustomEvent** bawaan browser — bukan React Context API.
+- `'openCommandPalette'` — di-dispatch oleh Navbar, di-listen oleh CommandPalette (membuka panel).
+- `'triggerQuickAction'` — di-dispatch oleh CommandPalette dengan `detail: 'question'|'event'|'user'`, di-listen oleh DashboardLayout untuk membuka modal yang sesuai.
+- Pendekatan ini dipilih karena lebih ringan dari Context API untuk komunikasi satu-arah yang jarang terjadi (tidak perlu *re-render* seluruh tree).
+
+### 3.12. CommandPalette sebagai Komponen Mandiri (Self-Contained)
+- `CommandPalette` tidak menerima props dari luar dan tidak mengekspos state ke parent. Ia sepenuhnya mengelola siklus hidupnya sendiri.
+- Dibuka via CustomEvent `'openCommandPalette'` (dari Navbar) atau shortcut keyboard `Ctrl+K`/`Cmd+K` (event listener internal).
+- Mengembalikan `null` (bukan di-unmount) saat tertutup untuk menghindari biaya re-registrasi event listener dan menjaga state internal.
 
 ## 4. Infrastruktur dan Deployment
 - Aplikasi akan di-containerisasi menggunakan **Docker** agar mudah dideploy di berbagai server (VPS atau Cloud).
@@ -129,10 +152,16 @@ PramukaCAT/
 ├── frontend/                 # Aplikasi Next.js (React)
 │   ├── src/
 │   │   ├── app/              # App Router (Pages, Layouts, Routing)
+│   │   │   └── (dashboard)/ # Route group: layout.tsx (Global Shell), halaman admin
 │   │   ├── components/       # Reusable UI components (Tombol, Modal, Card)
+│   │   │   ├── layout/       # Shell components: Navbar, Sidebar, CommandPalette
+│   │   │   ├── dashboard/    # Dashboard-specific: QuickActionModals
+│   │   │   └── ui/           # Generic UI: Toast, Modal, Spinner, Pagination
+│   │   ├── contexts/         # React Context providers (AuthContext)
 │   │   ├── hooks/            # Custom React hooks (useTimer, useAuth)
 │   │   ├── services/         # Fungsi fetcher HTTP ke Backend API
-│   │   └── utils/            # Helper functions
+│   │   ├── types/            # Semua TypeScript types (auth.ts — monolitik, satu file)
+│   │   └── lib/              # Konfigurasi helper (constants, axios instance)
 │   ├── public/               # Asset statis (Logo Pramuka, Icons)
 │   ├── package.json          # Dependency frontend
 │   └── tailwind.config.ts    # Konfigurasi Tailwind CSS
