@@ -11,6 +11,8 @@ import {
   Activity,
   ArrowUpRight,
 } from "lucide-react";
+import QuickActionModals from "@/components/dashboard/QuickActionModals";
+import { ToastContainer } from "@/components/ui/Toast";
 
 // --- Stat Card ---
 interface StatCardProps {
@@ -111,6 +113,7 @@ export default function DashboardPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [quickAction, setQuickAction] = useState<'question' | 'event' | 'user' | null>(null);
 
   useEffect(() => {
     import('@/lib/api/dashboard').then(({ dashboardApi }) => {
@@ -274,19 +277,19 @@ export default function DashboardPage() {
             {[
               {
                 label: "Tambah Soal Baru",
-                href: "/dashboard/questions?new=true",
+                actionId: "question",
                 color: "bg-amber-50 text-amber-700 hover:bg-amber-100",
                 icon: "📝",
               },
               {
                 label: "Buat Event Ujian",
-                href: "/dashboard/events?new=true",
+                actionId: "event",
                 color: "bg-blue-50 text-blue-700 hover:bg-blue-100",
                 icon: "📅",
               },
               {
                 label: "Tambah Peserta",
-                href: "/dashboard/users?new=true",
+                actionId: "user",
                 color: "bg-violet-50 text-violet-700 hover:bg-violet-100",
                 icon: "👤",
               },
@@ -297,19 +300,37 @@ export default function DashboardPage() {
                 icon: "✅",
               },
             ].map((action) => (
-              <Link
-                key={action.href}
-                href={action.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${action.color}`}
-              >
-                <span className="text-base">{action.icon}</span>
-                {action.label}
-                <ArrowUpRight size={14} className="ml-auto opacity-50" />
-              </Link>
+              action.href ? (
+                <Link
+                  key={action.href}
+                  href={action.href}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${action.color}`}
+                >
+                  <span className="text-base">{action.icon}</span>
+                  {action.label}
+                  <ArrowUpRight size={14} className="ml-auto opacity-50" />
+                </Link>
+              ) : (
+                <button
+                  key={action.actionId}
+                  onClick={() => setQuickAction(action.actionId as any)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${action.color}`}
+                >
+                  <span className="text-base">{action.icon}</span>
+                  {action.label}
+                  <ArrowUpRight size={14} className="ml-auto opacity-50" />
+                </button>
+              )
             ))}
           </div>
         </div>
       </div>
+
+      <QuickActionModals 
+        actionToOpen={quickAction} 
+        onClose={() => setQuickAction(null)} 
+      />
+      <ToastContainer />
     </div>
   );
 }
