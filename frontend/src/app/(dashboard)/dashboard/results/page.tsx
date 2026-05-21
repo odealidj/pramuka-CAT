@@ -271,9 +271,12 @@ function EventResultCard({
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
 
       {/* ── Card Header ── */}
-      <button
+      <div
         onClick={toggle}
-        className="w-full flex items-center gap-4 p-5 text-left hover:bg-gray-50/60 transition-all"
+        className="w-full flex items-center gap-4 p-5 text-left hover:bg-gray-50/60 transition-all cursor-pointer select-none"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggle(); }}
       >
         <div className="w-1 h-12 rounded-full bg-gradient-to-b from-amber-400 to-amber-700 flex-shrink-0" />
 
@@ -320,7 +323,7 @@ function EventResultCard({
           </button>
           {isExpanded ? <ChevronUp size={18} className="text-gray-400" /> : <ChevronDown size={18} className="text-gray-400" />}
         </div>
-      </button>
+      </div>
 
       {/* ── Expanded Content ── */}
       {isExpanded && (
