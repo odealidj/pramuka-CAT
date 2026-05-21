@@ -173,6 +173,19 @@ func (q *Queries) CheckDuplicateQuestion(ctx context.Context, arg CheckDuplicate
 	return i, err
 }
 
+const countAdmins = `-- name: CountAdmins :one
+SELECT COUNT(*) FROM users
+WHERE deleted_at IS NULL AND role = 'admin'
+  AND ($1::text = '' OR full_name ILIKE '%' || $1::text || '%')
+`
+
+func (q *Queries) CountAdmins(ctx context.Context, search string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countAdmins, search)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countAvailableQuestionsForEventAll = `-- name: CountAvailableQuestionsForEventAll :one
 SELECT COUNT(*) FROM questions q
 JOIN categories c ON q.category_id = c.id
@@ -319,7 +332,7 @@ func (q *Queries) CountUserApprovals(ctx context.Context, userID uuid.NullUUID) 
 
 const countUsers = `-- name: CountUsers :one
 SELECT COUNT(*) FROM users
-WHERE deleted_at IS NULL
+WHERE deleted_at IS NULL AND role = 'peserta'
   AND ($1::text = '' OR full_name ILIKE '%' || $1::text || '%')
 `
 
@@ -955,6 +968,53 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 	return i, err
 }
 
+const listAdmins = `-- name: ListAdmins :many
+SELECT id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at FROM users
+WHERE deleted_at IS NULL AND role = 'admin'
+  AND ($3::text = '' OR full_name ILIKE '%' || $3::text || '%')
+ORDER BY full_name ASC
+LIMIT $1 OFFSET $2
+`
+
+type ListAdminsParams struct {
+	Limit  int32  `json:"limit"`
+	Offset int32  `json:"offset"`
+	Search string `json:"search"`
+}
+
+func (q *Queries) ListAdmins(ctx context.Context, arg ListAdminsParams) ([]User, error) {
+	rows, err := q.db.QueryContext(ctx, listAdmins, arg.Limit, arg.Offset, arg.Search)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []User{}
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.Username,
+			&i.PasswordHash,
+			&i.FullName,
+			&i.Role,
+			&i.PhotoUrl,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listCategories = `-- name: ListCategories :many
 SELECT id, name, deleted_at, created_at FROM categories
 WHERE deleted_at IS NULL AND ($3::text = '' OR name ILIKE '%' || $3::text || '%')
@@ -1353,7 +1413,7 @@ func (q *Queries) ListUserApprovals(ctx context.Context, arg ListUserApprovalsPa
 
 const listUsers = `-- name: ListUsers :many
 SELECT id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at FROM users
-WHERE deleted_at IS NULL
+WHERE deleted_at IS NULL AND role = 'peserta'
   AND ($3::text = '' OR full_name ILIKE '%' || $3::text || '%')
 ORDER BY full_name ASC
 LIMIT $1 OFFSET $2

@@ -90,6 +90,29 @@ func (r *userRepository) ListUsers(ctx context.Context, page int32, limit int32,
 	return users, total, nil
 }
 
+func (r *userRepository) ListAdmins(ctx context.Context, page int32, limit int32, search string) ([]domain.User, int64, error) {
+	offset := (page - 1) * limit
+	rows, err := r.queries.ListAdmins(ctx, sqlcgen.ListAdminsParams{
+		Limit:  limit,
+		Offset: offset,
+		Search: search,
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	total, err := r.queries.CountAdmins(ctx, search)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var admins []domain.User
+	for _, row := range rows {
+		admins = append(admins, mapSqlcToDomainUser(row))
+	}
+	return admins, total, nil
+}
+
 func (r *userRepository) UpdateUser(ctx context.Context, id uuid.UUID, u domain.User) (domain.User, error) {
 	photoUrl := sql.NullString{Valid: false}
 	if u.PhotoURL != nil {

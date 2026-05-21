@@ -106,6 +106,8 @@ func main() {
 	userService := services.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService)
 
+	uploadHandler := handler.NewUploadHandler()
+
 	// 5. Siapkan Server Echo
 	e := echo.New()
 
@@ -189,23 +191,34 @@ func main() {
 
 	// Endpoint ini HANYA bisa diakses jika Role di token adalah "admin"
 	adminOnly := protected.Group("/admin-only")
-	adminOnly.Use(appMiddleware.RequireRole("admin"))
+	adminOnly.Use(appMiddleware.RequireAdmin())
 	adminOnly.GET("", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]interface{}{
 			"message": "Selamat datang, Admin! Anda berhak melihat rute super rahasia ini.",
 		})
 	})
 
-	// Rute CRUD Bank Soal (Hanya untuk Admin)
+	// Rute CRUD (Hanya untuk Admin)
 	adminGroup := api.Group("/admin")
 	adminGroup.Use(appMiddleware.RequireAuth(authCache))
-	adminGroup.Use(appMiddleware.RequireRole("admin"))
+	adminGroup.Use(appMiddleware.RequireAdmin())
+
+	// Rute khusus Super Admin
+	superAdminGroup := api.Group("/super-admin")
+	superAdminGroup.Use(appMiddleware.RequireAuth(authCache))
+	superAdminGroup.Use(appMiddleware.RequireSuperAdmin())
+	userHandler.RegisterSuperAdminRoutes(superAdminGroup)
 
 	categoryHandler.RegisterAdminRoutes(adminGroup)
 	questionHandler.RegisterAdminRoutes(adminGroup)
 	eventHandler.RegisterAdminRoutes(adminGroup)
 	userHandler.RegisterAdminRoutes(adminGroup)
 	examHandler.RegisterAdminRoutes(adminGroup)
+
+	// Rute Upload (Bisa diakses oleh semua: Peserta, Admin, Super Admin)
+	uploadGroup := api.Group("/upload")
+	uploadGroup.Use(appMiddleware.RequireAuth(authCache))
+	uploadGroup.POST("/image", uploadHandler.UploadImage)
 
 	// 6. Nyalakan Server dengan Graceful Shutdown
 	port := os.Getenv("PORT")

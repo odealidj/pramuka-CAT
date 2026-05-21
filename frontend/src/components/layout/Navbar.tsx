@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import Spinner from '@/components/ui/Spinner';
+import { getPhotoUrl } from '@/lib/constants';
 
 interface NavbarProps {
   onMenuToggle: () => void;
@@ -50,7 +51,7 @@ export default function Navbar({ onMenuToggle, pageTitle = 'Dashboard' }: Navbar
 
   const displayName = user?.full_name || user?.username || 'Pengguna';
   const initials = getInitials(displayName);
-  const roleLabel = user?.role === 'admin' ? 'Admin / Panitia' : 'Peserta';
+  const roleLabel = user?.role === 'super_admin' ? 'Super Admin' : user?.role === 'admin' ? 'Admin / Panitia' : 'Peserta';
 
   return (
     <header className="sticky top-0 z-20 h-16 bg-white/80 backdrop-blur-md border-b border-gray-200/60 shadow-sm">
@@ -113,9 +114,13 @@ export default function Navbar({ onMenuToggle, pageTitle = 'Dashboard' }: Navbar
               className="flex items-center gap-2.5 p-1.5 pr-3 rounded-xl hover:bg-gray-100 transition-all"
               aria-label="Profile menu"
             >
-              {/* Avatar with Initials */}
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center text-white text-xs font-bold shadow-sm flex-shrink-0">
-                {initials}
+              {/* Avatar with Initials or Photo */}
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center text-white text-xs font-bold shadow-sm flex-shrink-0 overflow-hidden">
+                {user?.photo_url ? (
+                  <img src={getPhotoUrl(user.photo_url) || ''} alt="User Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  initials
+                )}
               </div>
               <div className="hidden sm:block text-left">
                 <p className="text-gray-800 text-sm font-semibold leading-tight truncate max-w-[120px]">
@@ -147,7 +152,7 @@ export default function Navbar({ onMenuToggle, pageTitle = 'Dashboard' }: Navbar
 
                 <div className="p-2">
                   <Link
-                    href="/dashboard/profile"
+                    href={user?.role === 'super_admin' ? '/super-admin/profile' : '/dashboard/profile'}
                     className="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 text-sm"
                     onClick={() => setIsProfileOpen(false)}
                   >

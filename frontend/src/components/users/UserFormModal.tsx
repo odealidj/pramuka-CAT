@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,6 +8,9 @@ import { AlertCircle } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import Spinner from '@/components/ui/Spinner';
 import type { User, CreateUserRequest, UpdateUserRequest } from '@/types/auth';
+import { uploadImageApi } from '@/services/upload.service';
+import imageCompression from 'browser-image-compression';
+import { getPhotoUrl } from '@/lib/constants';
 
 // ============================================================
 // Zod Schemas
@@ -16,15 +19,15 @@ const createSchema = z.object({
   username: z.string().min(3, 'Username minimal 3 karakter'),
   password: z.string().min(6, 'Password minimal 6 karakter'),
   full_name: z.string().min(2, 'Nama lengkap minimal 2 karakter'),
-  role: z.enum(['admin', 'peserta']),
-  photo_url: z.string().url('URL tidak valid').optional().or(z.literal('')),
+  role: z.enum(['peserta']),
+  photo_url: z.string().optional().or(z.literal('')),
 });
 
 const editSchema = z.object({
   username: z.string().min(3, 'Username minimal 3 karakter'),
   full_name: z.string().min(2, 'Nama lengkap minimal 2 karakter'),
-  role: z.enum(['admin', 'peserta']),
-  photo_url: z.string().url('URL tidak valid').optional().or(z.literal('')),
+  role: z.enum(['peserta']),
+  photo_url: z.string().optional().or(z.literal('')),
 });
 
 type CreateFormValues = z.infer<typeof createSchema>;
@@ -94,11 +97,15 @@ export default function UserFormModal({
   apiError,
 }: UserFormModalProps) {
   const isEdit = mode === 'edit';
+  const [photoMode, setPhotoMode] = useState<'url' | 'file'>('url');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<CreateFormValues | EditFormValues>({
     resolver: zodResolver(isEdit ? editSchema : createSchema) as never,
@@ -117,7 +124,7 @@ export default function UserFormModal({
       reset({
         username: user.username,
         full_name: user.full_name,
-        role: user.role,
+        role: 'peserta',
         photo_url: user.photo_url ?? '',
       });
     } else if (!isEdit) {
@@ -129,12 +136,53 @@ export default function UserFormModal({
         photo_url: '',
       });
     }
+    
+    // Reset file state on open/close
+    setSelectedFile(null);
+    setPhotoMode(isEdit && user?.photo_url ? 'url' : 'file');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   }, [isEdit, user, reset, isOpen]);
 
+  const [previewFile, setPreviewFile] = useState<string | null>(null);
+  useEffect(() => {
+    if (selectedFile) {
+      const obj = URL.createObjectURL(selectedFile);
+      setPreviewFile(obj);
+      return () => URL.revokeObjectURL(obj);
+    } else {
+      setPreviewFile(null);
+    }
+  }, [selectedFile]);
+
+  const photoUrlValue = watch('photo_url');
+  const finalPreview = photoMode === 'file' ? previewFile : (photoUrlValue ? getPhotoUrl(photoUrlValue) : null);
+
   const handleFormSubmit = async (values: CreateFormValues | EditFormValues) => {
+    let finalPhotoUrl = values.photo_url || undefined;
+
+    // Handle file upload if mode is 'file' and file is selected
+    if (photoMode === 'file' && selectedFile) {
+      try {
+        const options = {
+          maxSizeMB: 0.05, // 50KB max
+          maxWidthOrHeight: 400,
+          useWebWorker: true,
+          fileType: 'image/webp' as const,
+        };
+        const compressedFile = await imageCompression(selectedFile, options);
+        finalPhotoUrl = await uploadImageApi(compressedFile);
+      } catch (error) {
+        console.error('Failed to compress/upload image', error);
+        alert('Gagal mengunggah foto profil');
+        return; // Stop submission on upload failure
+      }
+    }
+
     const payload = {
       ...values,
-      photo_url: values.photo_url || undefined,
+      photo_url: finalPhotoUrl,
     };
     await onSubmit(payload as CreateUserRequest | UpdateUserRequest);
   };
@@ -197,27 +245,74 @@ export default function UserFormModal({
         )}
 
         {/* Role */}
-        <Field label="Role / Peran" error={errors.role?.message} required>
-          <select
-            disabled={isSubmitting}
-            {...register('role')}
-            className={`${inputClass(!!errors.role)} appearance-none cursor-pointer`}
-          >
-            <option value="peserta">Peserta</option>
-            <option value="admin">Admin / Panitia</option>
-          </select>
-        </Field>
+        <input type="hidden" {...register('role')} value="peserta" />
 
-        {/* Photo URL (optional) */}
-        <Field label="URL Foto Profil" error={errors.photo_url?.message}>
-          <input
-            type="url"
-            placeholder="https://example.com/foto.jpg (opsional)"
-            disabled={isSubmitting}
-            {...register('photo_url')}
-            className={inputClass(!!errors.photo_url)}
-          />
-        </Field>
+        {/* Photo Input Mode Toggle */}
+        <div className="pt-2">
+          <label className="block text-gray-700 text-sm font-semibold mb-2">Foto Profil (Opsional)</label>
+          <div className="flex gap-2 mb-3 bg-gray-50 p-1 rounded-lg w-max">
+            <button
+              type="button"
+              onClick={() => setPhotoMode('url')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                photoMode === 'url' ? 'bg-emerald-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Gunakan URL
+            </button>
+            <button
+              type="button"
+              onClick={() => setPhotoMode('file')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                photoMode === 'file' ? 'bg-emerald-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Unggah File
+            </button>
+          </div>
+
+          {photoMode === 'url' ? (
+            <div>
+              <input
+                type="url"
+                placeholder="https://example.com/foto.jpg"
+                disabled={isSubmitting}
+                {...register('photo_url')}
+                className={inputClass(!!errors.photo_url)}
+              />
+              {errors.photo_url?.message && (
+                <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
+                  <AlertCircle size={11} />
+                  {errors.photo_url.message}
+                </p>
+              )}
+            </div>
+          ) : (
+            <div>
+              <input
+                type="file"
+                accept="image/png, image/jpeg, image/jpg, image/webp"
+                disabled={isSubmitting}
+                ref={fileInputRef}
+                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-all border border-gray-200 rounded-xl cursor-pointer bg-white"
+              />
+              <p className="text-xs text-gray-400 mt-2">
+                File akan otomatis dikompres ke WebP ({'< 50KB'}).
+              </p>
+            </div>
+          )}
+          
+          {/* Image Preview */}
+          {finalPreview && (
+            <div className="mt-3">
+              <p className="text-xs font-semibold text-gray-500 mb-1.5">Preview Foto:</p>
+              <div className="w-16 h-16 rounded-full border-2 border-emerald-200 overflow-hidden shadow-sm">
+                <img src={finalPreview} alt="Preview" className="w-full h-full object-cover" />
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Footer Buttons */}
         <div className="flex gap-3 pt-2">

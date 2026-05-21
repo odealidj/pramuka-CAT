@@ -30,6 +30,21 @@ func main() {
 	log.Println("Memulai Seeding Database (Mock Data)...")
 
 	// 1. Seed Users
+	// Super Admin
+	superAdminPassword, _ := utils.HashPassword("superadmin123")
+	superAdmin, err := queries.CreateUser(ctx, sqlcgen.CreateUserParams{
+		Username:     "superadmin",
+		PasswordHash: superAdminPassword,
+		FullName:     "Super Administrator",
+		Role:         "super_admin",
+		PhotoUrl:     sql.NullString{String: "", Valid: false},
+	})
+	if err != nil {
+		log.Printf("Info: Super Admin 'superadmin' gagal dibuat (mungkin sudah ada): %v", err)
+	} else {
+		log.Printf("Berhasil insert Super Admin: %s (password: superadmin123)", superAdmin.Username)
+	}
+
 	// Admin
 	adminPassword, _ := utils.HashPassword("admin123")
 	admin, err := queries.CreateUser(ctx, sqlcgen.CreateUserParams{

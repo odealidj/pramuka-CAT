@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { uploadPhotoApi } from '@/services/user.service';
 import { Camera, User as UserIcon, Upload, CheckCircle, AlertCircle } from 'lucide-react';
-import { API_BASE_URL } from '@/lib/constants';
+import { API_BASE_URL, getPhotoUrl } from '@/lib/constants';
 import Spinner from '@/components/ui/Spinner';
 import { isAxiosError } from 'axios';
 import type { ApiErrorResponse } from '@/types/auth';
@@ -20,17 +20,6 @@ export default function ProfilePage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  // Fungsi untuk mendapatkan URL gambar yang benar dari backend
-  const getPhotoUrl = (photoPath?: string | null) => {
-    if (!photoPath) return null;
-    if (photoPath.startsWith('http')) return photoPath;
-    
-    // Asumsi API_BASE_URL berakhiran /api/v1
-    const baseUrl = API_BASE_URL.replace(/\/api\/v1\/?$/, '');
-    // photoPath dari backend formatnya `/uploads/...` atau `uploads/...`
-    const normalizedPath = photoPath.startsWith('/') ? photoPath : `/${photoPath}`;
-    return `${baseUrl}${normalizedPath}`;
-  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setErrorMsg(null);

@@ -23,6 +23,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { ToastContainer, useToast } from '@/components/ui/Toast';
 import UserFormModal from '@/components/users/UserFormModal';
 import ChangePasswordModal from '@/components/users/ChangePasswordModal';
+import { getPhotoUrl } from '@/lib/constants';
 
 import {
   listUsersApi,
@@ -217,8 +218,9 @@ function UsersContent() {
   // ============================================================
   // Stats
   // ============================================================
-  const adminCount = users.filter((u) => u.role === 'admin').length;
-  const pesertaCount = users.filter((u) => u.role === 'peserta').length;
+  const pesertaCount = meta ? users.length : 0;
+  
+  const filteredUsers = users;
 
   // ============================================================
   // Render
@@ -231,10 +233,10 @@ function UsersContent() {
         <div>
           <h1 className="text-gray-900 text-xl font-bold flex items-center gap-2">
             <Users size={22} className="text-amber-700" />
-            Manajemen Pengguna
+            Manajemen Peserta
           </h1>
           <p className="text-gray-500 text-sm mt-0.5">
-            Kelola akun admin dan peserta ujian
+            Kelola akun peserta ujian
           </p>
         </div>
         <button
@@ -246,29 +248,24 @@ function UsersContent() {
           className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#7C4318] to-[#9C5A22] text-white text-sm font-semibold rounded-xl shadow-sm shadow-amber-900/20 hover:from-[#5C3010] hover:to-[#7C4318] transition-all"
         >
           <UserPlus size={16} />
-          Tambah Pengguna
+          Tambah Peserta
         </button>
       </div>
 
       {/* ── Stats Cards ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <p className="text-gray-500 text-xs font-medium">Total Pengguna</p>
+          <p className="text-gray-500 text-xs font-medium">Total Peserta</p>
           <p className="text-gray-900 text-2xl font-bold mt-1">
             {meta?.total_records ?? '—'}
           </p>
         </div>
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2 mb-1">
-            <UserCheck size={14} className="text-amber-600" />
-            <p className="text-gray-500 text-xs font-medium">Admin</p>
-          </div>
-          <p className="text-gray-900 text-2xl font-bold">{adminCount}</p>
-        </div>
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm col-span-2 sm:col-span-1">
+        <div
+          className="text-left rounded-2xl p-4 border shadow-sm transition-all bg-emerald-50 border-emerald-300 ring-2 ring-emerald-200"
+        >
           <div className="flex items-center gap-2 mb-1">
             <UserX size={14} className="text-emerald-600" />
-            <p className="text-gray-500 text-xs font-medium">Peserta</p>
+            <p className="text-gray-500 text-xs font-medium">Peserta Aktif</p>
           </div>
           <p className="text-gray-900 text-2xl font-bold">{pesertaCount}</p>
         </div>
@@ -299,6 +296,9 @@ function UsersContent() {
               </button>
             )}
           </div>
+
+          {/* Remove role filter from here */}
+
           <button
             onClick={fetchUsers}
             disabled={isLoading}
@@ -345,19 +345,21 @@ function UsersContent() {
                     </div>
                   </td>
                 </tr>
-              ) : users.length === 0 ? (
+              ) : filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-16 text-center">
                     <div className="flex flex-col items-center gap-2 text-gray-400">
                       <Users size={36} className="text-gray-200" />
                       <p className="text-sm font-medium text-gray-500">
-                        {search ? `Tidak ada pengguna dengan kata kunci "${search}"` : 'Belum ada pengguna'}
+                        {search
+                          ? `Tidak ada peserta dengan kata kunci "${search}"`
+                          : 'Belum ada peserta'}
                       </p>
                     </div>
                   </td>
                 </tr>
               ) : (
-                users.map((user, idx) => {
+                filteredUsers.map((user, idx) => {
                   const rowNo = ((page - 1) * 10) + idx + 1;
                   const isDeleted = !!user.deleted_at;
                   return (
@@ -371,8 +373,12 @@ function UsersContent() {
                       {/* Pengguna */}
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-700 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-sm">
-                            {getInitials(user.full_name)}
+                          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-700 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-sm overflow-hidden">
+                            {user.photo_url ? (
+                              <img src={getPhotoUrl(user.photo_url) || ''} alt="User Avatar" className="w-full h-full object-cover" />
+                            ) : (
+                              getInitials(user.full_name)
+                            )}
                           </div>
                           <div>
                             <p className="text-gray-900 font-semibold text-sm leading-tight">

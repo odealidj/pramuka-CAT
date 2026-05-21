@@ -13,14 +13,26 @@ WHERE id = $1 AND deleted_at IS NULL LIMIT 1;
 
 -- name: ListUsers :many
 SELECT * FROM users
-WHERE deleted_at IS NULL
+WHERE deleted_at IS NULL AND role = 'peserta'
   AND (sqlc.arg('search')::text = '' OR full_name ILIKE '%' || sqlc.arg('search')::text || '%')
 ORDER BY full_name ASC
 LIMIT $1 OFFSET $2;
 
 -- name: CountUsers :one
 SELECT COUNT(*) FROM users
-WHERE deleted_at IS NULL
+WHERE deleted_at IS NULL AND role = 'peserta'
+  AND (sqlc.arg('search')::text = '' OR full_name ILIKE '%' || sqlc.arg('search')::text || '%');
+
+-- name: ListAdmins :many
+SELECT * FROM users
+WHERE deleted_at IS NULL AND role = 'admin'
+  AND (sqlc.arg('search')::text = '' OR full_name ILIKE '%' || sqlc.arg('search')::text || '%')
+ORDER BY full_name ASC
+LIMIT $1 OFFSET $2;
+
+-- name: CountAdmins :one
+SELECT COUNT(*) FROM users
+WHERE deleted_at IS NULL AND role = 'admin'
   AND (sqlc.arg('search')::text = '' OR full_name ILIKE '%' || sqlc.arg('search')::text || '%');
 
 -- name: UpdateUser :one

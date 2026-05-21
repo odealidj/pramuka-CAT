@@ -78,6 +78,12 @@ func (s *authService) Login(ctx context.Context, req domain.LoginRequest) (domai
 		log.Printf("Peringatan: Gagal menyimpan sesi ke Redis: %v\n", err)
 	}
 
+	var photoUrl *string
+	if user.PhotoUrl.Valid {
+		val := user.PhotoUrl.String
+		photoUrl = &val
+	}
+
 	return domain.LoginResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
@@ -86,6 +92,7 @@ func (s *authService) Login(ctx context.Context, req domain.LoginRequest) (domai
 			Username: user.Username,
 			FullName: user.FullName,
 			Role:     user.Role,
+			PhotoURL: photoUrl,
 		},
 	}, nil
 }

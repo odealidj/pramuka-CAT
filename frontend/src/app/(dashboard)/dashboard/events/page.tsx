@@ -42,9 +42,13 @@ function fmtDate(iso: string) {
   });
 }
 function fmtTime(iso: string) {
-  return new Date(iso).toLocaleTimeString('id-ID', {
-    hour: '2-digit', minute: '2-digit',
-  });
+  return new Date(iso).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace(':', '.');
+}
+function fmtDuration(minutes: number) {
+  if (minutes < 60) return `${minutes} menit`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m > 0 ? `${h} jam ${m} menit` : `${h} jam`;
 }
 
 function getEventStatus(event: Event): {
@@ -172,7 +176,7 @@ function EventCard({
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1">
               <Clock size={11} className="text-amber-500" />
-              <strong className="text-gray-700">{event.duration_minutes}</strong> menit
+              {fmtDuration(event.duration_minutes)}
             </span>
             <span className="flex items-center gap-1" title="Total Soal Didaftarkan">
               <div className="w-2.5 h-2.5 rounded-full bg-blue-100 flex items-center justify-center text-[7px] text-blue-600 font-bold border border-blue-200">?</div>

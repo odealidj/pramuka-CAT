@@ -27,12 +27,22 @@ func NewUserHandler(service ports.UserService) *UserHandler {
 
 func (h *UserHandler) RegisterAdminRoutes(adminGroup *echo.Group) {
 	usersGroup := adminGroup.Group("/users")
-	usersGroup.POST("", h.CreateUser)
-	usersGroup.GET("", h.ListUsers)
+	usersGroup.POST("", h.CreatePesertaOnly)
+	usersGroup.GET("", h.ListUsers) // Lists only peserta
 	usersGroup.GET("/:id", h.GetUser)
-	usersGroup.PUT("/:id", h.UpdateUser)
+	usersGroup.PUT("/:id", h.UpdateUser) // Admin can only update peserta
 	usersGroup.PUT("/:id/password", h.UpdateUserPassword)
 	usersGroup.DELETE("/:id", h.DeleteUser)
+}
+
+func (h *UserHandler) RegisterSuperAdminRoutes(superAdminGroup *echo.Group) {
+	adminGroup := superAdminGroup.Group("/admins")
+	adminGroup.POST("", h.CreateAdminOnly)
+	adminGroup.GET("", h.ListAdmins)
+	adminGroup.GET("/:id", h.GetUser)
+	adminGroup.PUT("/:id", h.UpdateUser) // Super admin updates admin
+	adminGroup.PUT("/:id/password", h.UpdateUserPassword)
+	adminGroup.DELETE("/:id", h.DeleteUser)
 }
 
 func (h *UserHandler) RegisterParticipantRoutes(participantGroup *echo.Group) {
@@ -40,30 +50,60 @@ func (h *UserHandler) RegisterParticipantRoutes(participantGroup *echo.Group) {
 	usersGroup.POST("/me/photo", h.UploadPhoto)
 }
 
-// CreateUser godoc
-// @Summary     Buat User Baru
-// @Description Admin membuat akun peserta atau admin baru
+// CreatePesertaOnly godoc
+// @Summary     Buat Peserta Baru
+// @Description Admin membuat akun peserta baru
 // @Tags        Admin - User
 // @Security    BearerAuth
 // @Accept      json
 // @Produce     json
-// @Param       body  body      domain.CreateUserRequest  true  "Data User Baru"
+// @Param       body  body      domain.CreateUserRequest  true  "Data Peserta Baru"
 // @Success     201   {object}  response.SuccessResponse{data=domain.User}
 // @Failure     400   {object}  response.ErrorResponse
 // @Failure     500   {object}  response.ErrorResponse
 // @Router      /admin/users [post]
-func (h *UserHandler) CreateUser(c echo.Context) error {
+func (h *UserHandler) CreatePesertaOnly(c echo.Context) error {
 	var req domain.CreateUserRequest
 	if err := c.Bind(&req); err != nil {
 		return response.Error(c, http.StatusBadRequest, "Format request tidak valid", nil)
 	}
 
+	req.Role = appMiddleware.RolePeserta // Paksa role jadi peserta
+
 	u, err := h.service.CreateUser(c.Request().Context(), req)
 	if err != nil {
-		return response.Error(c, http.StatusInternalServerError, "Gagal membuat user", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
+		return response.Error(c, http.StatusInternalServerError, "Gagal membuat peserta", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}
 
-	return response.Success(c, http.StatusCreated, "User berhasil dibuat", u)
+	return response.Success(c, http.StatusCreated, "Peserta berhasil dibuat", u)
+}
+
+// CreateAdminOnly godoc
+// @Summary     Buat Admin Baru
+// @Description Super Admin membuat akun admin baru
+// @Tags        Super Admin - Admin
+// @Security    BearerAuth
+// @Accept      json
+// @Produce     json
+// @Param       body  body      domain.CreateUserRequest  true  "Data Admin Baru"
+// @Success     201   {object}  response.SuccessResponse{data=domain.User}
+// @Failure     400   {object}  response.ErrorResponse
+// @Failure     500   {object}  response.ErrorResponse
+// @Router      /super-admin/admins [post]
+func (h *UserHandler) CreateAdminOnly(c echo.Context) error {
+	var req domain.CreateUserRequest
+	if err := c.Bind(&req); err != nil {
+		return response.Error(c, http.StatusBadRequest, "Format request tidak valid", nil)
+	}
+
+	req.Role = appMiddleware.RoleAdmin // Paksa role jadi admin
+
+	u, err := h.service.CreateUser(c.Request().Context(), req)
+	if err != nil {
+		return response.Error(c, http.StatusInternalServerError, "Gagal membuat admin", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
+	}
+
+	return response.Success(c, http.StatusCreated, "Admin berhasil dibuat", u)
 }
 
 // ListUsers godoc
@@ -90,7 +130,34 @@ func (h *UserHandler) ListUsers(c echo.Context) error {
 	}
 
 	meta := response.BuildMeta(page, limit, total)
-	return response.SuccessWithMeta(c, http.StatusOK, "Daftar user berhasil diambil", users, meta)
+	return response.SuccessWithMeta(c, http.StatusOK, "Daftar peserta berhasil diambil", users, meta)
+}
+
+// ListAdmins godoc
+// @Summary     Daftar Semua Admin
+// @Description Mengambil daftar seluruh admin dengan paginasi
+// @Tags        Super Admin - Admin
+// @Security    BearerAuth
+// @Produce     json
+// @Param       page   query     int  false  "Halaman (default: 1)" default(1)
+// @Param       limit  query     int  false  "Jumlah per halaman (default: 10)" default(10)
+// @Param       search query     string false "Cari nama admin"
+// @Success     200    {object}  response.PaginatedResponse{data=[]domain.User}
+// @Router      /super-admin/admins [get]
+func (h *UserHandler) ListAdmins(c echo.Context) error {
+	page, limit := response.ParsePaginationParams(c)
+	search := c.QueryParam("search")
+	admins, total, err := h.service.ListAdmins(c.Request().Context(), page, limit, search)
+	if err != nil {
+		return response.Error(c, http.StatusInternalServerError, "Gagal mengambil daftar admin", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
+	}
+
+	if admins == nil {
+		admins = []domain.User{}
+	}
+
+	meta := response.BuildMeta(page, limit, total)
+	return response.SuccessWithMeta(c, http.StatusOK, "Daftar admin berhasil diambil", admins, meta)
 }
 
 // GetUser godoc

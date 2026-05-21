@@ -221,7 +221,7 @@ export default function AnswerReviewDrawer({
                   Total Bobot: <strong className="text-gray-800">{earnedWeight}</strong> / {totalWeight}
                 </span>
                 <span className="text-gray-500">
-                  KKM: <strong className="text-gray-800">{passingGrade}%</strong>
+                  Batas Lulus: <strong className="text-gray-800">{passingGrade}%</strong>
                 </span>
                 <span
                   className={`font-bold ${

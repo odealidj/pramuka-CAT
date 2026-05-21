@@ -28,6 +28,7 @@ type UserResponse struct {
 	Username string    `json:"username"`
 	FullName string    `json:"full_name"`
 	Role     string    `json:"role"`
+	PhotoURL *string   `json:"photo_url,omitempty"`
 }
 
 // LoginResponse adalah balasan sukses login yang mengandung JWT

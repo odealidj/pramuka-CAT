@@ -124,8 +124,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Update React state
       setUser(data.user);
 
-      // Redirect ke dashboard
-      router.push('/dashboard');
+      // Redirect berdasarkan role
+      if (data.user.role === 'super_admin') {
+        router.push('/super-admin');
+      } else {
+        router.push('/dashboard');
+      }
     },
     [router]
   );

@@ -1,9 +1,13 @@
 interface BadgeProps {
-  variant: 'admin' | 'peserta' | 'active' | 'inactive';
+  variant: 'super_admin' | 'admin' | 'peserta' | 'active' | 'inactive';
   label?: string;
 }
 
 const config: Record<BadgeProps['variant'], { label: string; className: string }> = {
+  super_admin: {
+    label: 'Super Admin',
+    className: 'bg-purple-100 text-purple-800 border border-purple-200',
+  },
   admin: {
     label: 'Admin',
     className: 'bg-amber-100 text-amber-800 border border-amber-200',

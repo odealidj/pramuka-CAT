@@ -15,7 +15,6 @@ const pageTitles: Record<string, string> = {
   '/dashboard/events': 'Jadwal Ujian',
   '/dashboard/results': 'Hasil Ujian',
   '/dashboard/users': 'Manajemen Pengguna',
-  '/dashboard/settings': 'Pengaturan',
   '/dashboard/profile': 'Profil Saya',
 };
 
@@ -64,7 +63,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AuthGuard>
+    <AuthGuard allowedRoles={['admin', 'peserta']}>
       <DashboardContent>{children}</DashboardContent>
     </AuthGuard>
   );

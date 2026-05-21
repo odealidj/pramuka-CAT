@@ -28,7 +28,7 @@ export interface UserInfo {
   id: string;
   username: string;
   full_name: string;
-  role: 'admin' | 'peserta';
+  role: 'super_admin' | 'admin' | 'peserta';
   photo_url?: string | null;
 }
 
@@ -52,7 +52,7 @@ export interface User {
   id: string;
   username: string;
   full_name: string;
-  role: 'admin' | 'peserta';
+  role: 'super_admin' | 'admin' | 'peserta';
   photo_url?: string | null;
   created_at: string;
   deleted_at?: string | null;
@@ -63,7 +63,7 @@ export interface CreateUserRequest {
   username: string;
   password: string;
   full_name: string;
-  role: 'admin' | 'peserta';
+  role: 'super_admin' | 'admin' | 'peserta';
   photo_url?: string;
 }
 
@@ -71,7 +71,7 @@ export interface CreateUserRequest {
 export interface UpdateUserRequest {
   username: string;
   full_name: string;
-  role: 'admin' | 'peserta';
+  role: 'super_admin' | 'admin' | 'peserta';
   photo_url?: string;
 }
 

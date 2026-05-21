@@ -111,11 +111,15 @@ function NavLink({ item, onClick }: { item: NavItem; onClick?: () => void }) {
 }
 
 // --- Main Sidebar ---
-export default function Sidebar({ isOpen, onClose, role = 'admin' }: SidebarProps) {
-  const visibleNavItems =
-    role === 'admin' ? navItems : navItems.filter((item) => !item.adminOnly);
-
-  const SidebarContent = () => (
+const SidebarContent = ({
+  role,
+  visibleNavItems,
+  onClose,
+}: {
+  role?: 'admin' | 'peserta';
+  visibleNavItems: NavItem[];
+  onClose: () => void;
+}) => (
     <div className="flex flex-col h-full">
       {/* Logo / Brand */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-white/10">
@@ -166,7 +170,7 @@ export default function Sidebar({ isOpen, onClose, role = 'admin' }: SidebarProp
             <NavLink
               item={{
                 label: 'Pengaturan',
-                href: '/dashboard/settings',
+                href: '/dashboard/profile',
                 icon: <Settings size={18} />,
               }}
               onClick={onClose}
@@ -194,11 +198,15 @@ export default function Sidebar({ isOpen, onClose, role = 'admin' }: SidebarProp
     </div>
   );
 
+export default function Sidebar({ isOpen, onClose, role = 'admin' }: SidebarProps) {
+  const visibleNavItems =
+    role === 'admin' ? navItems : navItems.filter((item) => !item.adminOnly);
+
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 h-screen bg-gradient-to-b from-[#5C3010] via-[#7C4318] to-[#5C3010] fixed left-0 top-0 z-30 shadow-2xl">
-        <SidebarContent />
+      <aside className="hidden lg:flex flex-col w-64 h-screen bg-gradient-to-b from-[#3B1F0A] via-[#5C3010] to-[#3B1F0A] fixed left-0 top-0 z-30 shadow-2xl">
+        <SidebarContent role={role} visibleNavItems={visibleNavItems} onClose={onClose} />
       </aside>
 
       {/* Mobile Overlay */}
@@ -227,7 +235,7 @@ export default function Sidebar({ isOpen, onClose, role = 'admin' }: SidebarProp
         >
           <X size={18} />
         </button>
-        <SidebarContent />
+        <SidebarContent role={role} visibleNavItems={visibleNavItems} onClose={onClose} />
       </aside>
     </>
   );

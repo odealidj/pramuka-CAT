@@ -15,6 +15,10 @@ const (
 	authorizationHeaderKey  = "authorization"
 	authorizationTypeBearer = "bearer"
 	AuthorizationPayloadKey = "authorization_payload" // Diekspor agar bisa diakses oleh handler jika butuh data UserID
+
+	RoleSuperAdmin = "super_admin"
+	RoleAdmin      = "admin"
+	RolePeserta    = "peserta"
 )
 
 // RequireAuth adalah Gatekeeper utama yang memvalidasi JWT sekaligus memastikannya masih "Stateful" (Ada di Redis)
@@ -86,4 +90,14 @@ func RequireRole(allowedRoles ...string) echo.MiddlewareFunc {
 			return next(c)
 		}
 	}
+}
+
+// RequireSuperAdmin hanya mengizinkan role super_admin
+func RequireSuperAdmin() echo.MiddlewareFunc {
+	return RequireRole(RoleSuperAdmin)
+}
+
+// RequireAdmin hanya mengizinkan role admin (tidak termasuk super_admin)
+func RequireAdmin() echo.MiddlewareFunc {
+	return RequireRole(RoleAdmin)
 }

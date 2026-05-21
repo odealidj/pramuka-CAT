@@ -2,7 +2,9 @@
  * User Service — Fungsi-fungsi API untuk manajemen user (Admin)
  */
 
-import httpClient from '@/lib/http-client';
+import axios from 'axios';
+import { API_BASE_URL } from '@/lib/constants';
+import httpClient, { getInMemoryToken } from '@/lib/http-client';
 import type {
   ApiSuccessResponse,
   User,
@@ -81,14 +83,74 @@ export const uploadPhotoApi = async (file: File): Promise<{ photo_url: string }>
   const formData = new FormData();
   formData.append('photo', file);
 
-  const res = await httpClient.post<ApiSuccessResponse<{ photo_url: string }>>(
-    '/users/me/photo',
+  const res = await axios.post<ApiSuccessResponse<{ photo_url: string }>>(
+    `${API_BASE_URL}/protected/users/me/photo`,
     formData,
     {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        Authorization: `Bearer ${getInMemoryToken()}`,
       },
     }
   );
   return res.data.data;
+};
+
+// === SUPER ADMIN ENDPOINTS ===
+
+export const listAdminsApi = async (
+  page = 1,
+  limit = 10,
+  search = ''
+): Promise<PaginatedResponse<User>> => {
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+    ...(search ? { search } : {}),
+  });
+  const res = await httpClient.get<ApiSuccessResponse<User[]>>(
+    `/super-admin/admins?${params.toString()}`
+  );
+  return {
+    data: res.data.data,
+    meta: res.data.meta!,
+  };
+};
+
+export const getAdminApi = async (id: string): Promise<User> => {
+  const res = await httpClient.get<ApiSuccessResponse<User>>(
+    `/super-admin/admins/${id}`
+  );
+  return res.data.data;
+};
+
+export const createAdminApi = async (
+  payload: CreateUserRequest
+): Promise<User> => {
+  const res = await httpClient.post<ApiSuccessResponse<User>>(
+    '/super-admin/admins',
+    payload
+  );
+  return res.data.data;
+};
+
+export const updateAdminApi = async (
+  id: string,
+  payload: UpdateUserRequest
+): Promise<User> => {
+  const res = await httpClient.put<ApiSuccessResponse<User>>(
+    `/super-admin/admins/${id}`,
+    payload
+  );
+  return res.data.data;
+};
+
+export const updateAdminPasswordApi = async (
+  id: string,
+  payload: UpdatePasswordRequest
+): Promise<void> => {
+  await httpClient.put(`/super-admin/admins/${id}/password`, payload);
+};
+
+export const deleteAdminApi = async (id: string): Promise<void> => {
+  await httpClient.delete(`/super-admin/admins/${id}`);
 };

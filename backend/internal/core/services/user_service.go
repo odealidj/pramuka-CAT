@@ -47,6 +47,10 @@ func (s *userService) ListUsers(ctx context.Context, page int32, limit int32, se
 	return s.repo.ListUsers(ctx, page, limit, search)
 }
 
+func (s *userService) ListAdmins(ctx context.Context, page int32, limit int32, search string) ([]domain.User, int64, error) {
+	return s.repo.ListAdmins(ctx, page, limit, search)
+}
+
 func (s *userService) UpdateUser(ctx context.Context, id uuid.UUID, req domain.UpdateUserRequest) (domain.User, error) {
 	_, err := s.repo.GetUserById(ctx, id)
 	if err != nil {
