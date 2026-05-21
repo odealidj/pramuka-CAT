@@ -65,12 +65,15 @@ export default function Navbar({ onMenuToggle, pageTitle = 'Dashboard', isCollap
           <Menu size={20} />
         </button>
 
-        {/* Brand / Spacer — Only show brand when sidebar is collapsed */}
+        {/* Page Title */}
         <div className="flex-1 min-w-0">
-          {isCollapsed && (
-            <div className="flex items-center gap-2">
-              <h1 className="text-gray-800 font-bold text-sm hidden sm:block">Pramuka CAT</h1>
-            </div>
+          <h1 className="text-gray-900 font-semibold text-base truncate">
+            {isCollapsed ? 'Pramuka CAT' : pageTitle}
+          </h1>
+          {!isCollapsed && (
+            <p className="text-gray-400 text-[11px] hidden sm:block leading-none mt-0.5">
+              Pramuka CAT
+            </p>
           )}
         </div>
 

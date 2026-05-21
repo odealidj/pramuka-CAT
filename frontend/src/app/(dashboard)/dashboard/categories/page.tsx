@@ -185,12 +185,11 @@ export default function CategoriesPage() {
 
       {/* ── Page Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-gray-900 text-xl font-bold flex items-center gap-2">
-            <Tag size={22} className="text-amber-700" />
-            Kategori Soal
-          </h1>
-          <p className="text-gray-500 text-sm mt-0.5">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+            <Tag size={18} className="text-amber-700" />
+          </div>
+          <p className="text-gray-500 text-sm">
             Kelola rumpun/kategori materi untuk pengelompokan bank soal
           </p>
         </div>
