@@ -20,21 +20,24 @@ const pageTitles: Record<string, string> = {
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
   const pageTitle = pageTitles[pathname] ?? 'Halaman';
   const { user } = useAuth();
 
   return (
-    <div className="h-full flex">
+    <div className="h-full flex overflow-hidden">
       {/* Sidebar */}
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         role={(user?.role as 'admin' | 'peserta') ?? 'peserta'}
+        isCollapsed={isCollapsed}
+        onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
       />
 
       {/* Main Content Area (offset by sidebar width on desktop) */}
-      <div className="flex flex-col flex-1 min-h-screen lg:ml-64">
+      <div className={`flex flex-col flex-1 h-screen overflow-hidden transition-all duration-300 ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
         {/* Navbar */}
         <Navbar
           onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)}

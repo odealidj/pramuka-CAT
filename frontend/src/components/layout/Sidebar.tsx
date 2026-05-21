@@ -68,10 +68,12 @@ interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
   role?: 'admin' | 'peserta';
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 // --- NavLink Component ---
-function NavLink({ item, onClick }: { item: NavItem; onClick?: () => void }) {
+function NavLink({ item, onClick, isCollapsed }: { item: NavItem; onClick?: () => void; isCollapsed?: boolean }) {
   const pathname = usePathname();
   const isActive =
     item.href === '/dashboard'
@@ -83,27 +85,30 @@ function NavLink({ item, onClick }: { item: NavItem; onClick?: () => void }) {
       href={item.href}
       onClick={onClick}
       className={`
-        group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+      className={`
+        group flex items-center gap-3 py-2.5 rounded-xl text-sm font-medium
         transition-all duration-200 relative overflow-hidden
+        ${isCollapsed ? 'justify-center px-0' : 'px-3'}
         ${
           isActive
             ? 'sidebar-link-active text-white'
             : 'text-amber-100/70 hover:text-white hover:bg-white/10'
         }
       `}
+      title={isCollapsed ? item.label : undefined}
     >
       <span
         className={`flex-shrink-0 ${isActive ? 'text-amber-200' : 'text-amber-300/60 group-hover:text-amber-200'}`}
       >
         {item.icon}
       </span>
-      <span className="flex-1 truncate">{item.label}</span>
-      {item.badge && (
+      {!isCollapsed && <span className="flex-1 truncate">{item.label}</span>}
+      {!isCollapsed && item.badge && (
         <span className="bg-amber-400 text-amber-900 text-xs font-bold px-1.5 py-0.5 rounded-full">
           {item.badge}
         </span>
       )}
-      {isActive && (
+      {!isCollapsed && isActive && (
         <ChevronRight size={14} className="text-amber-200 flex-shrink-0" />
       )}
     </Link>
@@ -115,30 +120,65 @@ const SidebarContent = ({
   role,
   visibleNavItems,
   onClose,
+  isCollapsed,
+  onToggleCollapse,
 }: {
   role?: 'admin' | 'peserta';
   visibleNavItems: NavItem[];
   onClose: () => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }) => (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-hidden">
       {/* Logo / Brand */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-white/10">
+      <div className={`flex items-center gap-3 py-5 border-b border-white/10 relative ${isCollapsed ? 'px-2 justify-center' : 'px-4'}`}>
         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-900/40 flex-shrink-0">
           <FlameKindling size={20} className="text-white" />
         </div>
-        <div>
-          <p className="text-white font-bold text-base leading-tight tracking-tight">
-            Pramuka CAT
-          </p>
-          <p className="text-amber-300/60 text-xs font-medium">
-            Sistem Ujian Digital
-          </p>
-        </div>
+        {!isCollapsed && (
+          <div>
+            <p className="text-white font-bold text-base leading-tight tracking-tight">
+              Pramuka CAT
+            </p>
+            <p className="text-amber-300/60 text-xs font-medium">
+              Sistem Ujian Digital
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* Role Badge */}
-      <div className="px-4 py-3">
-        <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2">
+      {/* Role Badge & Collapse Toggle */}
+      <div className={`py-3 flex items-center ${isCollapsed ? 'justify-center flex-col gap-2' : 'px-4 justify-between'}`}>
+        {!isCollapsed ? (
+          <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2">
+            <ShieldCheck
+              size={14}
+              className={role === 'admin' ? 'text-amber-300' : 'text-emerald-300'}
+            />
+            <span
+              className={`text-xs font-semibold uppercase tracking-wider ${
+                role === 'admin' ? 'text-amber-300' : 'text-emerald-300'
+              }`}
+            >
+              {role === 'admin' ? 'Admin / Panitia' : 'Peserta'}
+            </span>
+          </div>
+        ) : (
+          <div className="bg-white/10 rounded-lg p-2" title={role === 'admin' ? 'Admin / Panitia' : 'Peserta'}>
+             <ShieldCheck size={18} className={role === 'admin' ? 'text-amber-300' : 'text-emerald-300'} />
+          </div>
+        )}
+        
+        {onToggleCollapse && (
+          <button 
+            onClick={onToggleCollapse} 
+            className="hidden lg:flex items-center justify-center w-6 h-6 rounded bg-white/10 hover:bg-white/20 text-amber-200 transition-colors"
+            title={isCollapsed ? "Perbesar Sidebar" : "Perkecil Sidebar"}
+          >
+            <ChevronRight size={14} className={`transform transition-transform ${isCollapsed ? '' : 'rotate-180'}`} />
+          </button>
+        )}
+      </div>
           <ShieldCheck
             size={14}
             className={role === 'admin' ? 'text-amber-300' : 'text-emerald-300'}
@@ -154,19 +194,23 @@ const SidebarContent = ({
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
-        <p className="px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-amber-300/40 mb-1">
-          Menu Utama
-        </p>
+      <nav className={`flex-1 py-2 space-y-1 overflow-y-auto overflow-x-hidden ${isCollapsed ? 'px-2' : 'px-3'}`}>
+        {!isCollapsed && (
+          <p className="px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-amber-300/40 mb-1">
+            Menu Utama
+          </p>
+        )}
         {visibleNavItems.map((item) => (
-          <NavLink key={item.href} item={item} onClick={onClose} />
+          <NavLink key={item.href} item={item} onClick={onClose} isCollapsed={isCollapsed} />
         ))}
 
         {role === 'admin' && (
           <>
-            <p className="px-3 py-1 mt-4 text-[10px] font-bold uppercase tracking-widest text-amber-300/40 mb-1">
-              Sistem
-            </p>
+            {!isCollapsed && (
+              <p className="px-3 py-1 mt-4 text-[10px] font-bold uppercase tracking-widest text-amber-300/40 mb-1">
+                Sistem
+              </p>
+            )}
             <NavLink
               item={{
                 label: 'Pengaturan',
@@ -174,39 +218,42 @@ const SidebarContent = ({
                 icon: <Settings size={18} />,
               }}
               onClick={onClose}
+              isCollapsed={isCollapsed}
             />
           </>
         )}
       </nav>
 
       {/* Footer */}
-      <div className="px-4 py-4 border-t border-white/10">
-        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/10 cursor-pointer group">
+      <div className={`py-4 border-t border-white/10 ${isCollapsed ? 'px-2' : 'px-4'}`}>
+        <div className={`flex items-center gap-3 py-2.5 rounded-xl hover:bg-white/10 cursor-pointer group ${isCollapsed ? 'justify-center px-0' : 'px-3'}`} title={isCollapsed ? "Admin Pramuka" : undefined}>
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
             A
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-white text-sm font-medium truncate">
-              Admin Pramuka
-            </p>
-            <p className="text-amber-300/50 text-xs truncate">
-              admin@pramuka.id
-            </p>
-          </div>
+          {!isCollapsed && (
+            <div className="flex-1 min-w-0">
+              <p className="text-white text-sm font-medium truncate">
+                Admin Pramuka
+              </p>
+              <p className="text-amber-300/50 text-xs truncate">
+                admin@pramuka.id
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 
-export default function Sidebar({ isOpen, onClose, role = 'admin' }: SidebarProps) {
+export default function Sidebar({ isOpen, onClose, role = 'admin', isCollapsed, onToggleCollapse }: SidebarProps) {
   const visibleNavItems =
     role === 'admin' ? navItems : navItems.filter((item) => !item.adminOnly);
 
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 h-screen bg-gradient-to-b from-[#3B1F0A] via-[#5C3010] to-[#3B1F0A] fixed left-0 top-0 z-30 shadow-2xl">
-        <SidebarContent role={role} visibleNavItems={visibleNavItems} onClose={onClose} />
+      <aside className={`hidden lg:flex flex-col h-screen bg-gradient-to-b from-[#3B1F0A] via-[#5C3010] to-[#3B1F0A] fixed left-0 top-0 z-30 shadow-2xl transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`}>
+        <SidebarContent role={role} visibleNavItems={visibleNavItems} onClose={onClose} isCollapsed={isCollapsed} onToggleCollapse={onToggleCollapse} />
       </aside>
 
       {/* Mobile Overlay */}
