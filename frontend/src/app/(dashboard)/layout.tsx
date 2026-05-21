@@ -8,6 +8,7 @@ import AuthGuard from '@/components/auth/AuthGuard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect } from 'react';
 import QuickActionModals from '@/components/dashboard/QuickActionModals';
+import CommandPalette from '@/components/layout/CommandPalette';
 import { ToastContainer, useToast } from '@/components/ui/Toast';
 
 // Mapping path → page title
@@ -78,6 +79,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         onClose={() => setQuickAction(null)} 
         addToast={addToast}
       />
+      <CommandPalette />
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
     </div>
   );

@@ -32,18 +32,16 @@ const ITEMS: PaletteItem[] = [
   { id: 'act-user', label: 'Tambah Peserta Baru', type: 'action', actionId: 'user', icon: <Plus size={18} />, roles: ['admin', 'super_admin'], category: 'Aksi Cepat' },
 ];
 
-interface CommandPaletteProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
+export default function CommandPalette() {
+  const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const { user } = useAuth();
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+
+  const onClose = () => setIsOpen(false);
 
   const role = user?.role || 'peserta';
 
@@ -74,17 +72,25 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
     }
   }, [isOpen]);
 
-  // Handle global shortcut (Ctrl+K / Cmd+K)
+  // Handle global shortcut (Ctrl+K / Cmd+K) and custom event
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
-        isOpen ? onClose() : document.dispatchEvent(new CustomEvent('openCommandPalette'));
+        setIsOpen(prev => !prev);
       }
     };
+    
+    const handleOpenEvent = () => setIsOpen(true);
+    
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+    document.addEventListener('openCommandPalette', handleOpenEvent);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('openCommandPalette', handleOpenEvent);
+    };
+  }, []);
 
   const handleSelect = (item: PaletteItem) => {
     if (item.type === 'navigate' && item.href) {
@@ -117,8 +123,8 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-24 sm:pt-32 px-4">
-      <div className="fixed inset-0 bg-transparent" onClick={onClose} />
+    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-24 sm:pt-32 px-4">
+      <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-md" onClick={onClose} />
       
       <div 
         className="relative bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden border border-gray-100 flex flex-col transform scale-100 animate-in fade-in zoom-in duration-200"

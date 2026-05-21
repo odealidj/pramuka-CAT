@@ -4,7 +4,6 @@ import { Bell, Menu, Search, LogOut, User, ChevronDown } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import CommandPalette from '@/components/layout/CommandPalette';
 import Spinner from '@/components/ui/Spinner';
 import { getPhotoUrl } from '@/lib/constants';
 
@@ -25,7 +24,6 @@ function getInitials(name: string): string {
 export default function Navbar({ onMenuToggle, pageTitle = 'Dashboard' }: NavbarProps) {
   const { user, logout } = useAuth();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isCmdPaletteOpen, setIsCmdPaletteOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
@@ -37,14 +35,6 @@ export default function Navbar({ onMenuToggle, pageTitle = 'Dashboard' }: Navbar
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Listen for global open command palette event (triggered from CommandPalette itself when closed)
-  useEffect(() => {
-    const handleOpen = () => setIsCmdPaletteOpen(true);
-    document.addEventListener('openCommandPalette', handleOpen);
-    return () => document.removeEventListener('openCommandPalette', handleOpen);
   }, []);
 
   const handleLogout = async () => {
@@ -89,7 +79,7 @@ export default function Navbar({ onMenuToggle, pageTitle = 'Dashboard' }: Navbar
 
           {/* Search — Desktop */}
           <button 
-            onClick={() => setIsCmdPaletteOpen(true)}
+            onClick={() => document.dispatchEvent(new CustomEvent('openCommandPalette'))}
             className="hidden md:flex items-center justify-between gap-2 bg-gray-100 hover:bg-gray-200 transition-colors rounded-xl px-3 py-2 w-56 text-sm text-gray-500 border border-transparent"
           >
             <div className="flex items-center gap-2">
@@ -105,7 +95,7 @@ export default function Navbar({ onMenuToggle, pageTitle = 'Dashboard' }: Navbar
           {/* Search — Mobile Toggle */}
           <button
             className="md:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100"
-            onClick={() => setIsCmdPaletteOpen(true)}
+            onClick={() => document.dispatchEvent(new CustomEvent('openCommandPalette'))}
             aria-label="Search"
           >
             <Search size={18} />
@@ -196,11 +186,6 @@ export default function Navbar({ onMenuToggle, pageTitle = 'Dashboard' }: Navbar
     </div>
 
       
-      {/* Command Palette */}
-      <CommandPalette 
-        isOpen={isCmdPaletteOpen} 
-        onClose={() => setIsCmdPaletteOpen(false)} 
-      />
     </header>
   );
 }
