@@ -178,19 +178,6 @@ const SidebarContent = ({
           </button>
         )}
       </div>
-          <ShieldCheck
-            size={14}
-            className={role === 'admin' ? 'text-amber-300' : 'text-emerald-300'}
-          />
-          <span
-            className={`text-xs font-semibold uppercase tracking-wider ${
-              role === 'admin' ? 'text-amber-300' : 'text-emerald-300'
-            }`}
-          >
-            {role === 'admin' ? 'Admin / Panitia' : 'Peserta'}
-          </span>
-        </div>
-      </div>
 
       {/* Navigation */}
       <nav className={`flex-1 py-2 space-y-1 overflow-y-auto overflow-x-hidden ${isCollapsed ? 'px-2' : 'px-3'}`}>
