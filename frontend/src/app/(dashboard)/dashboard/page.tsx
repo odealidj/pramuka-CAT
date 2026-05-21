@@ -313,7 +313,7 @@ export default function DashboardPage() {
               ) : (
                 <button
                   key={action.actionId}
-                  onClick={() => setQuickAction(action.actionId as any)}
+                  onClick={() => window.dispatchEvent(new CustomEvent('triggerQuickAction', { detail: action.actionId }))}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${action.color}`}
                 >
                   <span className="text-base">{action.icon}</span>
