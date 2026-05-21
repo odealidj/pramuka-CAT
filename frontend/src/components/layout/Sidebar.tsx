@@ -85,7 +85,6 @@ function NavLink({ item, onClick, isCollapsed }: { item: NavItem; onClick?: () =
       href={item.href}
       onClick={onClick}
       className={`
-      className={`
         group flex items-center gap-3 py-2.5 rounded-xl text-sm font-medium
         transition-all duration-200 relative overflow-hidden
         ${isCollapsed ? 'justify-center px-0' : 'px-3'}
