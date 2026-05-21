@@ -106,6 +106,10 @@ func main() {
 	userService := services.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService)
 
+	dashboardRepo := repository.NewDashboardRepository(queries)
+	dashboardService := services.NewDashboardService(dashboardRepo)
+	dashboardHandler := handler.NewDashboardHandler(dashboardService)
+
 	uploadHandler := handler.NewUploadHandler()
 
 	// 5. Siapkan Server Echo
@@ -214,6 +218,7 @@ func main() {
 	eventHandler.RegisterAdminRoutes(adminGroup)
 	userHandler.RegisterAdminRoutes(adminGroup)
 	examHandler.RegisterAdminRoutes(adminGroup)
+	dashboardHandler.RegisterRoutes(adminGroup)
 
 	// Rute Upload (Bisa diakses oleh semua: Peserta, Admin, Super Admin)
 	uploadGroup := api.Group("/upload")

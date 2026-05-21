@@ -58,9 +58,9 @@ func (q *Queries) AddRandomEventQuestionsByCategory(ctx context.Context, arg Add
 
 const approveUserEvent = `-- name: ApproveUserEvent :one
 UPDATE user_event_approvals
-SET status = 'approved'
+SET status = 'approved', updated_at = NOW()
 WHERE id = $1
-RETURNING id, user_id, event_id, status, is_completed, score, is_passed, started_at, completed_at
+RETURNING id, user_id, event_id, status, is_completed, score, is_passed, started_at, completed_at, created_at, updated_at
 `
 
 func (q *Queries) ApproveUserEvent(ctx context.Context, id uuid.UUID) (UserEventApproval, error) {
@@ -76,6 +76,8 @@ func (q *Queries) ApproveUserEvent(ctx context.Context, id uuid.UUID) (UserEvent
 		&i.IsPassed,
 		&i.StartedAt,
 		&i.CompletedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -590,7 +592,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 const enrollUserToEvent = `-- name: EnrollUserToEvent :one
 INSERT INTO user_event_approvals (user_id, event_id, status)
 VALUES ($1, $2, 'pending')
-RETURNING id, user_id, event_id, status, is_completed, score, is_passed, started_at, completed_at
+RETURNING id, user_id, event_id, status, is_completed, score, is_passed, started_at, completed_at, created_at, updated_at
 `
 
 type EnrollUserToEventParams struct {
@@ -611,13 +613,15 @@ func (q *Queries) EnrollUserToEvent(ctx context.Context, arg EnrollUserToEventPa
 		&i.IsPassed,
 		&i.StartedAt,
 		&i.CompletedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
 const finishExam = `-- name: FinishExam :exec
 UPDATE user_event_approvals
-SET is_completed = true, completed_at = NOW(), score = $2, is_passed = $3
+SET is_completed = true, completed_at = NOW(), score = $2, is_passed = $3, updated_at = NOW()
 WHERE id = $1
 `
 
@@ -684,7 +688,7 @@ func (q *Queries) GetAllEventParticipantsForExport(ctx context.Context, eventID 
 }
 
 const getApprovalById = `-- name: GetApprovalById :one
-SELECT id, user_id, event_id, status, is_completed, score, is_passed, started_at, completed_at FROM user_event_approvals WHERE id = $1
+SELECT id, user_id, event_id, status, is_completed, score, is_passed, started_at, completed_at, created_at, updated_at FROM user_event_approvals WHERE id = $1
 `
 
 func (q *Queries) GetApprovalById(ctx context.Context, id uuid.UUID) (UserEventApproval, error) {
@@ -700,12 +704,14 @@ func (q *Queries) GetApprovalById(ctx context.Context, id uuid.UUID) (UserEventA
 		&i.IsPassed,
 		&i.StartedAt,
 		&i.CompletedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
 const getApprovalStatus = `-- name: GetApprovalStatus :one
-SELECT id, user_id, event_id, status, is_completed, score, is_passed, started_at, completed_at FROM user_event_approvals
+SELECT id, user_id, event_id, status, is_completed, score, is_passed, started_at, completed_at, created_at, updated_at FROM user_event_approvals
 WHERE user_id = $1 AND event_id = $2 LIMIT 1
 `
 
@@ -727,6 +733,8 @@ func (q *Queries) GetApprovalStatus(ctx context.Context, arg GetApprovalStatusPa
 		&i.IsPassed,
 		&i.StartedAt,
 		&i.CompletedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -838,6 +846,61 @@ func (q *Queries) GetQuestionById(ctx context.Context, id uuid.UUID) (Question, 
 	return i, err
 }
 
+const getRecentActivitiesDashboard = `-- name: GetRecentActivitiesDashboard :many
+SELECT
+    u.full_name as user_name,
+    e.name as event_name,
+    uea.status,
+    uea.is_completed,
+    uea.score,
+    COALESCE(uea.updated_at, uea.created_at) as activity_time
+FROM user_event_approvals uea
+JOIN users u ON uea.user_id = u.id
+JOIN events e ON uea.event_id = e.id
+WHERE uea.status != 'revoked'
+ORDER BY COALESCE(uea.updated_at, uea.created_at) DESC NULLS LAST
+LIMIT 5
+`
+
+type GetRecentActivitiesDashboardRow struct {
+	UserName     string         `json:"user_name"`
+	EventName    string         `json:"event_name"`
+	Status       string         `json:"status"`
+	IsCompleted  bool           `json:"is_completed"`
+	Score        sql.NullString `json:"score"`
+	ActivityTime sql.NullTime   `json:"activity_time"`
+}
+
+func (q *Queries) GetRecentActivitiesDashboard(ctx context.Context) ([]GetRecentActivitiesDashboardRow, error) {
+	rows, err := q.db.QueryContext(ctx, getRecentActivitiesDashboard)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetRecentActivitiesDashboardRow{}
+	for rows.Next() {
+		var i GetRecentActivitiesDashboardRow
+		if err := rows.Scan(
+			&i.UserName,
+			&i.EventName,
+			&i.Status,
+			&i.IsCompleted,
+			&i.Score,
+			&i.ActivityTime,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getSession = `-- name: GetSession :one
 SELECT id, user_id, refresh_token, is_blocked, expires_at, created_at FROM sessions
 WHERE id = $1 LIMIT 1
@@ -855,6 +918,54 @@ func (q *Queries) GetSession(ctx context.Context, id uuid.UUID) (Session, error)
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const getTotalActiveEventsDashboard = `-- name: GetTotalActiveEventsDashboard :one
+SELECT COUNT(*) FROM events
+WHERE end_time > NOW() AND deleted_at IS NULL
+`
+
+func (q *Queries) GetTotalActiveEventsDashboard(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getTotalActiveEventsDashboard)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const getTotalCompletedExamsDashboard = `-- name: GetTotalCompletedExamsDashboard :one
+SELECT COUNT(*) FROM user_event_approvals
+WHERE is_completed = true
+`
+
+func (q *Queries) GetTotalCompletedExamsDashboard(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getTotalCompletedExamsDashboard)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const getTotalParticipantsDashboard = `-- name: GetTotalParticipantsDashboard :one
+SELECT COUNT(*) FROM users
+WHERE role = 'peserta' AND deleted_at IS NULL
+`
+
+func (q *Queries) GetTotalParticipantsDashboard(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getTotalParticipantsDashboard)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const getTotalQuestionsDashboard = `-- name: GetTotalQuestionsDashboard :one
+SELECT COUNT(*) FROM questions
+WHERE deleted_at IS NULL
+`
+
+func (q *Queries) GetTotalQuestionsDashboard(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getTotalQuestionsDashboard)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
 }
 
 const getUserAnswersDetail = `-- name: GetUserAnswersDetail :many
@@ -1460,9 +1571,9 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 
 const revokeUserEvent = `-- name: RevokeUserEvent :one
 UPDATE user_event_approvals
-SET status = 'revoked'
+SET status = 'revoked', updated_at = NOW()
 WHERE id = $1
-RETURNING id, user_id, event_id, status, is_completed, score, is_passed, started_at, completed_at
+RETURNING id, user_id, event_id, status, is_completed, score, is_passed, started_at, completed_at, created_at, updated_at
 `
 
 func (q *Queries) RevokeUserEvent(ctx context.Context, id uuid.UUID) (UserEventApproval, error) {
@@ -1478,6 +1589,8 @@ func (q *Queries) RevokeUserEvent(ctx context.Context, id uuid.UUID) (UserEventA
 		&i.IsPassed,
 		&i.StartedAt,
 		&i.CompletedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -1519,7 +1632,7 @@ func (q *Queries) SaveUserAnswer(ctx context.Context, arg SaveUserAnswerParams) 
 }
 
 const setStartedAt = `-- name: SetStartedAt :exec
-UPDATE user_event_approvals SET started_at = NOW() WHERE id = $1 AND started_at IS NULL
+UPDATE user_event_approvals SET started_at = NOW(), updated_at = NOW() WHERE id = $1 AND started_at IS NULL
 `
 
 func (q *Queries) SetStartedAt(ctx context.Context, id uuid.UUID) error {

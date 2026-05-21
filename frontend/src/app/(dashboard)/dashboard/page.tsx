@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Users,
@@ -105,73 +108,97 @@ function ActivityItem({
 
 // --- Dashboard Page ---
 export default function DashboardPage() {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    import('@/lib/api/dashboard').then(({ dashboardApi }) => {
+      dashboardApi.getStats().then((res) => {
+        setData(res.data);
+        setLoading(false);
+      }).catch((err) => {
+        setError(err.message || 'Gagal memuat statistik');
+        setLoading(false);
+      });
+    });
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 text-red-500 p-4 rounded-xl border border-red-100">
+        <p className="font-semibold text-sm">Gagal Memuat Data</p>
+        <p className="text-xs mt-1">{error}</p>
+      </div>
+    );
+  }
+
   const stats: StatCardProps[] = [
     {
       title: "Total Peserta",
-      value: "248",
-      change: "+12%",
+      value: data?.stats.total_participants.toLocaleString() || "0",
+      change: "Live",
       changeType: "up",
       icon: <Users size={20} className="text-violet-600" />,
       color: "bg-violet-50",
     },
     {
       title: "Bank Soal",
-      value: "1,432",
-      change: "+34 soal",
+      value: data?.stats.total_questions.toLocaleString() || "0",
+      change: "Live",
       changeType: "up",
       icon: <BookOpen size={20} className="text-amber-600" />,
       color: "bg-amber-50",
     },
     {
       title: "Event Aktif",
-      value: "5",
-      change: "+2 baru",
+      value: data?.stats.active_events.toLocaleString() || "0",
+      change: "Live",
       changeType: "up",
       icon: <CalendarDays size={20} className="text-blue-600" />,
       color: "bg-blue-50",
     },
     {
       title: "Ujian Selesai",
-      value: "186",
-      change: "+18%",
+      value: data?.stats.completed_exams.toLocaleString() || "0",
+      change: "Live",
       changeType: "up",
       icon: <ClipboardCheck size={20} className="text-emerald-600" />,
       color: "bg-emerald-50",
     },
   ];
 
-  const activities = [
-    {
-      name: "Raka Sanjaya",
-      action: "Mendaftar event: Ujian Penegak 2025",
-      time: "5 menit lalu",
-      status: "pending" as const,
-    },
-    {
-      name: "Dewi Putri",
-      action: "Menyelesaikan ujian dengan skor 92",
-      time: "23 menit lalu",
-      status: "completed" as const,
-    },
-    {
-      name: "Ahmad Yusuf",
-      action: "Persetujuan ujian disetujui admin",
-      time: "1 jam lalu",
-      status: "approved" as const,
-    },
-    {
-      name: "Siti Rahma",
-      action: "Mendaftar event: Uji Kompetensi Penggalang",
-      time: "2 jam lalu",
-      status: "pending" as const,
-    },
-    {
-      name: "Budi Santoso",
-      action: "Menyelesaikan ujian dengan skor 78",
-      time: "3 jam lalu",
-      status: "completed" as const,
-    },
-  ];
+  const activities = (data?.activities || []).map((a: any) => {
+    // Determine relative time
+    const date = new Date(a.time);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    let timeStr = "";
+    if (diffInSeconds < 60) timeStr = "Baru saja";
+    else if (diffInSeconds < 3600) timeStr = `${Math.floor(diffInSeconds / 60)} menit lalu`;
+    else if (diffInSeconds < 86400) timeStr = `${Math.floor(diffInSeconds / 3600)} jam lalu`;
+    else timeStr = `${Math.floor(diffInSeconds / 86400)} hari lalu`;
+    
+    let statusConfig = "pending" as const;
+    if (a.status === "completed" || a.action.includes("Menyelesaikan")) statusConfig = "completed" as const;
+    else if (a.status === "approved") statusConfig = "approved" as const;
+
+    return {
+      name: a.name,
+      action: a.action,
+      time: timeStr,
+      status: statusConfig,
+    };
+  });
 
   return (
     <div className="space-y-6">
@@ -187,8 +214,7 @@ export default function DashboardPage() {
           </p>
           <h2 className="text-white text-2xl font-bold mb-1">Admin Pramuka</h2>
           <p className="text-amber-100/70 text-sm max-w-md">
-            Ada <span className="text-amber-300 font-semibold">7 peserta</span>{" "}
-            yang menunggu persetujuan untuk mengikuti ujian hari ini.
+            Anda dapat memantau aktivitas secara real-time dan mengelola persetujuan ujian peserta.
           </p>
         </div>
       </div>
@@ -229,9 +255,13 @@ export default function DashboardPage() {
             </button>
           </div>
           <div>
-            {activities.map((a, i) => (
-              <ActivityItem key={i} {...a} />
-            ))}
+            {activities.length > 0 ? (
+              activities.map((a: any, i: number) => (
+                <ActivityItem key={i} {...a} />
+              ))
+            ) : (
+              <p className="text-sm text-gray-500 text-center py-6">Belum ada aktivitas terkini.</p>
+            )}
           </div>
         </div>
 

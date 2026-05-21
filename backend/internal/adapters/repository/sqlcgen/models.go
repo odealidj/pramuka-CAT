@@ -88,4 +88,6 @@ type UserEventApproval struct {
 	IsPassed    sql.NullBool   `json:"is_passed"`
 	StartedAt   sql.NullTime   `json:"started_at"`
 	CompletedAt sql.NullTime   `json:"completed_at"`
+	CreatedAt   sql.NullTime   `json:"created_at"`
+	UpdatedAt   sql.NullTime   `json:"updated_at"`
 }

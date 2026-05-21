@@ -164,7 +164,7 @@ RETURNING *;
 
 -- name: ApproveUserEvent :one
 UPDATE user_event_approvals
-SET status = 'approved'
+SET status = 'approved', updated_at = NOW()
 WHERE id = $1
 RETURNING *;
 
@@ -261,7 +261,7 @@ WHERE ua.approval_id = $1 AND ua.is_correct = true;
 
 -- name: FinishExam :exec
 UPDATE user_event_approvals
-SET is_completed = true, completed_at = NOW(), score = $2, is_passed = $3
+SET is_completed = true, completed_at = NOW(), score = $2, is_passed = $3, updated_at = NOW()
 WHERE id = $1;
 
 -- name: GetEventTotalWeight :one
@@ -327,11 +327,11 @@ WHERE uea.event_id = $1
 ORDER BY u.full_name ASC;
 
 -- name: SetStartedAt :exec
-UPDATE user_event_approvals SET started_at = NOW() WHERE id = $1 AND started_at IS NULL;
+UPDATE user_event_approvals SET started_at = NOW(), updated_at = NOW() WHERE id = $1 AND started_at IS NULL;
 
 -- name: RevokeUserEvent :one
 UPDATE user_event_approvals
-SET status = 'revoked'
+SET status = 'revoked', updated_at = NOW()
 WHERE id = $1
 RETURNING *;
 
@@ -354,3 +354,34 @@ SELECT * FROM events
 WHERE deleted_at IS NULL AND name = $1 AND start_time = $2 AND end_time = $3
   AND (sqlc.narg('exclude_id')::uuid IS NULL OR id <> sqlc.narg('exclude_id')::uuid)
 LIMIT 1;
+
+-- name: GetTotalParticipantsDashboard :one
+SELECT COUNT(*) FROM users
+WHERE role = 'peserta' AND deleted_at IS NULL;
+
+-- name: GetTotalQuestionsDashboard :one
+SELECT COUNT(*) FROM questions
+WHERE deleted_at IS NULL;
+
+-- name: GetTotalActiveEventsDashboard :one
+SELECT COUNT(*) FROM events
+WHERE end_time > NOW() AND deleted_at IS NULL;
+
+-- name: GetTotalCompletedExamsDashboard :one
+SELECT COUNT(*) FROM user_event_approvals
+WHERE is_completed = true;
+
+-- name: GetRecentActivitiesDashboard :many
+SELECT
+    u.full_name as user_name,
+    e.name as event_name,
+    uea.status,
+    uea.is_completed,
+    uea.score,
+    COALESCE(uea.updated_at, uea.created_at) as activity_time
+FROM user_event_approvals uea
+JOIN users u ON uea.user_id = u.id
+JOIN events e ON uea.event_id = e.id
+WHERE uea.status != 'revoked'
+ORDER BY COALESCE(uea.updated_at, uea.created_at) DESC NULLS LAST
+LIMIT 5;
