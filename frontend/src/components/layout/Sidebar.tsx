@@ -130,26 +130,38 @@ const SidebarContent = ({
 }) => (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Logo / Brand */}
-      <div className={`flex items-center gap-3 py-5 border-b border-white/10 relative ${isCollapsed ? 'px-2 justify-center' : 'px-4'}`}>
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-900/40 flex-shrink-0">
-          <FlameKindling size={20} className="text-white" />
-        </div>
-        {!isCollapsed && (
-          <div>
-            <p className="text-white font-bold text-base leading-tight tracking-tight">
-              Pramuka CAT
-            </p>
-            <p className="text-amber-300/60 text-xs font-medium">
-              Sistem Ujian Digital
-            </p>
+      <div className={`flex items-center py-5 border-b border-white/10 relative ${isCollapsed ? 'flex-col gap-3 px-2 justify-center' : 'px-4 justify-between'}`}>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-900/40 flex-shrink-0">
+            <FlameKindling size={20} className="text-white" />
           </div>
+          {!isCollapsed && (
+            <div>
+              <p className="text-white font-bold text-base leading-tight tracking-tight">
+                Pramuka CAT
+              </p>
+              <p className="text-amber-300/60 text-xs font-medium">
+                Sistem Ujian Digital
+              </p>
+            </div>
+          )}
+        </div>
+        
+        {onToggleCollapse && (
+          <button 
+            onClick={onToggleCollapse} 
+            className="hidden lg:flex items-center justify-center w-6 h-6 rounded bg-white/10 hover:bg-white/20 text-amber-200 transition-colors flex-shrink-0"
+            title={isCollapsed ? "Perbesar Sidebar" : "Perkecil Sidebar"}
+          >
+            <ChevronRight size={14} className={`transform transition-transform ${isCollapsed ? '' : 'rotate-180'}`} />
+          </button>
         )}
       </div>
 
-      {/* Role Badge & Collapse Toggle */}
-      <div className={`py-3 flex items-center ${isCollapsed ? 'justify-center flex-col gap-2' : 'px-4 justify-between'}`}>
+      {/* Role Badge */}
+      <div className={`py-3 flex items-center ${isCollapsed ? 'justify-center' : 'px-4 justify-start'}`}>
         {!isCollapsed ? (
-          <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2">
+          <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2 w-full justify-center">
             <ShieldCheck
               size={14}
               className={role === 'admin' ? 'text-amber-300' : 'text-emerald-300'}
@@ -163,19 +175,9 @@ const SidebarContent = ({
             </span>
           </div>
         ) : (
-          <div className="bg-white/10 rounded-lg p-2" title={role === 'admin' ? 'Admin / Panitia' : 'Peserta'}>
+          <div className="bg-white/10 rounded-lg p-2 flex items-center justify-center" title={role === 'admin' ? 'Admin / Panitia' : 'Peserta'}>
              <ShieldCheck size={18} className={role === 'admin' ? 'text-amber-300' : 'text-emerald-300'} />
           </div>
-        )}
-        
-        {onToggleCollapse && (
-          <button 
-            onClick={onToggleCollapse} 
-            className="hidden lg:flex items-center justify-center w-6 h-6 rounded bg-white/10 hover:bg-white/20 text-amber-200 transition-colors"
-            title={isCollapsed ? "Perbesar Sidebar" : "Perkecil Sidebar"}
-          >
-            <ChevronRight size={14} className={`transform transition-transform ${isCollapsed ? '' : 'rotate-180'}`} />
-          </button>
         )}
       </div>
 
