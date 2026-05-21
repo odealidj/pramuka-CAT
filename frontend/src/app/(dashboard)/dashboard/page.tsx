@@ -12,7 +12,7 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import QuickActionModals from "@/components/dashboard/QuickActionModals";
-import { ToastContainer } from "@/components/ui/Toast";
+import { ToastContainer, useToast } from "@/components/ui/Toast";
 
 // --- Stat Card ---
 interface StatCardProps {
@@ -114,6 +114,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [quickAction, setQuickAction] = useState<'question' | 'event' | 'user' | null>(null);
+  const { toasts, toast: addToast, dismiss } = useToast();
 
   useEffect(() => {
     import('@/lib/api/dashboard').then(({ dashboardApi }) => {
@@ -329,8 +330,9 @@ export default function DashboardPage() {
       <QuickActionModals 
         actionToOpen={quickAction} 
         onClose={() => setQuickAction(null)} 
+        addToast={addToast}
       />
-      <ToastContainer />
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
     </div>
   );
 }

@@ -15,11 +15,11 @@ import type { Category } from '@/types/auth';
 interface QuickActionModalsProps {
   actionToOpen: 'question' | 'event' | 'user' | null;
   onClose: () => void;
+  addToast: (type: 'success' | 'error', message: string) => void;
 }
 
-export default function QuickActionModals({ actionToOpen, onClose }: QuickActionModalsProps) {
+export default function QuickActionModals({ actionToOpen, onClose, addToast }: QuickActionModalsProps) {
   const router = useRouter();
-  const { addToast } = useToast();
   
   const [categories, setCategories] = useState<Category[]>([]);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -43,7 +43,7 @@ export default function QuickActionModals({ actionToOpen, onClose }: QuickAction
     try {
       setApiError(null);
       await createQuestionApi(data);
-      addToast('Soal berhasil ditambahkan', 'success');
+      addToast('success', 'Soal berhasil ditambahkan');
       handleClose();
       router.push('/dashboard/questions');
     } catch (err: any) {
@@ -55,7 +55,7 @@ export default function QuickActionModals({ actionToOpen, onClose }: QuickAction
     try {
       setApiError(null);
       await createEventApi(data);
-      addToast('Event ujian berhasil dibuat', 'success');
+      addToast('success', 'Event ujian berhasil dibuat');
       handleClose();
       router.push('/dashboard/events');
     } catch (err: any) {
@@ -67,7 +67,7 @@ export default function QuickActionModals({ actionToOpen, onClose }: QuickAction
     try {
       setApiError(null);
       await createUserApi(data);
-      addToast('Peserta berhasil ditambahkan', 'success');
+      addToast('success', 'Peserta berhasil ditambahkan');
       handleClose();
       router.push('/dashboard/users');
     } catch (err: any) {
