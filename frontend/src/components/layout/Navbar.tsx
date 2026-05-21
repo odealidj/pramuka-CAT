@@ -68,13 +68,10 @@ export default function Navbar({ onMenuToggle, pageTitle = 'Dashboard', isCollap
         {/* Page Title */}
         <div className="flex-1 min-w-0">
           <h1 className="text-gray-900 font-semibold text-base truncate">
-            {isCollapsed ? 'Pramuka CAT' : pageTitle}
+            {isCollapsed
+              ? `Pramuka CAT — ${pageTitle}`
+              : pageTitle}
           </h1>
-          {!isCollapsed && (
-            <p className="text-gray-400 text-[11px] hidden sm:block leading-none mt-0.5">
-              Pramuka CAT
-            </p>
-          )}
         </div>
 
         {/* Actions */}
