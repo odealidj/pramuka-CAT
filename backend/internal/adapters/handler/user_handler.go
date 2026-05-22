@@ -48,6 +48,7 @@ func (h *UserHandler) RegisterSuperAdminRoutes(superAdminGroup *echo.Group) {
 func (h *UserHandler) RegisterParticipantRoutes(participantGroup *echo.Group) {
 	usersGroup := participantGroup.Group("/users")
 	usersGroup.POST("/me/photo", h.UploadPhoto)
+	usersGroup.PUT("/me", h.UpdateProfile)
 }
 
 // CreatePesertaOnly godoc
@@ -244,6 +245,40 @@ func (h *UserHandler) UpdateUserPassword(c echo.Context) error {
 	}
 
 	return response.Success(c, http.StatusOK, "Kata sandi user berhasil diperbarui", nil)
+}
+
+// UpdateProfile godoc
+// @Summary     Update Profil Sendiri
+// @Description Pengguna memperbarui data profilnya sendiri
+// @Tags        User
+// @Security    BearerAuth
+// @Accept      json
+// @Produce     json
+// @Param       body  body      domain.UpdateProfileRequest  true  "Data yang diperbarui"
+// @Success     200   {object}  response.SuccessResponse{data=domain.User}
+// @Failure     400   {object}  response.ErrorResponse
+// @Router      /protected/users/me [put]
+func (h *UserHandler) UpdateProfile(c echo.Context) error {
+	payloadValue := c.Get(appMiddleware.AuthorizationPayloadKey)
+	if payloadValue == nil {
+		return response.Error(c, http.StatusUnauthorized, "Tidak terautentikasi", nil)
+	}
+	payload, ok := payloadValue.(*utils.TokenPayload)
+	if !ok {
+		return response.Error(c, http.StatusInternalServerError, "Terjadi kesalahan internal membaca sesi", nil)
+	}
+
+	var req domain.UpdateProfileRequest
+	if err := c.Bind(&req); err != nil {
+		return response.Error(c, http.StatusBadRequest, "Format request tidak valid", nil)
+	}
+
+	u, err := h.service.UpdateProfile(c.Request().Context(), payload.UserID, req)
+	if err != nil {
+		return response.Error(c, http.StatusInternalServerError, "Gagal memperbarui profil", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
+	}
+
+	return response.Success(c, http.StatusOK, "Profil berhasil diperbarui", u)
 }
 
 // DeleteUser godoc

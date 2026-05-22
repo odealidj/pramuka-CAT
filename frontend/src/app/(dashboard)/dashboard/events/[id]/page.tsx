@@ -16,6 +16,8 @@ import {
   XCircle,
   Trophy,
   Search,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import Spinner from '@/components/ui/Spinner';
 import Pagination from '@/components/ui/Pagination';
@@ -28,6 +30,7 @@ import {
   listEventParticipantsApi,
   approveParticipantApi,
   revokeParticipantApi,
+  removeEventParticipantApi,
   getExportUrl,
 } from '@/services/event.service';
 import { listQuestionsApi } from '@/services/question.service';
@@ -91,6 +94,7 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
   const [pSearchInput, setPSearchInput] = useState('');
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [revokingId, setRevokingId] = useState<string | null>(null);
+  const [removingParticipantId, setRemovingParticipantId] = useState<string | null>(null);
 
   // ── Toast (Simulated via alert for now, can be replaced by real toast) ──
   const onToast = (type: 'success' | 'error', msg: string) => {
@@ -121,10 +125,10 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
     }
   }, [eventId]);
 
-  const fetchParticipants = useCallback(async () => {
+  const fetchParticipants = useCallback(async (page: number = pPage) => {
     setLoadingP(true);
     try {
-      const res = await listEventParticipantsApi(eventId, pPage, 10, pSearch);
+      const res = await listEventParticipantsApi(eventId, page, 10, pSearch);
       setParticipants(res.data);
       setPMeta(res.meta);
     } finally {
@@ -234,6 +238,7 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
     setApprovingId(approvalId);
     try {
       await approveParticipantApi(eventId, approvalId);
+      onToast('success', 'Peserta disetujui. Notifikasi & Email sedang dikirim.');
       await fetchParticipants();
     } catch {
       onToast('error', 'Gagal menyetujui peserta.');
@@ -243,14 +248,36 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
   };
 
   const handleRevoke = async (approvalId: string) => {
-    setRevokingId(approvalId);
     try {
+      setRevokingId(approvalId);
       await revokeParticipantApi(eventId, approvalId);
-      await fetchParticipants();
-    } catch {
-      onToast('error', 'Gagal membatalkan persetujuan peserta.');
+      onToast('success', 'Persetujuan peserta dibatalkan. Notifikasi & Email sedang dikirim.');
+      fetchParticipants(1);
+    } catch (err: any) {
+      onToast('error', err?.response?.data?.message || 'Gagal membatalkan persetujuan');
     } finally {
       setRevokingId(null);
+    }
+  };
+
+  const handleRemoveParticipant = async (approvalId: string) => {
+    const confirmation = prompt('Ketik "HAPUS" untuk menghapus peserta ini secara permanen dari ujian:');
+    if (confirmation !== 'HAPUS') {
+      if (confirmation !== null) {
+        onToast('error', 'Konfirmasi gagal. Anda harus mengetik "HAPUS".');
+      }
+      return;
+    }
+    
+    try {
+      setRemovingParticipantId(approvalId);
+      await removeEventParticipantApi(eventId, approvalId);
+      onToast('success', 'Peserta dihapus. Notifikasi & Email sedang dikirim.');
+      fetchParticipants(1);
+    } catch (err: any) {
+      onToast('error', err?.response?.data?.message || 'Gagal menghapus peserta');
+    } finally {
+      setRemovingParticipantId(null);
     }
   };
 
@@ -608,23 +635,33 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
                           </td>
                           <td className="px-6 py-4 text-right">
                             <div className="flex items-center justify-end gap-2">
-                              {p.status.toLowerCase() === 'pending' && (
+                              {(p.status.toLowerCase() === 'pending' || p.status.toLowerCase() === 'revoked') && (
                                 <button
-                                  onClick={() => handleApprove(p.user_id)}
-                                  disabled={approvingId === p.user_id}
+                                  onClick={() => handleApprove(p.approval_id)}
+                                  disabled={approvingId === p.approval_id}
                                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-all disabled:opacity-50"
                                 >
-                                  {approvingId === p.user_id ? <Spinner size={14} /> : <CheckCircle size={14} />} Approve
+                                  {approvingId === p.approval_id ? <Spinner size={14} /> : <CheckCircle size={14} />} Approve
                                 </button>
                               )}
                               
-                              {(p.status.toLowerCase() === 'pending' || p.status.toLowerCase() === 'approved') && (
+                              {p.status.toLowerCase() === 'approved' && (
                                 <button
-                                  onClick={() => handleRevoke(p.user_id)}
-                                  disabled={revokingId === p.user_id}
-                                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white text-red-600 border-2 border-red-100 text-xs font-bold hover:bg-red-50 hover:border-red-200 transition-all disabled:opacity-50"
+                                  onClick={() => handleRevoke(p.approval_id)}
+                                  disabled={revokingId === p.approval_id}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
                                 >
-                                  {revokingId === p.user_id ? <Spinner size={14} /> : <XCircle size={14} />} Revoke
+                                  {revokingId === p.approval_id ? <Spinner size={14} /> : <XCircle size={14} />} Revoke
+                                </button>
+                              )}
+
+                              {(p.status.toLowerCase() === 'pending' || p.status.toLowerCase() === 'approved' || p.status.toLowerCase() === 'revoked') && (
+                                <button
+                                  onClick={() => handleRemoveParticipant(p.approval_id)}
+                                  disabled={removingParticipantId === p.approval_id}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100 transition-colors disabled:opacity-50"
+                                >
+                                  {removingParticipantId === p.approval_id ? <Spinner size={14} /> : <Trash2 size={14} />} Hapus
                                 </button>
                               )}
                             </div>

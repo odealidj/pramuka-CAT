@@ -9,6 +9,7 @@ import (
 type User struct {
 	ID        uuid.UUID `json:"id"`
 	Username  string    `json:"username"`
+	Email     *string   `json:"email"`
 	FullName  string    `json:"full_name"`
 	Role      string    `json:"role"`
 	PhotoURL  *string   `json:"photo_url,omitempty"`
@@ -17,6 +18,7 @@ type User struct {
 
 type CreateUserRequest struct {
 	Username string  `json:"username" validate:"required"`
+	Email    string  `json:"email" validate:"required,email"`
 	Password string  `json:"password" validate:"required,min=6"`
 	FullName string  `json:"full_name" validate:"required"`
 	Role     string  `json:"role" validate:"required,oneof=admin peserta"`
@@ -25,9 +27,16 @@ type CreateUserRequest struct {
 
 type UpdateUserRequest struct {
 	Username string  `json:"username" validate:"required"`
+	Email    string  `json:"email" validate:"required,email"`
 	FullName string  `json:"full_name" validate:"required"`
-	Role     string  `json:"role" validate:"required,oneof=admin peserta"`
+	Role     string  `json:"role" validate:"required,oneof=super_admin admin peserta"`
 	PhotoURL *string `json:"photo_url,omitempty"`
+}
+
+type UpdateProfileRequest struct {
+	Username string `json:"username" validate:"required"`
+	Email    string `json:"email" validate:"required,email"`
+	FullName string `json:"full_name" validate:"required"`
 }
 
 type UpdateUserPasswordRequest struct {

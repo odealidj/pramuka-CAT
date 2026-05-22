@@ -31,6 +31,8 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const pageTitle = pageTitles[pathname] ?? 'Halaman';
   const { user } = useAuth();
+  
+  const isExamMode = pathname.includes('/dashboard/exams/');
 
   // Listen for quick actions from CommandPalette
   useEffect(() => {
@@ -44,34 +46,40 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="h-full flex overflow-hidden">
-      {/* Sidebar */}
-      <Sidebar
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-        role={(user?.role as 'admin' | 'peserta') ?? 'peserta'}
-        isCollapsed={isCollapsed}
-        onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
-      />
-
-      {/* Main Content Area (offset by sidebar width on desktop) */}
-      <div className={`flex flex-col flex-1 h-screen overflow-hidden transition-all duration-300 ${isCollapsed ? 'lg:ml-20' : 'lg:ml-64'}`}>
-        <Navbar
-          onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)}
-          pageTitle={pageTitle}
+      {/* Sidebar - Hidden in Exam Mode */}
+      {!isExamMode && (
+        <Sidebar
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+          role={(user?.role as 'admin' | 'peserta') ?? 'peserta'}
           isCollapsed={isCollapsed}
+          onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
         />
+      )}
+
+      {/* Main Content Area */}
+      <div className={`flex flex-col flex-1 h-screen overflow-hidden transition-all duration-300 ${!isExamMode ? (isCollapsed ? 'lg:ml-20' : 'lg:ml-64') : ''}`}>
+        {!isExamMode && (
+          <Navbar
+            onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+            pageTitle={pageTitle}
+            isCollapsed={isCollapsed}
+          />
+        )}
 
         {/* Page Content */}
-        <main className="flex-1 p-4 lg:p-6 overflow-auto">
+        <main className={`flex-1 overflow-auto bg-gray-50/50 ${isExamMode ? 'p-0' : 'p-4 lg:p-6'}`}>
           {children}
         </main>
 
-        {/* Footer */}
-        <footer className="border-t border-gray-200 px-6 py-3 bg-white">
-          <p className="text-gray-400 text-xs text-center">
-            © {new Date().getFullYear()} Pramuka CAT — Sistem Ujian Digital. All rights reserved.
-          </p>
-        </footer>
+        {/* Footer - Hidden in Exam Mode */}
+        {!isExamMode && (
+          <footer className="border-t border-gray-200 px-6 py-3 bg-white">
+            <p className="text-gray-400 text-xs text-center">
+              © {new Date().getFullYear()} Pramuka CAT — Sistem Ujian Digital. All rights reserved.
+            </p>
+          </footer>
+        )}
       </div>
 
       <QuickActionModals 

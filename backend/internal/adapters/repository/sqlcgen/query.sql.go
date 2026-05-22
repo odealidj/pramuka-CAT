@@ -308,6 +308,18 @@ func (q *Queries) CountQuestionsByCategory(ctx context.Context, categoryID sql.N
 	return count, err
 }
 
+const countUnreadNotifications = `-- name: CountUnreadNotifications :one
+SELECT COUNT(*) FROM notifications
+WHERE user_id = $1 AND is_read = FALSE
+`
+
+func (q *Queries) CountUnreadNotifications(ctx context.Context, userID uuid.UUID) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countUnreadNotifications, userID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countUpcomingEvents = `-- name: CountUpcomingEvents :one
 SELECT COUNT(*) FROM events
 WHERE end_time > NOW() AND deleted_at IS NULL
@@ -335,7 +347,7 @@ func (q *Queries) CountUserApprovals(ctx context.Context, userID uuid.NullUUID) 
 const countUsers = `-- name: CountUsers :one
 SELECT COUNT(*) FROM users
 WHERE deleted_at IS NULL AND role = 'peserta'
-  AND ($1::text = '' OR full_name ILIKE '%' || $1::text || '%')
+  AND ($1::text = '' OR full_name ILIKE '%' || $1::text || '%' OR email ILIKE '%' || $1::text || '%')
 `
 
 func (q *Queries) CountUsers(ctx context.Context, search string) (int64, error) {
@@ -412,6 +424,39 @@ type CreateEventQuestionParams struct {
 func (q *Queries) CreateEventQuestion(ctx context.Context, arg CreateEventQuestionParams) error {
 	_, err := q.db.ExecContext(ctx, createEventQuestion, arg.EventID, arg.QuestionID)
 	return err
+}
+
+const createNotification = `-- name: CreateNotification :one
+INSERT INTO notifications (user_id, title, message, type)
+VALUES ($1, $2, $3, $4)
+RETURNING id, user_id, title, message, type, is_read, created_at
+`
+
+type CreateNotificationParams struct {
+	UserID  uuid.UUID `json:"user_id"`
+	Title   string    `json:"title"`
+	Message string    `json:"message"`
+	Type    string    `json:"type"`
+}
+
+func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotificationParams) (Notification, error) {
+	row := q.db.QueryRowContext(ctx, createNotification,
+		arg.UserID,
+		arg.Title,
+		arg.Message,
+		arg.Type,
+	)
+	var i Notification
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Title,
+		&i.Message,
+		&i.Type,
+		&i.IsRead,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const createQuestion = `-- name: CreateQuestion :one
@@ -494,9 +539,9 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (S
 }
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (username, password_hash, full_name, role, photo_url)
-VALUES ($1, $2, $3, $4, $5)
-RETURNING id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at
+INSERT INTO users (username, password_hash, full_name, role, photo_url, email)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at, email
 `
 
 type CreateUserParams struct {
@@ -505,6 +550,7 @@ type CreateUserParams struct {
 	FullName     string         `json:"full_name"`
 	Role         string         `json:"role"`
 	PhotoUrl     sql.NullString `json:"photo_url"`
+	Email        sql.NullString `json:"email"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -514,6 +560,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.FullName,
 		arg.Role,
 		arg.PhotoUrl,
+		arg.Email,
 	)
 	var i User
 	err := row.Scan(
@@ -526,8 +573,18 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.Email,
 	)
 	return i, err
+}
+
+const deleteApprovalsByEventID = `-- name: DeleteApprovalsByEventID :exec
+DELETE FROM user_event_approvals WHERE event_id = $1
+`
+
+func (q *Queries) DeleteApprovalsByEventID(ctx context.Context, eventID uuid.NullUUID) error {
+	_, err := q.db.ExecContext(ctx, deleteApprovalsByEventID, eventID)
+	return err
 }
 
 const deleteCategory = `-- name: DeleteCategory :exec
@@ -586,6 +643,15 @@ WHERE id = $1
 
 func (q *Queries) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.ExecContext(ctx, deleteUser, id)
+	return err
+}
+
+const deleteUserEventApproval = `-- name: DeleteUserEventApproval :exec
+DELETE FROM user_event_approvals WHERE id = $1
+`
+
+func (q *Queries) DeleteUserEventApproval(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteUserEventApproval, id)
 	return err
 }
 
@@ -1036,7 +1102,7 @@ func (q *Queries) GetUserAnswersDetail(ctx context.Context, approvalID uuid.Null
 }
 
 const getUserById = `-- name: GetUserById :one
-SELECT id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at FROM users
+SELECT id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at, email FROM users
 WHERE id = $1 AND deleted_at IS NULL LIMIT 1
 `
 
@@ -1053,12 +1119,13 @@ func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.Email,
 	)
 	return i, err
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at FROM users
+SELECT id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at, email FROM users
 WHERE username = $1 AND deleted_at IS NULL LIMIT 1
 `
 
@@ -1075,12 +1142,57 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.Email,
 	)
 	return i, err
 }
 
+const getUserNotifications = `-- name: GetUserNotifications :many
+SELECT id, user_id, title, message, type, is_read, created_at FROM notifications 
+WHERE user_id = $1
+ORDER BY created_at DESC
+LIMIT $2 OFFSET $3
+`
+
+type GetUserNotificationsParams struct {
+	UserID uuid.UUID `json:"user_id"`
+	Limit  int32     `json:"limit"`
+	Offset int32     `json:"offset"`
+}
+
+func (q *Queries) GetUserNotifications(ctx context.Context, arg GetUserNotificationsParams) ([]Notification, error) {
+	rows, err := q.db.QueryContext(ctx, getUserNotifications, arg.UserID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Notification{}
+	for rows.Next() {
+		var i Notification
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Title,
+			&i.Message,
+			&i.Type,
+			&i.IsRead,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listAdmins = `-- name: ListAdmins :many
-SELECT id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at FROM users
+SELECT id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at, email FROM users
 WHERE deleted_at IS NULL AND role = 'admin'
   AND ($3::text = '' OR full_name ILIKE '%' || $3::text || '%')
 ORDER BY full_name ASC
@@ -1112,6 +1224,51 @@ func (q *Queries) ListAdmins(ctx context.Context, arg ListAdminsParams) ([]User,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
+			&i.Email,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listAllEventParticipants = `-- name: ListAllEventParticipants :many
+SELECT u.id, u.username, u.full_name, u.email, uea.id as approval_id
+FROM users u
+JOIN user_event_approvals uea ON u.id = uea.user_id
+WHERE uea.event_id = $1
+`
+
+type ListAllEventParticipantsRow struct {
+	ID         uuid.UUID      `json:"id"`
+	Username   string         `json:"username"`
+	FullName   string         `json:"full_name"`
+	Email      sql.NullString `json:"email"`
+	ApprovalID uuid.UUID      `json:"approval_id"`
+}
+
+func (q *Queries) ListAllEventParticipants(ctx context.Context, eventID uuid.NullUUID) ([]ListAllEventParticipantsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listAllEventParticipants, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListAllEventParticipantsRow{}
+	for rows.Next() {
+		var i ListAllEventParticipantsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Username,
+			&i.FullName,
+			&i.Email,
+			&i.ApprovalID,
 		); err != nil {
 			return nil, err
 		}
@@ -1168,7 +1325,7 @@ func (q *Queries) ListCategories(ctx context.Context, arg ListCategoriesParams) 
 }
 
 const listEventParticipants = `-- name: ListEventParticipants :many
-SELECT u.id, u.username, u.full_name, uea.status, uea.is_completed, uea.score, uea.is_passed
+SELECT u.id, u.username, u.full_name, uea.id as approval_id, uea.status, uea.is_completed, uea.score, uea.is_passed
 FROM users u
 JOIN user_event_approvals uea ON u.id = uea.user_id
 WHERE uea.event_id = $1
@@ -1188,6 +1345,7 @@ type ListEventParticipantsRow struct {
 	ID          uuid.UUID      `json:"id"`
 	Username    string         `json:"username"`
 	FullName    string         `json:"full_name"`
+	ApprovalID  uuid.UUID      `json:"approval_id"`
 	Status      string         `json:"status"`
 	IsCompleted bool           `json:"is_completed"`
 	Score       sql.NullString `json:"score"`
@@ -1212,6 +1370,7 @@ func (q *Queries) ListEventParticipants(ctx context.Context, arg ListEventPartic
 			&i.ID,
 			&i.Username,
 			&i.FullName,
+			&i.ApprovalID,
 			&i.Status,
 			&i.IsCompleted,
 			&i.Score,
@@ -1523,9 +1682,9 @@ func (q *Queries) ListUserApprovals(ctx context.Context, arg ListUserApprovalsPa
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at FROM users
+SELECT id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at, email FROM users
 WHERE deleted_at IS NULL AND role = 'peserta'
-  AND ($3::text = '' OR full_name ILIKE '%' || $3::text || '%')
+  AND ($3::text = '' OR full_name ILIKE '%' || $3::text || '%' OR email ILIKE '%' || $3::text || '%')
 ORDER BY full_name ASC
 LIMIT $1 OFFSET $2
 `
@@ -1555,6 +1714,7 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
+			&i.Email,
 		); err != nil {
 			return nil, err
 		}
@@ -1567,6 +1727,33 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 		return nil, err
 	}
 	return items, nil
+}
+
+const markAllNotificationsAsRead = `-- name: MarkAllNotificationsAsRead :exec
+UPDATE notifications
+SET is_read = TRUE
+WHERE user_id = $1 AND is_read = FALSE
+`
+
+func (q *Queries) MarkAllNotificationsAsRead(ctx context.Context, userID uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, markAllNotificationsAsRead, userID)
+	return err
+}
+
+const markNotificationAsRead = `-- name: MarkNotificationAsRead :exec
+UPDATE notifications
+SET is_read = TRUE
+WHERE id = $1 AND user_id = $2
+`
+
+type MarkNotificationAsReadParams struct {
+	ID     uuid.UUID `json:"id"`
+	UserID uuid.UUID `json:"user_id"`
+}
+
+func (q *Queries) MarkNotificationAsRead(ctx context.Context, arg MarkNotificationAsReadParams) error {
+	_, err := q.db.ExecContext(ctx, markNotificationAsRead, arg.ID, arg.UserID)
+	return err
 }
 
 const revokeUserEvent = `-- name: RevokeUserEvent :one
@@ -1753,9 +1940,9 @@ func (q *Queries) UpdateQuestion(ctx context.Context, arg UpdateQuestionParams) 
 
 const updateUser = `-- name: UpdateUser :one
 UPDATE users
-SET username = $2, full_name = $3, role = $4, photo_url = $5
+SET username = $2, full_name = $3, role = $4, photo_url = $5, email = $6
 WHERE id = $1 AND deleted_at IS NULL
-RETURNING id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at
+RETURNING id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at, email
 `
 
 type UpdateUserParams struct {
@@ -1764,6 +1951,7 @@ type UpdateUserParams struct {
 	FullName string         `json:"full_name"`
 	Role     string         `json:"role"`
 	PhotoUrl sql.NullString `json:"photo_url"`
+	Email    sql.NullString `json:"email"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
@@ -1773,6 +1961,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		arg.FullName,
 		arg.Role,
 		arg.PhotoUrl,
+		arg.Email,
 	)
 	var i User
 	err := row.Scan(
@@ -1785,6 +1974,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.Email,
 	)
 	return i, err
 }

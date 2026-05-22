@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import Spinner from '@/components/ui/Spinner';
 import { getPhotoUrl } from '@/lib/constants';
+import NotificationDropdown from './NotificationDropdown';
 
 interface NavbarProps {
   onMenuToggle: () => void;
@@ -102,10 +103,7 @@ export default function Navbar({ onMenuToggle, pageTitle = 'Dashboard', isCollap
           </button>
 
           {/* Notification Bell */}
-          <button className="relative p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100">
-            <Bell size={18} />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white" />
-          </button>
+          <NotificationDropdown />
 
           {/* Divider */}
           <div className="w-px h-6 bg-gray-200 mx-1 hidden sm:block" />

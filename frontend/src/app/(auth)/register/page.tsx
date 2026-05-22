@@ -21,6 +21,10 @@ const registerSchema = z.object({
     .min(1, 'Username wajib diisi')
     .min(3, 'Username minimal 3 karakter')
     .regex(/^[a-zA-Z0-9_]+$/, 'Username hanya boleh berisi huruf, angka, dan underscore'),
+  email: z
+    .string()
+    .min(1, 'Email wajib diisi')
+    .email('Format email tidak valid'),
   full_name: z
     .string()
     .min(1, 'Nama lengkap wajib diisi')
@@ -57,6 +61,7 @@ export default function RegisterPage() {
     resolver: zodResolver(registerSchema),
     defaultValues: {
       username: '',
+      email: '',
       full_name: '',
       password: '',
       confirm_password: '',
@@ -69,6 +74,7 @@ export default function RegisterPage() {
     try {
       await registerApi({
         username: values.username,
+        email: values.email,
         full_name: values.full_name,
         password: values.password,
       });
@@ -199,6 +205,35 @@ export default function RegisterPage() {
                   <p className="text-red-500 text-[11px] mt-1.5 flex items-center gap-1">
                     <AlertCircle size={10} />
                     {errors.username.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Email Field */}
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-gray-700 text-xs font-semibold mb-1.5"
+                >
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="Masukkan email"
+                  disabled={isSubmitting || !!apiSuccess}
+                  {...register('email')}
+                  className={`w-full px-3 py-2.5 rounded-xl border text-gray-800 text-sm placeholder:text-gray-400 outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed
+                    ${errors.email
+                      ? 'border-red-300 bg-red-50 focus:ring-2 focus:ring-red-200 focus:border-red-400'
+                      : 'border-gray-200 bg-white focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400'
+                    }`}
+                />
+                {errors.email && (
+                  <p className="text-red-500 text-[11px] mt-1.5 flex items-center gap-1">
+                    <AlertCircle size={10} />
+                    {errors.email.message}
                   </p>
                 )}
               </div>

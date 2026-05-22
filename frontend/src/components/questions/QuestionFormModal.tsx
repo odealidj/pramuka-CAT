@@ -151,6 +151,7 @@ export default function QuestionFormModal({
     },
   });
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const correctAnswer = watch('correct_answer');
 
   useEffect(() => {

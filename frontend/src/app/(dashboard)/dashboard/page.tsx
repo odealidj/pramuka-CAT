@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Users,
   BookOpen,
@@ -106,8 +107,8 @@ function ActivityItem({
   );
 }
 
-// --- Dashboard Page ---
-export default function DashboardPage() {
+// --- Admin Dashboard ---
+function AdminDashboard() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -191,7 +192,7 @@ export default function DashboardPage() {
     else if (diffInSeconds < 86400) timeStr = `${Math.floor(diffInSeconds / 3600)} jam lalu`;
     else timeStr = `${Math.floor(diffInSeconds / 86400)} hari lalu`;
     
-    let statusConfig = "pending" as const;
+    let statusConfig: "pending" | "completed" | "approved" = "pending";
     if (a.status === "completed" || a.action.includes("Menyelesaikan")) statusConfig = "completed" as const;
     else if (a.status === "approved") statusConfig = "approved" as const;
 
@@ -329,4 +330,64 @@ export default function DashboardPage() {
       {/* We removed QuickActionModals here because it is now handled globally in layout.tsx */}
     </div>
   );
+}
+
+// --- Peserta Dashboard ---
+function PesertaDashboard() {
+  const { user } = useAuth();
+  
+  return (
+    <div className="space-y-6">
+      {/* Welcome Banner */}
+      <div className="relative bg-gradient-to-r from-[#0F52BA] via-[#1E3A8A] to-[#172554] rounded-2xl p-6 overflow-hidden shadow-lg">
+        <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
+        <div className="absolute bottom-0 right-16 w-24 h-24 bg-white/5 rounded-full translate-y-1/2" />
+
+        <div className="relative z-10">
+          <p className="text-blue-200 text-sm font-medium mb-1">
+            Selamat datang 👋
+          </p>
+          <h2 className="text-white text-2xl font-bold mb-1">{user?.full_name || user?.username}</h2>
+          <p className="text-blue-100/70 text-sm max-w-md">
+            Pilih menu <b>Jadwal Ujian</b> untuk melihat daftar tryout yang tersedia dan status persetujuan ujian Anda.
+          </p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center">
+        <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <CalendarDays size={28} />
+        </div>
+        <h3 className="text-gray-900 font-bold text-lg mb-2">Siap untuk Ujian?</h3>
+        <p className="text-gray-500 text-sm max-w-md mx-auto mb-6">
+          Semua event ujian yang dapat Anda ikuti, baik yang akan datang maupun yang sedang berlangsung, dapat dilihat di halaman Jadwal Ujian.
+        </p>
+        <Link 
+          href="/dashboard/events"
+          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-medium transition-colors"
+        >
+          Lihat Jadwal Ujian <ArrowUpRight size={18} />
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+// --- Main Page Component ---
+export default function DashboardPage() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
+      </div>
+    );
+  }
+
+  if (user?.role === 'peserta') {
+    return <PesertaDashboard />;
+  }
+
+  return <AdminDashboard />;
 }

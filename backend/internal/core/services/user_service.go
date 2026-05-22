@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/domain"
@@ -29,8 +30,15 @@ func (s *userService) CreateUser(ctx context.Context, req domain.CreateUserReque
 		return domain.User{}, fmt.Errorf("gagal mengenkripsi kata sandi: %w", err)
 	}
 
+	emailStr := req.Email
+	emailPtr := &emailStr
+	if req.Email == "" {
+		emailPtr = nil
+	}
+
 	u := domain.User{
 		Username: req.Username,
+		Email:    emailPtr,
 		FullName: req.FullName,
 		Role:     req.Role,
 		PhotoURL: req.PhotoURL,
@@ -57,11 +65,53 @@ func (s *userService) UpdateUser(ctx context.Context, id uuid.UUID, req domain.U
 		return domain.User{}, fmt.Errorf("user tidak ditemukan")
 	}
 
+	emailStr := req.Email
+	emailPtr := &emailStr
+	if req.Email == "" {
+		emailPtr = nil
+	}
+
 	u := domain.User{
 		Username: req.Username,
+		Email:    emailPtr,
 		FullName: req.FullName,
 		Role:     req.Role,
 		PhotoURL: req.PhotoURL,
+	}
+
+
+	res, err := s.repo.UpdateUser(ctx, id, u)
+	if err != nil {
+		if strings.Contains(err.Error(), "idx_users_email") || strings.Contains(err.Error(), "users_email_key") {
+			return domain.User{}, fmt.Errorf("email sudah digunakan oleh pengguna lain")
+		}
+		if strings.Contains(err.Error(), "users_username_key") {
+			return domain.User{}, fmt.Errorf("username sudah digunakan oleh pengguna lain")
+		}
+		return domain.User{}, err
+	}
+	return res, nil
+
+}
+
+func (s *userService) UpdateProfile(ctx context.Context, id uuid.UUID, req domain.UpdateProfileRequest) (domain.User, error) {
+	existingUser, err := s.repo.GetUserById(ctx, id)
+	if err != nil {
+		return domain.User{}, fmt.Errorf("user tidak ditemukan")
+	}
+
+	emailStr := req.Email
+	emailPtr := &emailStr
+	if req.Email == "" {
+		emailPtr = nil
+	}
+
+	u := domain.User{
+		Username: req.Username,
+		Email:    emailPtr,
+		FullName: req.FullName,
+		Role:     existingUser.Role,     // Do not allow role change
+		PhotoURL: existingUser.PhotoURL, // Do not change photo here
 	}
 
 	return s.repo.UpdateUser(ctx, id, u)

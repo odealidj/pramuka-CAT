@@ -17,6 +17,7 @@ import { getPhotoUrl } from '@/lib/constants';
 // ============================================================
 const createSchema = z.object({
   username: z.string().min(3, 'Username minimal 3 karakter'),
+  email: z.string().email('Format email tidak valid'),
   password: z.string().min(6, 'Password minimal 6 karakter'),
   full_name: z.string().min(2, 'Nama lengkap minimal 2 karakter'),
   role: z.enum(['peserta']),
@@ -25,6 +26,7 @@ const createSchema = z.object({
 
 const editSchema = z.object({
   username: z.string().min(3, 'Username minimal 3 karakter'),
+  email: z.string().email('Format email tidak valid'),
   full_name: z.string().min(2, 'Nama lengkap minimal 2 karakter'),
   role: z.enum(['peserta']),
   photo_url: z.string().optional().or(z.literal('')),
@@ -111,6 +113,7 @@ export default function UserFormModal({
     resolver: zodResolver(isEdit ? editSchema : createSchema) as never,
     defaultValues: {
       username: '',
+      email: '',
       password: '',
       full_name: '',
       role: 'peserta',
@@ -123,6 +126,7 @@ export default function UserFormModal({
     if (isEdit && user) {
       reset({
         username: user.username,
+        email: user.email ?? '',
         full_name: user.full_name,
         role: 'peserta',
         photo_url: user.photo_url ?? '',
@@ -130,6 +134,7 @@ export default function UserFormModal({
     } else if (!isEdit) {
       reset({
         username: '',
+        email: '',
         password: '',
         full_name: '',
         role: 'peserta',
@@ -156,6 +161,7 @@ export default function UserFormModal({
     }
   }, [selectedFile]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const photoUrlValue = watch('photo_url');
   const finalPreview = photoMode === 'file' ? previewFile : (photoUrlValue ? getPhotoUrl(photoUrlValue) : null);
 
@@ -224,6 +230,17 @@ export default function UserFormModal({
             disabled={isSubmitting}
             {...register('username')}
             className={inputClass(!!errors.username)}
+          />
+        </Field>
+
+        {/* Email */}
+        <Field label="Email" error={errors.email?.message} required>
+          <input
+            type="email"
+            placeholder="Contoh: budi@gmail.com"
+            disabled={isSubmitting}
+            {...register('email')}
+            className={inputClass(!!errors.email)}
           />
         </Field>
 

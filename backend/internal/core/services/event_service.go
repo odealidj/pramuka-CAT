@@ -11,15 +11,17 @@ import (
 	gofpdf "github.com/jung-kurt/gofpdf"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/domain"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/ports"
+	"github.com/odealidj/pramuka-CAT/backend/internal/worker"
 	"github.com/xuri/excelize/v2"
 )
 
 type eventService struct {
-	repo ports.EventRepository
+	repo            ports.EventRepository
+	taskDistributor worker.TaskDistributor
 }
 
-func NewEventService(repo ports.EventRepository) ports.EventService {
-	return &eventService{repo: repo}
+func NewEventService(repo ports.EventRepository, taskDistributor worker.TaskDistributor) ports.EventService {
+	return &eventService{repo: repo, taskDistributor: taskDistributor}
 }
 
 func (s *eventService) CreateEvent(ctx context.Context, req domain.CreateEventRequest) (domain.Event, error) {
@@ -84,10 +86,27 @@ func (s *eventService) UpdateEvent(ctx context.Context, id uuid.UUID, req domain
 }
 
 func (s *eventService) DeleteEvent(ctx context.Context, id uuid.UUID) error {
-	_, err := s.repo.GetEventById(ctx, id)
+	event, err := s.repo.GetEventById(ctx, id)
 	if err != nil {
 		return fmt.Errorf("event tidak ditemukan")
 	}
+
+	participants, err := s.repo.ListAllEventParticipants(ctx, id)
+	if err == nil && s.taskDistributor != nil {
+		for _, p := range participants {
+			if p.Email.Valid && p.Email.String != "" {
+				s.taskDistributor.DistributeTaskSendEmail(context.Background(), &worker.PayloadSendEmail{
+					ToAddress: p.Email.String,
+					Subject:   "Pemberitahuan: Jadwal Ujian Dibatalkan",
+					Body:      fmt.Sprintf("Halo %s,\n\nMohon maaf, Jadwal Ujian '%s' yang Anda ikuti telah dibatalkan atau dihapus oleh Admin.\n\nTerima kasih.\n\nTim Pramuka CAT", p.FullName, event.Name),
+				})
+			}
+		}
+	}
+
+	// Delete approvals
+	s.repo.DeleteApprovalsByEventID(ctx, id)
+
 	return s.repo.DeleteEvent(ctx, id)
 }
 
@@ -113,11 +132,92 @@ func (s *eventService) ListEventParticipants(ctx context.Context, eventID uuid.U
 }
 
 func (s *eventService) ApproveUserEvent(ctx context.Context, approvalID uuid.UUID) error {
-	return s.repo.ApproveUserEvent(ctx, approvalID)
+	err := s.repo.ApproveUserEvent(ctx, approvalID)
+	if err == nil && s.taskDistributor != nil {
+		approval, _ := s.repo.GetApprovalById(ctx, approvalID)
+		if approval.UserID != uuid.Nil {
+			user, _ := s.repo.GetUserById(ctx, approval.UserID)
+			event, _ := s.repo.GetEventById(ctx, approval.EventID)
+
+			title := "Pendaftaran Disetujui"
+			msg := fmt.Sprintf("Pendaftaran Anda untuk ujian %s telah disetujui. Anda dapat memulai ujian pada waktu yang ditentukan.", event.Name)
+			
+			s.taskDistributor.DistributeTaskCreateNotification(context.Background(), &worker.PayloadCreateNotification{
+				UserID:  user.ID,
+				Title:   title,
+				Message: msg,
+				Type:    "event_approval",
+			})
+			if user.Email != nil && *user.Email != "" {
+				s.taskDistributor.DistributeTaskSendEmail(context.Background(), &worker.PayloadSendEmail{
+					ToAddress: *user.Email,
+					Subject:   "Pendaftaran Ujian Disetujui",
+					Body:      fmt.Sprintf("Halo %s,\n\n%s\n\nSalam,\nAdmin Pramuka CAT", user.FullName, msg),
+				})
+			}
+		}
+	}
+	return err
 }
 
 func (s *eventService) RevokeUserEvent(ctx context.Context, approvalID uuid.UUID) error {
-	return s.repo.RevokeUserEvent(ctx, approvalID)
+	err := s.repo.RevokeUserEvent(ctx, approvalID)
+	if err == nil && s.taskDistributor != nil {
+		approval, _ := s.repo.GetApprovalById(ctx, approvalID)
+		if approval.UserID != uuid.Nil {
+			user, _ := s.repo.GetUserById(ctx, approval.UserID)
+			event, _ := s.repo.GetEventById(ctx, approval.EventID)
+
+			title := "Pendaftaran Dibatalkan"
+			msg := fmt.Sprintf("Pendaftaran Anda untuk ujian %s telah dibatalkan (revoked) oleh admin.", event.Name)
+			
+			s.taskDistributor.DistributeTaskCreateNotification(context.Background(), &worker.PayloadCreateNotification{
+				UserID:  user.ID,
+				Title:   title,
+				Message: msg,
+				Type:    "event_revocation",
+			})
+			if user.Email != nil && *user.Email != "" {
+				s.taskDistributor.DistributeTaskSendEmail(context.Background(), &worker.PayloadSendEmail{
+					ToAddress: *user.Email,
+					Subject:   "Pendaftaran Ujian Dibatalkan",
+					Body:      fmt.Sprintf("Halo %s,\n\n%s\n\nSalam,\nAdmin Pramuka CAT", user.FullName, msg),
+				})
+			}
+		}
+	}
+	return err
+}
+
+func (s *eventService) RemoveUserEvent(ctx context.Context, approvalID uuid.UUID) error {
+	// Dapatkan data sebelum dihapus
+	approval, errGet := s.repo.GetApprovalById(ctx, approvalID)
+	
+	err := s.repo.RemoveUserEvent(ctx, approvalID)
+	if err == nil && errGet == nil && s.taskDistributor != nil {
+		if approval.UserID != uuid.Nil {
+			user, _ := s.repo.GetUserById(ctx, approval.UserID)
+			event, _ := s.repo.GetEventById(ctx, approval.EventID)
+
+			title := "Dikeluarkan dari Ujian"
+			msg := fmt.Sprintf("Anda telah dikeluarkan secara permanen dari ujian %s oleh admin.", event.Name)
+			
+			s.taskDistributor.DistributeTaskCreateNotification(context.Background(), &worker.PayloadCreateNotification{
+				UserID:  user.ID,
+				Title:   title,
+				Message: msg,
+				Type:    "event_removal",
+			})
+			if user.Email != nil && *user.Email != "" {
+				s.taskDistributor.DistributeTaskSendEmail(context.Background(), &worker.PayloadSendEmail{
+					ToAddress: *user.Email,
+					Subject:   "Dikeluarkan dari Ujian",
+					Body:      fmt.Sprintf("Halo %s,\n\n%s\n\nSalam,\nAdmin Pramuka CAT", user.FullName, msg),
+				})
+			}
+		}
+	}
+	return err
 }
 
 func (s *eventService) AddRandomEventQuestions(ctx context.Context, eventID uuid.UUID, req domain.AddRandomEventQuestionsRequest) error {

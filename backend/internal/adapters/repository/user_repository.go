@@ -30,9 +30,15 @@ func mapSqlcToDomainUser(u sqlcgen.User) domain.User {
 		photoURL = &u.PhotoUrl.String
 	}
 
+	var email *string
+	if u.Email.Valid {
+		email = &u.Email.String
+	}
+
 	return domain.User{
 		ID:        u.ID,
 		Username:  u.Username,
+		Email:     email,
 		FullName:  u.FullName,
 		Role:      u.Role,
 		PhotoURL:  photoURL,
@@ -46,12 +52,18 @@ func (r *userRepository) CreateUser(ctx context.Context, u domain.User, password
 		photoUrl = sql.NullString{String: *u.PhotoURL, Valid: true}
 	}
 
+	email := sql.NullString{Valid: false}
+	if u.Email != nil {
+		email = sql.NullString{String: *u.Email, Valid: true}
+	}
+
 	res, err := r.queries.CreateUser(ctx, sqlcgen.CreateUserParams{
 		Username:     u.Username,
 		PasswordHash: passwordHash,
 		FullName:     u.FullName,
 		Role:         u.Role,
 		PhotoUrl:     photoUrl,
+		Email:        email,
 	})
 	if err != nil {
 		return domain.User{}, err
@@ -119,12 +131,18 @@ func (r *userRepository) UpdateUser(ctx context.Context, id uuid.UUID, u domain.
 		photoUrl = sql.NullString{String: *u.PhotoURL, Valid: true}
 	}
 
+	email := sql.NullString{Valid: false}
+	if u.Email != nil {
+		email = sql.NullString{String: *u.Email, Valid: true}
+	}
+
 	res, err := r.queries.UpdateUser(ctx, sqlcgen.UpdateUserParams{
 		ID:       id,
 		Username: u.Username,
 		FullName: u.FullName,
 		Role:     u.Role,
 		PhotoUrl: photoUrl,
+		Email:    email,
 	})
 	if err != nil {
 		return domain.User{}, err

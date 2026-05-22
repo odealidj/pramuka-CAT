@@ -34,6 +34,16 @@ type EventQuestion struct {
 	QuestionID uuid.UUID `json:"question_id"`
 }
 
+type Notification struct {
+	ID        uuid.UUID `json:"id"`
+	UserID    uuid.UUID `json:"user_id"`
+	Title     string    `json:"title"`
+	Message   string    `json:"message"`
+	Type      string    `json:"type"`
+	IsRead    bool      `json:"is_read"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
 type Question struct {
 	ID            uuid.UUID     `json:"id"`
 	CategoryID    sql.NullInt32 `json:"category_id"`
@@ -67,6 +77,7 @@ type User struct {
 	CreatedAt    sql.NullTime   `json:"created_at"`
 	UpdatedAt    sql.NullTime   `json:"updated_at"`
 	DeletedAt    sql.NullTime   `json:"deleted_at"`
+	Email        sql.NullString `json:"email"`
 }
 
 type UserAnswer struct {

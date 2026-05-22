@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"time"
@@ -84,12 +85,19 @@ func (s *authService) Login(ctx context.Context, req domain.LoginRequest) (domai
 		photoUrl = &val
 	}
 
+	var emailStr *string
+	if user.Email.Valid {
+		val := user.Email.String
+		emailStr = &val
+	}
+
 	return domain.LoginResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		User: domain.UserResponse{
 			ID:       user.ID,
 			Username: user.Username,
+			Email:    emailStr,
 			FullName: user.FullName,
 			Role:     user.Role,
 			PhotoURL: photoUrl,
@@ -184,22 +192,34 @@ func (s *authService) Register(ctx context.Context, req domain.RegisterRequest) 
 		return domain.RegisterResponse{}, fmt.Errorf("gagal memproses password")
 	}
 
+	email := sql.NullString{Valid: false}
+	if req.Email != "" {
+		email = sql.NullString{String: req.Email, Valid: true}
+	}
+
 	// Create user dengan role default "peserta"
 	user, err := s.repo.CreateUser(ctx, sqlcgen.CreateUserParams{
 		Username:     req.Username,
 		PasswordHash: hashedPassword,
 		FullName:     req.FullName,
 		Role:         "peserta",
+		Email:        email,
 		// PhotoUrl dibiarkan kosong (invalid NullString)
 	})
 	if err != nil {
 		return domain.RegisterResponse{}, fmt.Errorf("gagal membuat akun: %w", err)
 	}
 
+	var emailStr *string
+	if user.Email.Valid {
+		emailStr = &user.Email.String
+	}
+
 	return domain.RegisterResponse{
 		User: domain.UserResponse{
 			ID:       user.ID,
 			Username: user.Username,
+			Email:    emailStr,
 			FullName: user.FullName,
 			Role:     user.Role,
 		},

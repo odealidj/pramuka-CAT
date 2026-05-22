@@ -16,6 +16,7 @@ export interface RefreshRequest {
 
 export interface RegisterRequest {
   username: string;
+  email: string;
   password: string;
   full_name: string;
 }
@@ -27,6 +28,7 @@ export interface RegisterRequest {
 export interface UserInfo {
   id: string;
   username: string;
+  email?: string | null;
   full_name: string;
   role: 'super_admin' | 'admin' | 'peserta';
   photo_url?: string | null;
@@ -51,6 +53,7 @@ export interface RefreshResponse {
 export interface User {
   id: string;
   username: string;
+  email?: string | null;
   full_name: string;
   role: 'super_admin' | 'admin' | 'peserta';
   photo_url?: string | null;
@@ -61,6 +64,7 @@ export interface User {
 /** Request membuat user baru */
 export interface CreateUserRequest {
   username: string;
+  email: string;
   password: string;
   full_name: string;
   role: 'super_admin' | 'admin' | 'peserta';
@@ -70,6 +74,7 @@ export interface CreateUserRequest {
 /** Request update profil user */
 export interface UpdateUserRequest {
   username: string;
+  email: string;
   full_name: string;
   role: 'super_admin' | 'admin' | 'peserta';
   photo_url?: string;
@@ -78,6 +83,12 @@ export interface UpdateUserRequest {
 /** Request ganti password user oleh admin */
 export interface UpdatePasswordRequest {
   password: string;
+}
+
+export interface UpdateProfileRequest {
+  username: string;
+  email: string;
+  full_name: string;
 }
 
 // === Pagination Types ===
@@ -186,6 +197,7 @@ export type UpdateEventRequest = CreateEventRequest;
 
 export interface EventParticipant {
   user_id: string;
+  approval_id: string;
   username: string;
   full_name: string;
   status: string;       // "pending" | "approved"

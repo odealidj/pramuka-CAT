@@ -1,41 +1,104 @@
-/**
- * Hasil Ujian (Exam Results) Service
- *
- * Pendekatan: Data hasil ujian diambil dari endpoint peserta per event
- * - GET /admin/events/:id/participants  → daftar peserta + skor (EventParticipant)
- * - GET /admin/exams/approvals/:approval_id/answers → review detail jawaban
- *
- * Service ini menyediakan fungsi untuk fitur laporan admin.
- */
-
 import httpClient from '@/lib/http-client';
-import type { ApiSuccessResponse, UserAnswerDetail, EventParticipant, PaginatedResponse } from '@/types/auth';
+import type { PaginatedResponse, ApiSuccessResponse, UserAnswerDetail } from '@/types/auth';
 
-/**
- * GET /admin/exams/approvals/:approval_id/answers
- * Mengambil detail jawaban peserta untuk review admin
- */
-export const reviewParticipantAnswersApi = async (
-  approvalId: string
-): Promise<UserAnswerDetail[]> => {
-  const res = await httpClient.get<ApiSuccessResponse<UserAnswerDetail[]>>(
-    `/admin/exams/approvals/${approvalId}/answers`
+// Tipe data untuk daftar ujian mendatatng (Upcoming Events)
+export interface UpcomingEvent {
+  id: string;
+  name: string;
+  start_time: string;
+  end_time: string;
+  duration_minutes: number;
+  passing_grade: number;
+}
+
+// Tipe data riwayat ujian (My Exams)
+export interface UserApproval {
+  event_id: string;
+  name: string;
+  start_time: string;
+  end_time: string;
+  duration_minutes: number;
+  passing_grade: number;
+  approval_id: string;
+  status: 'pending' | 'approved' | 'revoked';
+  is_completed: boolean;
+  score: number;
+  is_passed: boolean;
+  started_at: string | null;
+  completed_at: string | null;
+}
+
+export interface ParticipantQuestion {
+  id: string;
+  question_text: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+  weight: number;
+}
+
+export interface SubmitAnswerRequest {
+  question_id: string;
+  selected_answer: string;
+}
+
+export interface FinishExamResponse {
+  message: string;
+  score: number;
+  is_passed: boolean;
+}
+
+// ─── API Endpoints ──────────────────────────────────────────────────────────
+
+export const listUpcomingEventsApi = async (
+  page = 1,
+  limit = 10
+): Promise<PaginatedResponse<UpcomingEvent>> => {
+  const res = await httpClient.get<ApiSuccessResponse<UpcomingEvent[]>>(
+    `/protected/exams/upcoming?page=${page}&limit=${limit}`
+  );
+  return { data: res.data.data, meta: res.data.meta! };
+};
+
+export const listMyExamsApi = async (
+  page = 1,
+  limit = 10
+): Promise<PaginatedResponse<UserApproval>> => {
+  const res = await httpClient.get<ApiSuccessResponse<UserApproval[]>>(
+    `/protected/exams/my-exams?page=${page}&limit=${limit}`
+  );
+  return { data: res.data.data, meta: res.data.meta! };
+};
+
+export const enrollApi = async (eventId: string): Promise<void> => {
+  await httpClient.post('/protected/exams/enroll', { event_id: eventId });
+};
+
+export const startExamApi = async (eventId: string): Promise<ParticipantQuestion[]> => {
+  const res = await httpClient.get<ApiSuccessResponse<ParticipantQuestion[]>>(
+    `/protected/exams/${eventId}/start`
   );
   return res.data.data;
 };
 
-/**
- * GET /admin/events/:id/participants  (re-export helper)
- * Digunakan oleh halaman hasil ujian untuk mendapatkan daftar peserta + skor
- * per event tanpa perlu impor dari event.service
- */
-export const getEventParticipantsApi = async (
+export const submitAnswerApi = async (
   eventId: string,
-  page = 1,
-  limit = 100
-): Promise<PaginatedResponse<EventParticipant>> => {
-  const res = await httpClient.get<ApiSuccessResponse<EventParticipant[]>>(
-    `/admin/events/${eventId}/participants?page=${page}&limit=${limit}`
+  payload: SubmitAnswerRequest
+): Promise<void> => {
+  await httpClient.post(`/protected/exams/${eventId}/submit-answer`, payload);
+};
+
+export const finishExamApi = async (eventId: string): Promise<FinishExamResponse> => {
+  const res = await httpClient.post<ApiSuccessResponse<FinishExamResponse>>(
+    `/protected/exams/${eventId}/finish`
   );
-  return { data: res.data.data, meta: res.data.meta! };
+  return res.data.data;
+};
+
+export const reviewParticipantAnswersApi = async (approvalId: string): Promise<UserAnswerDetail[]> => {
+  const res = await httpClient.get<ApiSuccessResponse<UserAnswerDetail[]>>(
+    `/admin-only/exams/approvals/${approvalId}/answers`
+  );
+  return res.data.data;
 };

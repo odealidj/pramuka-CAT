@@ -35,6 +35,7 @@ type UpdateEventRequest struct {
 
 type EventParticipant struct {
 	UserID      uuid.UUID `json:"user_id"`
+	ApprovalID  uuid.UUID `json:"approval_id"`
 	Username    string    `json:"username"`
 	FullName    string    `json:"full_name"`
 	Status      string    `json:"status"`
@@ -61,4 +62,12 @@ type EventParticipantExport struct {
 	IsPassed    bool       `json:"is_passed"`
 	StartedAt   *time.Time `json:"started_at"`
 	CompletedAt *time.Time `json:"completed_at"`
+}
+
+type UserEventApproval struct {
+	ID          uuid.UUID
+	UserID      uuid.UUID
+	EventID     uuid.UUID
+	Status      string
+	IsCompleted bool
 }

@@ -1,4 +1,4 @@
-.PHONY: run build test swagger up down infra-up infra-down migrate-up migrate-down seed clear-seed reset-db sqlc docker-build
+.PHONY: run stop build test swagger up down infra-up infra-down migrate-up migrate-down seed clear-seed reset-db sqlc docker-build
 
 # Variabel Konfigurasi Database (Sesuaikan dengan .env)
 DB_URL="postgres://postgres:postgres@localhost:5432/pramukacat?sslmode=disable"
@@ -7,7 +7,13 @@ MIGRATION_PATH="backend/sql/migrations"
 # --- Aplikasi Backend ---
 run:
 	@echo "Menjalankan Backend API..."
-	cd backend && go run cmd/api/main.go
+	cd backend && go build -o bin/api cmd/api/main.go && ./bin/api
+
+stop:
+	@echo "Menghentikan Backend API..."
+	@pkill -f "bin/api" || true
+	@fuser -k 8080/tcp 2>/dev/null || true
+	@echo "Backend API berhasil dihentikan."
 
 build:
 	@echo "Membangun Binary Backend..."
@@ -40,8 +46,7 @@ infra-up:
 
 infra-down:
 	@echo "Mematikan Infrastruktur..."
-	docker-compose stop postgres redis migrate jaeger
-	docker-compose rm -f postgres redis migrate jaeger
+	docker-compose rm -s -f postgres redis migrate jaeger
 
 # --- Database Migrations ---
 migrate-up:

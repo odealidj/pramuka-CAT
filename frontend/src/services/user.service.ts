@@ -11,6 +11,7 @@ import type {
   CreateUserRequest,
   UpdateUserRequest,
   UpdatePasswordRequest,
+  UpdateProfileRequest,
   PaginatedResponse,
 } from '@/types/auth';
 
@@ -91,6 +92,17 @@ export const uploadPhotoApi = async (file: File): Promise<{ photo_url: string }>
         Authorization: `Bearer ${getInMemoryToken()}`,
       },
     }
+  );
+  return res.data.data;
+};
+
+/** PUT /users/me */
+export const updateProfileApi = async (
+  payload: UpdateProfileRequest
+): Promise<User> => {
+  const res = await httpClient.put<ApiSuccessResponse<User>>(
+    '/protected/users/me',
+    payload
   );
   return res.data.data;
 };

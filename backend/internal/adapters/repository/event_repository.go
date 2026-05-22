@@ -169,6 +169,15 @@ func (r *eventRepository) DeleteEvent(ctx context.Context, id uuid.UUID) error {
 	return r.queries.DeleteEvent(ctx, id)
 }
 
+func (r *eventRepository) DeleteApprovalsByEventID(ctx context.Context, eventID uuid.UUID) error {
+	return r.queries.DeleteApprovalsByEventID(ctx, uuid.NullUUID{UUID: eventID, Valid: true})
+}
+
+func (r *eventRepository) ListAllEventParticipants(ctx context.Context, eventID uuid.UUID) ([]sqlcgen.ListAllEventParticipantsRow, error) {
+	return r.queries.ListAllEventParticipants(ctx, uuid.NullUUID{UUID: eventID, Valid: true})
+}
+
+
 func (r *eventRepository) AddEventQuestion(ctx context.Context, eventID uuid.UUID, questionID uuid.UUID) error {
 	return r.queries.CreateEventQuestion(ctx, sqlcgen.CreateEventQuestionParams{
 		EventID:    eventID,
@@ -231,6 +240,7 @@ func (r *eventRepository) ListEventParticipants(ctx context.Context, eventID uui
 		score, _ := strconv.ParseFloat(row.Score.String, 64)
 		participants = append(participants, domain.EventParticipant{
 			UserID:      row.ID,
+			ApprovalID:  row.ApprovalID,
 			Username:    row.Username,
 			FullName:    row.FullName,
 			Status:      row.Status,
@@ -250,6 +260,10 @@ func (r *eventRepository) ApproveUserEvent(ctx context.Context, approvalID uuid.
 func (r *eventRepository) RevokeUserEvent(ctx context.Context, approvalID uuid.UUID) error {
 	_, err := r.queries.RevokeUserEvent(ctx, approvalID)
 	return err
+}
+
+func (r *eventRepository) RemoveUserEvent(ctx context.Context, approvalID uuid.UUID) error {
+	return r.queries.DeleteUserEventApproval(ctx, approvalID)
 }
 
 func (r *eventRepository) AddRandomEventQuestions(ctx context.Context, eventID uuid.UUID, categoryID *int32, amount int32) error {
@@ -311,4 +325,38 @@ func (r *eventRepository) GetAllEventParticipantsForExport(ctx context.Context, 
 	}
 
 	return results, nil
+}
+
+func (r *eventRepository) GetApprovalById(ctx context.Context, id uuid.UUID) (domain.UserEventApproval, error) {
+	row, err := r.queries.GetApprovalById(ctx, id)
+	if err != nil {
+		return domain.UserEventApproval{}, err
+	}
+	return domain.UserEventApproval{
+		ID:          row.ID,
+		UserID:      row.UserID.UUID,
+		EventID:     row.EventID.UUID,
+		Status:      row.Status,
+		IsCompleted: row.IsCompleted,
+	}, nil
+}
+
+func (r *eventRepository) GetUserById(ctx context.Context, id uuid.UUID) (domain.User, error) {
+	row, err := r.queries.GetUserById(ctx, id)
+	if err != nil {
+		return domain.User{}, err
+	}
+	
+	var email *string
+	if row.Email.Valid {
+		email = &row.Email.String
+	}
+
+	return domain.User{
+		ID:       row.ID,
+		Username: row.Username,
+		FullName: row.FullName,
+		Role:     row.Role,
+		Email:    email,
+	}, nil
 }

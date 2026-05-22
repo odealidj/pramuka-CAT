@@ -37,6 +37,7 @@ func (h *EventHandler) RegisterAdminRoutes(adminGroup *echo.Group) {
 	eventsGroup.GET("/:id/participants", h.ListEventParticipants)
 	eventsGroup.PUT("/:id/participants/:approval_id/approve", h.ApproveParticipant)
 	eventsGroup.PUT("/:id/participants/:approval_id/revoke", h.RevokeParticipant)
+	eventsGroup.DELETE("/:id/participants/:approval_id", h.RemoveParticipant)
 
 	// Laporan & Export (GET /admin/events/:id/export?format=excel|pdf)
 	eventsGroup.GET("/:id/export", h.ExportParticipants)
@@ -296,6 +297,30 @@ func (h *EventHandler) RevokeParticipant(c echo.Context) error {
 	}
 
 	return response.Success(c, http.StatusOK, "Persetujuan peserta berhasil dibatalkan (Revoked)", nil)
+}
+
+// RemoveParticipant godoc
+// @Summary     Hapus Peserta dari Event
+// @Description Admin menghapus secara permanen peserta dari event tertentu
+// @Tags        Admin - Event
+// @Security    BearerAuth
+// @Param       id          path      string  true  "UUID Event"
+// @Param       approval_id path      string  true  "UUID Approval"
+// @Success     200         {object}  response.SuccessResponse
+// @Failure     400         {object}  response.ErrorResponse
+// @Router      /admin/events/{id}/participants/{approval_id} [delete]
+func (h *EventHandler) RemoveParticipant(c echo.Context) error {
+	approvalID, err := uuid.Parse(c.Param("approval_id"))
+	if err != nil {
+		return response.Error(c, http.StatusBadRequest, "ID approval tidak valid", nil)
+	}
+
+	err = h.service.RemoveUserEvent(c.Request().Context(), approvalID)
+	if err != nil {
+		return response.Error(c, http.StatusInternalServerError, "Gagal menghapus peserta", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
+	}
+
+	return response.Success(c, http.StatusOK, "Peserta berhasil dihapus dari event", nil)
 }
 
 // ExportParticipants godoc

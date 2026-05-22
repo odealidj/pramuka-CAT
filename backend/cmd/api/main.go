@@ -37,8 +37,11 @@ import (
 	"github.com/odealidj/pramuka-CAT/backend/internal/adapters/repository"
 	"github.com/odealidj/pramuka-CAT/backend/internal/adapters/repository/sqlcgen"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/services"
+	"github.com/odealidj/pramuka-CAT/backend/internal/worker"
 	"github.com/odealidj/pramuka-CAT/backend/pkg/database"
 	"github.com/odealidj/pramuka-CAT/backend/pkg/tracer"
+	"github.com/hibiken/asynq"
+	"fmt"
 )
 
 func main() {
@@ -78,6 +81,22 @@ func main() {
 
 	// 4. Setup Dependency Injection (Hexagonal Wiring)
 	queries := sqlcgen.New(db)
+
+	// Setup Asynq Worker
+	redisOpt := asynq.RedisClientOpt{
+		Addr:     fmt.Sprintf("%s:%s", os.Getenv("REDIS_HOST"), os.Getenv("REDIS_PORT")),
+		Password: os.Getenv("REDIS_PASSWORD"),
+	}
+	taskDistributor := worker.NewRedisTaskDistributor(redisOpt)
+	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, queries)
+
+	go func() {
+		log.Println("Memulai Asynq Worker Server...")
+		if err := taskProcessor.Start(); err != nil {
+			log.Fatalf("Gagal menjalankan Asynq Worker Server: %v", err)
+		}
+	}()
+
 	authRepo := repository.NewAuthRepository(queries)
 	authCache := repository.NewAuthCache(rdb)
 
@@ -94,13 +113,18 @@ func main() {
 	questionHandler := handler.NewQuestionHandler(questionService)
 
 	eventRepo := repository.NewEventRepository(queries)
-	eventService := services.NewEventService(eventRepo)
+	eventService := services.NewEventService(eventRepo, taskDistributor)
 	eventHandler := handler.NewEventHandler(eventService)
 
 	examRepo := repository.NewExamRepository(queries)
 	examCache := repository.NewExamCache(rdb)
 	examService := services.NewExamService(examRepo, examCache)
 	examHandler := handler.NewExamHandler(examService)
+
+	notifRepo := repository.NewNotificationRepository(queries)
+	notifService := services.NewNotificationService(notifRepo)
+	notifHandler := handler.NewNotificationHandler(notifService)
+
 
 	userRepo := repository.NewUserRepository(queries)
 	userService := services.NewUserService(userRepo)
@@ -180,6 +204,7 @@ func main() {
 	examHandler.RegisterParticipantRoutes(protected)
 	authHandler.RegisterProtectedRoutes(protected)
 	userHandler.RegisterParticipantRoutes(protected)
+	notifHandler.RegisterRoutes(protected)
 
 	// Serve the uploads directory statically
 	e.Static("/uploads", "./uploads")

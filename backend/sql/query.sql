@@ -1,6 +1,6 @@
 -- name: CreateUser :one
-INSERT INTO users (username, password_hash, full_name, role, photo_url)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO users (username, password_hash, full_name, role, photo_url, email)
+VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING *;
 
 -- name: GetUserByUsername :one
@@ -14,14 +14,14 @@ WHERE id = $1 AND deleted_at IS NULL LIMIT 1;
 -- name: ListUsers :many
 SELECT * FROM users
 WHERE deleted_at IS NULL AND role = 'peserta'
-  AND (sqlc.arg('search')::text = '' OR full_name ILIKE '%' || sqlc.arg('search')::text || '%')
+  AND (sqlc.arg('search')::text = '' OR full_name ILIKE '%' || sqlc.arg('search')::text || '%' OR email ILIKE '%' || sqlc.arg('search')::text || '%')
 ORDER BY full_name ASC
 LIMIT $1 OFFSET $2;
 
 -- name: CountUsers :one
 SELECT COUNT(*) FROM users
 WHERE deleted_at IS NULL AND role = 'peserta'
-  AND (sqlc.arg('search')::text = '' OR full_name ILIKE '%' || sqlc.arg('search')::text || '%');
+  AND (sqlc.arg('search')::text = '' OR full_name ILIKE '%' || sqlc.arg('search')::text || '%' OR email ILIKE '%' || sqlc.arg('search')::text || '%');
 
 -- name: ListAdmins :many
 SELECT * FROM users
@@ -37,7 +37,7 @@ WHERE deleted_at IS NULL AND role = 'admin'
 
 -- name: UpdateUser :one
 UPDATE users
-SET username = $2, full_name = $3, role = $4, photo_url = $5
+SET username = $2, full_name = $3, role = $4, photo_url = $5, email = $6
 WHERE id = $1 AND deleted_at IS NULL
 RETURNING *;
 
@@ -157,6 +157,16 @@ UPDATE events
 SET deleted_at = NOW()
 WHERE id = $1;
 
+-- name: DeleteApprovalsByEventID :exec
+DELETE FROM user_event_approvals WHERE event_id = $1;
+
+-- name: ListAllEventParticipants :many
+SELECT u.id, u.username, u.full_name, u.email, uea.id as approval_id
+FROM users u
+JOIN user_event_approvals uea ON u.id = uea.user_id
+WHERE uea.event_id = $1;
+
+
 -- name: EnrollUserToEvent :one
 INSERT INTO user_event_approvals (user_id, event_id, status)
 VALUES ($1, $2, 'pending')
@@ -211,7 +221,7 @@ DELETE FROM event_questions
 WHERE event_id = $1 AND question_id = $2;
 
 -- name: ListEventParticipants :many
-SELECT u.id, u.username, u.full_name, uea.status, uea.is_completed, uea.score, uea.is_passed
+SELECT u.id, u.username, u.full_name, uea.id as approval_id, uea.status, uea.is_completed, uea.score, uea.is_passed
 FROM users u
 JOIN user_event_approvals uea ON u.id = uea.user_id
 WHERE uea.event_id = $1
@@ -385,3 +395,30 @@ JOIN events e ON uea.event_id = e.id
 WHERE uea.status != 'revoked'
 ORDER BY COALESCE(uea.updated_at, uea.created_at) DESC NULLS LAST
 LIMIT 5;
+-- name: DeleteUserEventApproval :exec
+DELETE FROM user_event_approvals WHERE id = $1;
+
+-- name: CreateNotification :one
+INSERT INTO notifications (user_id, title, message, type)
+VALUES ($1, $2, $3, $4)
+RETURNING *;
+
+-- name: GetUserNotifications :many
+SELECT * FROM notifications 
+WHERE user_id = $1
+ORDER BY created_at DESC
+LIMIT $2 OFFSET $3;
+
+-- name: CountUnreadNotifications :one
+SELECT COUNT(*) FROM notifications
+WHERE user_id = $1 AND is_read = FALSE;
+
+-- name: MarkNotificationAsRead :exec
+UPDATE notifications
+SET is_read = TRUE
+WHERE id = $1 AND user_id = $2;
+
+-- name: MarkAllNotificationsAsRead :exec
+UPDATE notifications
+SET is_read = TRUE
+WHERE user_id = $1 AND is_read = FALSE;

@@ -13,6 +13,7 @@ type LoginRequest struct {
 // RegisterRequest merepresentasikan data JSON yang dikirim saat peserta mendaftar
 type RegisterRequest struct {
 	Username string `json:"username" validate:"required"`
+	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,min=6"`
 	FullName string `json:"full_name" validate:"required"`
 }
@@ -26,6 +27,7 @@ type RegisterResponse struct {
 type UserResponse struct {
 	ID       uuid.UUID `json:"id"`
 	Username string    `json:"username"`
+	Email    *string   `json:"email"`
 	FullName string    `json:"full_name"`
 	Role     string    `json:"role"`
 	PhotoURL *string   `json:"photo_url,omitempty"`

@@ -138,3 +138,10 @@ export const getExportUrl = (eventId: string, format: 'excel' | 'pdf'): string =
   const base = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
   return `${base}/admin/events/${eventId}/export?format=${format}`;
 };
+
+export const removeEventParticipantApi = async (
+  eventId: string,
+  approvalId: string
+): Promise<void> => {
+  await httpClient.delete(`/admin/events/${eventId}/participants/${approvalId}`);
+};

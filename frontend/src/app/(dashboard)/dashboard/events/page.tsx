@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   CalendarDays,
   Plus,
@@ -15,6 +16,9 @@ import {
   ChevronRight,
   Calendar,
   XCircle,
+  Play,
+  CheckCircle2,
+  ClipboardCheck,
 } from 'lucide-react';
 import { isAxiosError } from 'axios';
 import Spinner from '@/components/ui/Spinner';
@@ -28,6 +32,12 @@ import {
   updateEventApi,
   deleteEventApi,
 } from '@/services/event.service';
+import {
+  listUpcomingEventsApi,
+  listMyExamsApi,
+  enrollApi,
+} from '@/services/exam.service';
+import type { UpcomingEvent, UserApproval } from '@/services/exam.service';
 import type {
   Event,
   CreateEventRequest,
@@ -202,8 +212,8 @@ function EventCard({
   );
 }
 
-// ─── Page Content ─────────────────────────────────────────────────────────────
-function EventsContent() {
+// ─── Admin Content ─────────────────────────────────────────────────────────────
+function AdminEventsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [events, setEvents] = useState<Event[]>([]);
@@ -452,10 +462,348 @@ function EventsContent() {
   );
 }
 
+// ─── Peserta Content ──────────────────────────────────────────────────────────
+
+function MyExamCard({ exam }: { exam: UserApproval }) {
+  const statusInfo = getEventStatus(exam as any);
+  const countdown = useCountdown(exam.end_time, exam.start_time);
+  
+  const isEventFinished = Date.now() > new Date(exam.end_time).getTime();
+
+  let countdownText = '';
+  let countdownColor = 'text-gray-500';
+  if (countdown.status === 'upcoming') {
+    countdownText = `Dimulai dalam ${countdown.minutesLeft} menit`;
+    countdownColor = 'text-blue-600';
+  } else if (countdown.status === 'ongoing') {
+    countdownText = `${countdown.minutesLeft} menit akan berakhir`;
+    countdownColor = 'text-emerald-600 font-medium';
+  } else {
+    countdownText = '0 menit (Selesai)';
+    countdownColor = 'text-gray-400';
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group overflow-hidden flex flex-col">
+      <div className={`h-2 w-full ${statusInfo.dot}`} />
+      <div className="p-5 flex flex-col flex-1">
+        <div className="flex justify-between items-start mb-4 gap-4">
+          <h3 className="font-bold text-gray-900 text-lg line-clamp-2">{exam.name}</h3>
+          <span className={`flex-shrink-0 px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider ${
+            isEventFinished || exam.is_completed ? 'bg-gray-100 text-gray-500 border-gray-200' :
+            exam.status === 'approved' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
+            exam.status === 'revoked' ? 'bg-red-50 text-red-600 border-red-200' :
+            'bg-amber-50 text-amber-600 border-amber-200'
+          }`}>
+            {isEventFinished || exam.is_completed ? 'Selesai' : exam.status}
+          </span>
+        </div>
+        
+        <div className="space-y-2 mb-6 flex-1">
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <Calendar size={14} className="text-gray-400" />
+            <span>{fmtDate(exam.start_time)}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <Clock size={14} className="text-gray-400" />
+            <span>{fmtTime(exam.start_time)} - {fmtTime(exam.end_time)}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <Clock size={14} className={countdownColor} />
+            <span className={countdownColor}>{countdownText}</span>
+          </div>
+        </div>
+        
+        {isEventFinished || exam.is_completed ? (
+          <button disabled className="w-full flex items-center justify-center gap-2 bg-gray-100 text-gray-500 py-2.5 rounded-xl text-sm font-semibold transition-colors border border-gray-200">
+            <CheckCircle2 size={16} /> Ujian Selesai
+          </button>
+        ) : exam.status === 'approved' ? (
+          <Link href={`/dashboard/exams/${exam.event_id}`} className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors">
+            <Play size={16} fill="currentColor" /> Mulai Ujian
+          </Link>
+        ) : exam.status === 'pending' ? (
+          <button disabled className="w-full flex items-center justify-center gap-2 bg-amber-50 text-amber-600 border border-amber-200 py-2.5 rounded-xl text-sm font-semibold transition-colors">
+            Menunggu Admin
+          </button>
+        ) : (
+          <button disabled className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 border border-red-200 py-2.5 rounded-xl text-sm font-semibold transition-colors">
+            Dibatalkan
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function UpcomingExamCard({ event, onEnroll, enrolling }: { event: Event, onEnroll: (id: string) => void, enrolling: string | null }) {
+  const statusInfo = getEventStatus(event);
+  const countdown = useCountdown(event.end_time, event.start_time);
+  
+  const isEventFinished = Date.now() > new Date(event.end_time).getTime();
+
+  let countdownText = '';
+  let countdownColor = 'text-gray-500';
+  if (countdown.status === 'upcoming') {
+    countdownText = `Dimulai dalam ${countdown.minutesLeft} menit`;
+    countdownColor = 'text-blue-600';
+  } else if (countdown.status === 'ongoing') {
+    countdownText = `${countdown.minutesLeft} menit akan berakhir`;
+    countdownColor = 'text-emerald-600 font-medium';
+  } else {
+    countdownText = '0 menit (Selesai)';
+    countdownColor = 'text-gray-400';
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex flex-col group overflow-hidden">
+      <div className={`h-2 w-full ${statusInfo.dot}`} />
+      <div className="p-5 flex flex-col flex-1">
+        <div className="flex justify-between items-start mb-4 gap-4">
+          <h3 className="font-bold text-gray-900 text-lg line-clamp-2">{event.name}</h3>
+          <span className={`flex-shrink-0 px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider ${statusInfo.color}`}>
+            {statusInfo.label}
+          </span>
+        </div>
+        <div className="space-y-2 mb-6 flex-1">
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <Calendar size={14} className="text-gray-400" />
+            <span>{fmtDate(event.start_time)}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <Clock size={14} className="text-gray-400" />
+            <span>{fmtTime(event.start_time)} - {fmtTime(event.end_time)}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <Clock size={14} className="text-amber-500" />
+            <span>Durasi: {fmtDuration(event.duration_minutes)}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <Clock size={14} className={countdownColor} />
+            <span className={countdownColor}>{countdownText}</span>
+          </div>
+        </div>
+        {isEventFinished ? (
+          <button disabled className="w-full flex items-center justify-center gap-2 bg-gray-100 text-gray-500 py-2.5 rounded-xl text-sm font-semibold transition-colors border border-gray-200">
+            <CheckCircle2 size={16} /> Ujian Selesai
+          </button>
+        ) : (
+          <button
+            onClick={() => onEnroll(event.id)}
+            disabled={enrolling === event.id}
+            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
+          >
+            {enrolling === event.id ? <Spinner size={16} /> : <Plus size={16} />}
+            Daftar Ujian
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PesertaEventsContent() {
+  const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
+  const [myExams, setMyExams] = useState<UserApproval[]>([]);
+  const [metaUpcoming, setMetaUpcoming] = useState<PaginationMeta | null>(null);
+  const [metaMyExams, setMetaMyExams] = useState<PaginationMeta | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const [pageUpcoming, setPageUpcoming] = useState(1);
+  const [pageMyExams, setPageMyExams] = useState(1);
+  const [enrolling, setEnrolling] = useState<string | null>(null);
+  const { toast } = useToast();
+  const router = useRouter();
+
+  const fetchAllData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const [upcomingRes, myExamsRes] = await Promise.all([
+        listUpcomingEventsApi(pageUpcoming, 6),
+        listMyExamsApi(pageMyExams, 6)
+      ]);
+      setUpcomingEvents(upcomingRes.data);
+      setMetaUpcoming(upcomingRes.meta);
+      setMyExams(myExamsRes.data);
+      setMetaMyExams(myExamsRes.meta);
+    } catch {
+      toast('error', 'Gagal memuat jadwal ujian.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [pageUpcoming, pageMyExams]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { fetchAllData(); }, [fetchAllData]);
+
+  const handleEnroll = async (eventId: string) => {
+    setEnrolling(eventId);
+    try {
+      await enrollApi(eventId);
+      toast('success', 'Berhasil mendaftar! Menunggu persetujuan Admin.');
+      await fetchAllData(); // Refresh list so it moves to "Ujian Saya"
+    } catch (err: any) {
+      toast('error', err?.response?.data?.message || 'Gagal mendaftar ke event ini.');
+    } finally {
+      setEnrolling(null);
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Ujian Saya (My Exams) Section */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2.5 mb-2">
+          <div className="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
+            <Trophy size={18} className="text-indigo-700" />
+          </div>
+          <div>
+            <h2 className="text-gray-900 font-bold text-lg">Ujian Saya</h2>
+            <p className="text-gray-500 text-sm">Status ujian yang Anda daftar atau sedang berjalan.</p>
+          </div>
+        </div>
+
+        {isLoading && myExams.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-10 gap-3 text-gray-400">
+            <Spinner size={28} className="text-indigo-600" />
+          </div>
+        ) : myExams.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 gap-3 text-gray-400 bg-white rounded-2xl border border-gray-100 shadow-sm">
+            <ClipboardCheck size={40} className="text-gray-200" />
+            <p className="text-sm font-medium text-gray-500">Belum ada riwayat pendaftaran ujian.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {myExams.map(exam => (
+              <div key={exam.approval_id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col hover:shadow-md transition-shadow">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <h3 className="font-bold text-gray-900 text-lg">{exam.name}</h3>
+                  <span className={`px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider ${
+                    exam.status === 'approved' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
+                    exam.status === 'revoked' ? 'bg-red-50 text-red-600 border-red-200' :
+                    'bg-amber-50 text-amber-600 border-amber-200'
+                  }`}>
+                    {exam.status}
+                  </span>
+                </div>
+                <div className="space-y-2 mb-6 flex-1">
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <Calendar size={14} className="text-gray-400" />
+                    <span>{fmtDate(exam.start_time)}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <Clock size={14} className="text-gray-400" />
+                    <span>{fmtTime(exam.start_time)} - {fmtTime(exam.end_time)}</span>
+                  </div>
+                </div>
+                
+                {/* Actions based on status */}
+                {exam.is_completed ? (
+                  <button disabled className="w-full flex items-center justify-center gap-2 bg-gray-100 text-gray-500 py-2.5 rounded-xl text-sm font-semibold transition-colors border border-gray-200">
+                    <CheckCircle2 size={16} /> Ujian Selesai
+                  </button>
+                ) : exam.status === 'approved' ? (
+                  <Link href={`/dashboard/exams/${exam.event_id}`} className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors">
+                    <Play size={16} fill="currentColor" /> Mulai Ujian
+                  </Link>
+                ) : exam.status === 'pending' ? (
+                  <button disabled className="w-full flex items-center justify-center gap-2 bg-amber-50 text-amber-600 border border-amber-200 py-2.5 rounded-xl text-sm font-semibold transition-colors">
+                    Menunggu Admin
+                  </button>
+                ) : (
+                  <button disabled className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 border border-red-200 py-2.5 rounded-xl text-sm font-semibold transition-colors">
+                    Dibatalkan
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {metaMyExams && metaMyExams.total_pages > 1 && (
+          <div className="flex items-center justify-between mt-4">
+            <Pagination page={pageMyExams} totalPages={metaMyExams.total_pages} onPageChange={setPageMyExams} isLoading={isLoading} />
+          </div>
+        )}
+      </section>
+
+      {/* Divider */}
+      <hr className="border-gray-100 border-t-2 border-dashed" />
+
+      {/* Jadwal Ujian Tersedia (Upcoming Events) Section */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2.5 mb-2">
+          <div className="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+            <CalendarDays size={18} className="text-blue-700" />
+          </div>
+          <div>
+            <h2 className="text-gray-900 font-bold text-lg">Jadwal Ujian Tersedia</h2>
+            <p className="text-gray-500 text-sm">Daftar tryout dan ujian yang dapat Anda ikuti.</p>
+          </div>
+        </div>
+
+        {isLoading && upcomingEvents.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-10 gap-3 text-gray-400">
+            <Spinner size={28} className="text-blue-600" />
+          </div>
+        ) : upcomingEvents.filter(e => !myExams.some(m => m.event_id === e.id)).length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 gap-3 text-gray-400 bg-white rounded-2xl border border-gray-100 shadow-sm">
+            <CalendarDays size={40} className="text-gray-200" />
+            <p className="text-sm font-medium text-gray-500">Tidak ada jadwal ujian baru yang tersedia.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {upcomingEvents.filter(e => !myExams.some(m => m.event_id === e.id)).map(event => (
+              <div key={event.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col hover:shadow-md transition-shadow">
+                <h3 className="font-bold text-gray-900 text-lg mb-2">{event.name}</h3>
+                <div className="space-y-2 mb-6 flex-1">
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <Calendar size={14} className="text-gray-400" />
+                    <span>{fmtDate(event.start_time)}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <Clock size={14} className="text-gray-400" />
+                    <span>{fmtTime(event.start_time)} - {fmtTime(event.end_time)}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <Clock size={14} className="text-amber-500" />
+                    <span>Durasi: {fmtDuration(event.duration_minutes)}</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleEnroll(event.id)}
+                  disabled={enrolling === event.id}
+                  className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
+                >
+                  {enrolling === event.id ? <Spinner size={16} /> : <Plus size={16} />}
+                  Daftar Ujian
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {metaUpcoming && metaUpcoming.total_pages > 1 && (
+          <div className="flex items-center justify-between mt-4">
+            <Pagination page={pageUpcoming} totalPages={metaUpcoming.total_pages} onPageChange={setPageUpcoming} isLoading={isLoading} />
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function EventsRouter() {
+  const { user } = useAuth();
+  if (user?.role === 'peserta') {
+    return <PesertaEventsContent />;
+  }
+  return <AdminEventsContent />;
+}
+
 export default function EventsPage() {
   return (
     <Suspense fallback={<div className="flex justify-center p-8"><Spinner size={32} className="text-amber-600" /></div>}>
-      <EventsContent />
+      <EventsRouter />
     </Suspense>
   );
 }

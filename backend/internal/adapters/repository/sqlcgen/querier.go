@@ -28,20 +28,24 @@ type Querier interface {
 	CountEvents(ctx context.Context, search string) (int64, error)
 	CountQuestions(ctx context.Context, arg CountQuestionsParams) (int64, error)
 	CountQuestionsByCategory(ctx context.Context, categoryID sql.NullInt32) (int64, error)
+	CountUnreadNotifications(ctx context.Context, userID uuid.UUID) (int64, error)
 	CountUpcomingEvents(ctx context.Context) (int64, error)
 	CountUserApprovals(ctx context.Context, userID uuid.NullUUID) (int64, error)
 	CountUsers(ctx context.Context, search string) (int64, error)
 	CreateCategory(ctx context.Context, name string) (Category, error)
 	CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error)
 	CreateEventQuestion(ctx context.Context, arg CreateEventQuestionParams) error
+	CreateNotification(ctx context.Context, arg CreateNotificationParams) (Notification, error)
 	CreateQuestion(ctx context.Context, arg CreateQuestionParams) (Question, error)
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	DeleteApprovalsByEventID(ctx context.Context, eventID uuid.NullUUID) error
 	DeleteCategory(ctx context.Context, id int32) error
 	DeleteEvent(ctx context.Context, id uuid.UUID) error
 	DeleteEventQuestion(ctx context.Context, arg DeleteEventQuestionParams) error
 	DeleteQuestion(ctx context.Context, id uuid.UUID) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
+	DeleteUserEventApproval(ctx context.Context, id uuid.UUID) error
 	EnrollUserToEvent(ctx context.Context, arg EnrollUserToEventParams) (UserEventApproval, error)
 	FinishExam(ctx context.Context, arg FinishExamParams) error
 	GetAllEventParticipantsForExport(ctx context.Context, eventID uuid.NullUUID) ([]GetAllEventParticipantsForExportRow, error)
@@ -61,7 +65,9 @@ type Querier interface {
 	GetUserAnswersDetail(ctx context.Context, approvalID uuid.NullUUID) ([]GetUserAnswersDetailRow, error)
 	GetUserById(ctx context.Context, id uuid.UUID) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
+	GetUserNotifications(ctx context.Context, arg GetUserNotificationsParams) ([]Notification, error)
 	ListAdmins(ctx context.Context, arg ListAdminsParams) ([]User, error)
+	ListAllEventParticipants(ctx context.Context, eventID uuid.NullUUID) ([]ListAllEventParticipantsRow, error)
 	ListCategories(ctx context.Context, arg ListCategoriesParams) ([]Category, error)
 	ListEventParticipants(ctx context.Context, arg ListEventParticipantsParams) ([]ListEventParticipantsRow, error)
 	ListEventQuestions(ctx context.Context, arg ListEventQuestionsParams) ([]Question, error)
@@ -70,6 +76,8 @@ type Querier interface {
 	ListUpcomingEvents(ctx context.Context, arg ListUpcomingEventsParams) ([]ListUpcomingEventsRow, error)
 	ListUserApprovals(ctx context.Context, arg ListUserApprovalsParams) ([]ListUserApprovalsRow, error)
 	ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error)
+	MarkAllNotificationsAsRead(ctx context.Context, userID uuid.UUID) error
+	MarkNotificationAsRead(ctx context.Context, arg MarkNotificationAsReadParams) error
 	RevokeUserEvent(ctx context.Context, id uuid.UUID) (UserEventApproval, error)
 	SaveUserAnswer(ctx context.Context, arg SaveUserAnswerParams) (UserAnswer, error)
 	SetStartedAt(ctx context.Context, id uuid.UUID) error

@@ -60,6 +60,7 @@ export default function CommandPalette() {
 
   // Reset selection when query changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedIndex(0);
   }, [query, isOpen]);
 
@@ -68,6 +69,7 @@ export default function CommandPalette() {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 50);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setQuery('');
     }
   }, [isOpen]);
