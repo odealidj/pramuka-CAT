@@ -538,15 +538,15 @@ function MyExamCard({ exam }: { exam: UserApproval }) {
               <span className={countdownColor}>{countdownText}</span>
             </div>
             
-            <div className="flex items-center gap-1.5">
-              <HelpCircle size={14} className="text-blue-500" />
-              <span className="font-medium text-gray-700">{exam.question_count || 0} soal</span>
+            <div className={`flex items-center gap-1.5 ${isEventFinished || exam.is_completed ? 'opacity-70' : ''}`}>
+              <HelpCircle size={14} className={isEventFinished || exam.is_completed ? 'text-gray-400' : 'text-blue-500'} />
+              <span className={`font-medium ${isEventFinished || exam.is_completed ? 'text-gray-400' : 'text-gray-700'}`}>{exam.question_count || 0} soal</span>
             </div>
 
-            <div className="flex items-center gap-1.5">
-              <Trophy size={14} className="text-emerald-500" />
-              <span className="font-medium text-gray-700">
-                Batas Lulus <span className="font-bold text-gray-900">{exam.passing_grade || 0}%</span>
+            <div className={`flex items-center gap-1.5 ${isEventFinished || exam.is_completed ? 'opacity-70' : ''}`}>
+              <Trophy size={14} className={isEventFinished || exam.is_completed ? 'text-gray-400' : 'text-emerald-500'} />
+              <span className={`font-medium ${isEventFinished || exam.is_completed ? 'text-gray-400' : 'text-gray-700'}`}>
+                Batas Lulus <span className={`font-bold ${isEventFinished || exam.is_completed ? 'text-gray-500' : 'text-gray-900'}`}>{exam.passing_grade || 0}%</span>
               </span>
             </div>
           </div>
