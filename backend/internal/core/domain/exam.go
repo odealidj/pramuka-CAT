@@ -23,6 +23,7 @@ type UserApproval struct {
 	StartTime       time.Time  `json:"start_time"`
 	EndTime         time.Time  `json:"end_time"`
 	DurationMinutes int32      `json:"duration_minutes"`
+	QuestionCount   int32      `json:"question_count"`
 	PassingGrade    float64    `json:"passing_grade"`
 	ApprovalID      uuid.UUID  `json:"approval_id"`
 	Status          string     `json:"status"` // pending, approved, revoked

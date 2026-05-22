@@ -18,6 +18,7 @@ import {
   XCircle,
   Play,
   CheckCircle2,
+  HelpCircle,
   ClipboardCheck,
 } from 'lucide-react';
 import { isAxiosError } from 'axios';
@@ -525,14 +526,29 @@ function MyExamCard({ exam }: { exam: UserApproval }) {
           </span>
         </div>
         
-        <div className="space-y-2 mb-6 flex-1">
+        <div className="space-y-3 mb-6 flex-1">
           <div className="flex items-center gap-2 text-sm text-gray-500">
             <Calendar size={14} className="text-gray-400 flex-shrink-0" />
             <span>{fmtDateRange(exam.start_time, exam.end_time)}</span>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <Clock size={14} className={countdownColor} />
-            <span className={countdownColor}>{countdownText}</span>
+          
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-500">
+            <div className="flex items-center gap-1.5">
+              <Clock size={14} className={countdownColor} />
+              <span className={countdownColor}>{countdownText}</span>
+            </div>
+            
+            <div className="flex items-center gap-1.5">
+              <HelpCircle size={14} className="text-blue-500" />
+              <span className="font-medium text-gray-700">{exam.question_count || 0} soal</span>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <Trophy size={14} className="text-emerald-500" />
+              <span className="font-medium text-gray-700">
+                Batas Lulus <span className="font-bold text-gray-900">{exam.passing_grade || 0}%</span>
+              </span>
+            </div>
           </div>
         </div>
         

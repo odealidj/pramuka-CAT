@@ -18,6 +18,7 @@ export interface UserApproval {
   start_time: string;
   end_time: string;
   duration_minutes: number;
+  question_count: number;
   passing_grade: number;
   approval_id: string;
   status: 'pending' | 'approved' | 'revoked';

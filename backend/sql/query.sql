@@ -248,6 +248,7 @@ WHERE end_time > NOW() AND deleted_at IS NULL;
 
 -- name: ListUserApprovals :many
 SELECT e.id, e.name, e.start_time, e.end_time, e.duration_minutes, e.passing_grade, 
+       (SELECT COUNT(question_id)::int FROM event_questions eq WHERE eq.event_id = e.id) as question_count,
        uea.id as approval_id, uea.status, uea.is_completed, uea.score, uea.is_passed, uea.started_at, uea.completed_at
 FROM events e
 JOIN user_event_approvals uea ON e.id = uea.event_id
@@ -260,7 +261,8 @@ SELECT COUNT(*) FROM user_event_approvals
 WHERE user_id = $1;
 
 -- name: GetApprovalStatus :one
-SELECT uea.*, e.start_time, e.end_time, e.passing_grade 
+SELECT uea.*, e.start_time, e.end_time, e.passing_grade,
+       (SELECT COUNT(question_id)::int FROM event_questions eq WHERE eq.event_id = e.id) as question_count
 FROM user_event_approvals uea
 JOIN events e ON uea.event_id = e.id
 WHERE uea.user_id = $1 AND uea.event_id = $2 LIMIT 1;
