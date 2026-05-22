@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/services/auth.service';
+import { useAuth } from '@/contexts/AuthContext';
 import { getExamResultParticipantApi } from '@/services/exam.service';
 import type { UserAnswerDetail } from '@/types/auth';
 import { ChevronLeft, CheckCircle2, XCircle, Award, Frown, Clock, Trophy } from 'lucide-react';
