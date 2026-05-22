@@ -135,6 +135,7 @@ func (r *examRepository) GetApprovalStatus(ctx context.Context, userID uuid.UUID
 	}
 
 	score, _ := strconv.ParseFloat(row.Score.String, 64)
+	passingGrade, _ := strconv.ParseFloat(row.PassingGrade, 64)
 	var startedAt *time.Time
 	if row.StartedAt.Valid {
 		t := row.StartedAt.Time
@@ -148,16 +149,17 @@ func (r *examRepository) GetApprovalStatus(ctx context.Context, userID uuid.UUID
 	}
 
 	return domain.UserApproval{
-		ApprovalID:  row.ID,
-		EventID:     row.EventID.UUID,
-		Status:      row.Status,
-		IsCompleted: row.IsCompleted,
-		Score:       score,
-		IsPassed:    row.IsPassed.Bool,
-		StartedAt:   startedAt,
-		CompletedAt: completedAt,
-		StartTime:   row.StartTime,
-		EndTime:     row.EndTime,
+		ApprovalID:   row.ID,
+		EventID:      row.EventID.UUID,
+		Status:       row.Status,
+		IsCompleted:  row.IsCompleted,
+		Score:        score,
+		PassingGrade: passingGrade,
+		IsPassed:     row.IsPassed.Bool,
+		StartedAt:    startedAt,
+		CompletedAt:  completedAt,
+		StartTime:    row.StartTime,
+		EndTime:      row.EndTime,
 	}, nil
 }
 

@@ -260,7 +260,7 @@ SELECT COUNT(*) FROM user_event_approvals
 WHERE user_id = $1;
 
 -- name: GetApprovalStatus :one
-SELECT uea.*, e.start_time, e.end_time 
+SELECT uea.*, e.start_time, e.end_time, e.passing_grade 
 FROM user_event_approvals uea
 JOIN events e ON uea.event_id = e.id
 WHERE uea.user_id = $1 AND uea.event_id = $2 LIMIT 1;

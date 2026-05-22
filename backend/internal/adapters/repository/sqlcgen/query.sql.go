@@ -777,7 +777,7 @@ func (q *Queries) GetApprovalById(ctx context.Context, id uuid.UUID) (UserEventA
 }
 
 const getApprovalStatus = `-- name: GetApprovalStatus :one
-SELECT uea.id, uea.user_id, uea.event_id, uea.status, uea.is_completed, uea.score, uea.is_passed, uea.started_at, uea.completed_at, uea.created_at, uea.updated_at, e.start_time, e.end_time 
+SELECT uea.id, uea.user_id, uea.event_id, uea.status, uea.is_completed, uea.score, uea.is_passed, uea.started_at, uea.completed_at, uea.created_at, uea.updated_at, e.start_time, e.end_time, e.passing_grade 
 FROM user_event_approvals uea
 JOIN events e ON uea.event_id = e.id
 WHERE uea.user_id = $1 AND uea.event_id = $2 LIMIT 1
@@ -789,19 +789,20 @@ type GetApprovalStatusParams struct {
 }
 
 type GetApprovalStatusRow struct {
-	ID          uuid.UUID      `json:"id"`
-	UserID      uuid.NullUUID  `json:"user_id"`
-	EventID     uuid.NullUUID  `json:"event_id"`
-	Status      string         `json:"status"`
-	IsCompleted bool           `json:"is_completed"`
-	Score       sql.NullString `json:"score"`
-	IsPassed    sql.NullBool   `json:"is_passed"`
-	StartedAt   sql.NullTime   `json:"started_at"`
-	CompletedAt sql.NullTime   `json:"completed_at"`
-	CreatedAt   sql.NullTime   `json:"created_at"`
-	UpdatedAt   sql.NullTime   `json:"updated_at"`
-	StartTime   time.Time      `json:"start_time"`
-	EndTime     time.Time      `json:"end_time"`
+	ID           uuid.UUID      `json:"id"`
+	UserID       uuid.NullUUID  `json:"user_id"`
+	EventID      uuid.NullUUID  `json:"event_id"`
+	Status       string         `json:"status"`
+	IsCompleted  bool           `json:"is_completed"`
+	Score        sql.NullString `json:"score"`
+	IsPassed     sql.NullBool   `json:"is_passed"`
+	StartedAt    sql.NullTime   `json:"started_at"`
+	CompletedAt  sql.NullTime   `json:"completed_at"`
+	CreatedAt    sql.NullTime   `json:"created_at"`
+	UpdatedAt    sql.NullTime   `json:"updated_at"`
+	StartTime    time.Time      `json:"start_time"`
+	EndTime      time.Time      `json:"end_time"`
+	PassingGrade string         `json:"passing_grade"`
 }
 
 func (q *Queries) GetApprovalStatus(ctx context.Context, arg GetApprovalStatusParams) (GetApprovalStatusRow, error) {
@@ -821,6 +822,7 @@ func (q *Queries) GetApprovalStatus(ctx context.Context, arg GetApprovalStatusPa
 		&i.UpdatedAt,
 		&i.StartTime,
 		&i.EndTime,
+		&i.PassingGrade,
 	)
 	return i, err
 }
