@@ -495,14 +495,14 @@ function MyExamCard({ exam }: { exam: UserApproval }) {
 
   let countdownText = '';
   let countdownColor = 'text-gray-500';
-  if (isEventFinished) {
+  if (isEventFinished || exam.is_completed) {
     countdownText = '0 menit (Selesai)';
     countdownColor = 'text-gray-400';
   } else if (countdown.status === 'upcoming') {
-    countdownText = `Dimulai dalam ${countdown.minutesLeft} menit`;
+    countdownText = `Dimulai dalam ${fmtDurationFull(countdown.minutesLeft)}`;
     countdownColor = 'text-blue-600';
   } else if (countdown.status === 'ongoing') {
-    countdownText = `${countdown.minutesLeft} menit akan berakhir`;
+    countdownText = `${fmtDurationFull(countdown.minutesLeft)} akan berakhir`;
     countdownColor = 'text-emerald-600 font-medium';
   } else {
     countdownText = '0 menit (Selesai)';
