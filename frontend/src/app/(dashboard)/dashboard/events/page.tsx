@@ -59,6 +59,8 @@ function fmtDuration(minutes: number) {
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
   return m > 0 ? `${h} jam ${m} menit` : `${h} jam`;
+}
+
 function fmtDurationFull(minutes: number) {
   if (minutes <= 0) return '0 menit';
   if (minutes < 60) return `${minutes} menit`;
