@@ -29,6 +29,7 @@ Aplikasi memiliki 3 jenis peran utama:
 5. **Hasil Ujian:** 
    - Nilai akhir langsung muncul di layar sesaat setelah peserta menekan tombol selesai/submit ujian.
    - Sistem membandingkan nilai peserta dengan **Passing Grade (Batas Lulus)** event tersebut, sehingga menampilkan status **"LULUS"** atau **"TIDAK LULUS"**.
+   - Peserta dapat melihat **Waktu Mulai** dan **Waktu Selesai** (timestamp `started_at` dan `completed_at`) pengerjaan mereka sebagai bukti transparansi.
 
 ### 3.3. Fitur Admin & Super Admin
 1. **Manajemen Admin (Khusus Super Admin):** Super Admin dapat mendaftarkan, mengubah, atau menghapus akun admin/panitia dari dalam sistem.
@@ -38,6 +39,8 @@ Aplikasi memiliki 3 jenis peran utama:
 3. **Approval Peserta Ujian:**
    - Admin dapat memvalidasi dan menyetujui (Approve) peserta agar bisa mengikuti event ujian tertentu.
    - Admin memiliki fitur pembatalan (Revoke/Batal) persetujuan, sehingga peserta tersebut terkunci dan tidak bisa mengerjakan soal.
+   - Admin juga dapat mengeluarkan/menghapus (Delete) peserta dari pendaftaran event tersebut.
+   - **Notifikasi Otomatis:** Setiap kali Admin mengubah status peserta (Approve, Revoke, atau Delete), sistem akan mengirimkan **Notifikasi Dalam Aplikasi** beserta **Email Pemberitahuan** kepada peserta secara asinkron (*background task*) agar peserta senantiasa terinformasi mengenai status pendaftaran mereka tanpa perlu mengecek dashboard secara berulang.
    - Admin dimudahkan dengan antarmuka manajemen peserta *full-page* berskala besar yang dilengkapi fitur pencarian (*Search*) berdasarkan "Nama" atau "Nomor Peserta" (`username`), serta *Pagination* terintegrasi langsung ke *backend* (*server-side pagination*).
 4. **Manajemen Soal (Bank Soal - CRUD):**
    - Membuat, membaca, mengubah, dan menghapus soal berbasis teks. Manajemen Bank Soal ini didukung dengan fitur pencarian dan filter *real-time*.

@@ -114,6 +114,11 @@ Semua *query* yang melibatkan soal melakukan `JOIN categories c ON q.category_id
 - Dibuka via CustomEvent `'openCommandPalette'` (dari Navbar) atau shortcut keyboard `Ctrl+K`/`Cmd+K` (event listener internal).
 - Mengembalikan `null` (bukan di-unmount) saat tertutup untuk menghindari biaya re-registrasi event listener dan menjaga state internal.
 
+### 3.13. Asynchronous Task & Notifikasi Email
+- Sistem mengimplementasikan pola asinkron untuk pengiriman email pemberitahuan dan notifikasi dalam aplikasi agar tidak memblokir laju _request_ HTTP utama.
+- Pengiriman ini dikelola melalui antrian tugas (*task queue*) menggunakan sistem asinkron bawaan/eksternal. Ketika status peserta diubah oleh Admin (misal: *Approve* atau *Revoke*), backend akan men-_distribute_ pesan tersebut ke *worker* di _background_.
+- *Worker* kemudian mengirim email melalui protokol SMTP secara mandiri, memastikan antarmuka frontend tetap responsif seketika tanpa perlu menunggu proses jaringan _handshake_ ke _server email_ selesai.
+
 ## 4. Infrastruktur dan Deployment
 - Aplikasi akan di-containerisasi menggunakan **Docker** agar mudah dideploy di berbagai server (VPS atau Cloud).
 - **Dockerfile (Multi-Stage Build):** Backend Go menggunakan pola *multi-stage build*. Tahap pertama (`Builder`) mengompilasi *binary* menggunakan image Go Alpine. Tahap kedua (`Final`) hanya menyalin *binary* ke image Alpine murni yang sangat ringan, tanpa *source code* sisa.

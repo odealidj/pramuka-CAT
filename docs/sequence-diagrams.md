@@ -160,6 +160,8 @@ Peserta tidak bisa sembarangan mengikuti ujian meskipun sudah login. Mereka haru
 3. Admin masuk ke halaman *Approval* dan melihat tabel daftar peserta berstatus `pending`.
 4. Admin menekan tombol "Approve" (Setuju) untuk mengizinkan peserta tersebut.
 5. Frontend Admin mengirim instruksi ke Backend untuk memperbarui (_update_) status peserta menjadi `approved` di database PostgreSQL.
+6. Backend mendistribusikan *task* pengiriman Notifikasi & Email ke *Worker Background* agar Frontend langsung menerima respon sukses tanpa penundaan.
+7. *Worker Background* secara asinkron mengirim Notifikasi (In-App) dan Email ke Peserta.
 
 ```mermaid
 sequenceDiagram
@@ -168,6 +170,8 @@ sequenceDiagram
     participant F as Frontend
     participant B as Backend API
     participant DB as Postgres
+    participant W as Task Worker (Asynq)
+    participant E as Email Server (SMTP)
 
     P->>F: Request Ikut Event Ujian
     F->>B: POST /protected/exams/enroll (body: { event_id })
@@ -183,7 +187,12 @@ sequenceDiagram
     A->>F: Klik "Approve" untuk Peserta X
     F->>B: PUT /admin/events/:event_id/participants/:approval_id/approve
     B->>DB: Update Status = 'approved'
+    B->>W: DistributeTaskSendEmail & CreateNotification (Background)
     B-->>F: OK
+    
+    Note over W,E: Proses Asinkron (Di Luar Siklus Request HTTP)
+    W->>DB: Insert In-App Notification
+    W->>E: Kirim Email Pemberitahuan via SMTP
 ```
 
 ---

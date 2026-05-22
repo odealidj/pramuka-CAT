@@ -143,6 +143,8 @@ Jantung dari operasional peserta ujian. Berperan ganda sebagai tabel "Pendaftara
 - Ketika peserta mengklik "Ikut Event", baris dibuat dengan `status = pending`.
 - Jika admin menyetujui, `status = approved`. Jika dibatalkan, `status = revoked`.
 - Setelah peserta selesai ujian, `is_completed` diset _true_, lalu nilai dijumlahkan ke `score` dan `is_passed` dikalkulasi.
+- Kolom `started_at` mencatat waktu pasti (timestamp) kapan peserta mulai mengerjakan soal untuk pertama kalinya.
+- Kolom `completed_at` mencatat waktu pasti (timestamp) kapan sesi ujian tersebut diakhiri, baik secara manual oleh peserta atau secara otomatis karena waktu habis (auto-submit).
 
 ### g. Tabel `user_answers`
 Tabel riwayat per jawaban. Sangat berguna untuk kebutuhan **Monitoring dan Review**.
