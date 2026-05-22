@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertTriangle, XCircle } from 'lucide-react';
+import { AlertTriangle, XCircle, Info, CheckCircle } from 'lucide-react';
 import Spinner from './Spinner';
 
 interface ConfirmDialogProps {
@@ -12,6 +12,7 @@ interface ConfirmDialogProps {
   confirmLabel?: string;
   isLoading?: boolean;
   error?: string; // pesan error dari backend, ditampilkan sebagai peringatan inline
+  variant?: 'danger' | 'warning' | 'info' | 'success';
 }
 
 export default function ConfirmDialog({
@@ -20,19 +21,67 @@ export default function ConfirmDialog({
   onConfirm,
   title = 'Konfirmasi Hapus',
   message,
-  confirmLabel = 'Ya, Hapus',
+  confirmLabel,
   isLoading = false,
   error,
+  variant = 'danger',
 }: ConfirmDialogProps) {
   if (!isOpen) return null;
+
+  const styles = {
+    danger: {
+      iconBg: 'bg-red-100',
+      iconText: 'text-red-600',
+      Icon: AlertTriangle,
+      btnBg: 'bg-red-600',
+      btnHover: 'hover:bg-red-700',
+      btnText: 'text-white',
+      defaultLabel: 'Ya, Hapus',
+      loadingLabel: 'Menghapus...',
+    },
+    warning: {
+      iconBg: 'bg-amber-100',
+      iconText: 'text-amber-600',
+      Icon: AlertTriangle,
+      btnBg: 'bg-amber-600',
+      btnHover: 'hover:bg-amber-700',
+      btnText: 'text-white',
+      defaultLabel: 'Ya, Lanjutkan',
+      loadingLabel: 'Memproses...',
+    },
+    info: {
+      iconBg: 'bg-blue-100',
+      iconText: 'text-blue-600',
+      Icon: Info,
+      btnBg: 'bg-blue-600',
+      btnHover: 'hover:bg-blue-700',
+      btnText: 'text-white',
+      defaultLabel: 'Ya, Lanjutkan',
+      loadingLabel: 'Memproses...',
+    },
+    success: {
+      iconBg: 'bg-emerald-100',
+      iconText: 'text-emerald-600',
+      Icon: CheckCircle,
+      btnBg: 'bg-emerald-600',
+      btnHover: 'hover:bg-emerald-700',
+      btnText: 'text-white',
+      defaultLabel: 'Ya, Selesai',
+      loadingLabel: 'Menyelesaikan...',
+    },
+  };
+
+  const style = styles[variant];
+  const Icon = style.Icon;
+  const label = confirmLabel || style.defaultLabel;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden">
         <div className="p-6">
           <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
-              <AlertTriangle size={20} className="text-red-600" />
+            <div className={`w-10 h-10 rounded-xl ${style.iconBg} flex items-center justify-center flex-shrink-0`}>
+              <Icon size={20} className={style.iconText} />
             </div>
             <div>
               <h3 className="text-gray-900 font-semibold text-base">{title}</h3>
@@ -56,15 +105,15 @@ export default function ConfirmDialog({
           >
             {error ? 'Tutup' : 'Batal'}
           </button>
-          {/* Sembunyikan tombol hapus jika sudah ada error (tidak perlu coba lagi) */}
+          {/* Sembunyikan tombol konfirmasi jika sudah ada error */}
           {!error && (
             <button
               onClick={onConfirm}
               disabled={isLoading}
-              className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-all disabled:opacity-70 flex items-center justify-center gap-2"
+              className={`flex-1 px-4 py-2.5 rounded-xl ${style.btnBg} ${style.btnText} text-sm font-semibold ${style.btnHover} transition-all disabled:opacity-70 flex items-center justify-center gap-2`}
             >
-              {isLoading ? <Spinner size={14} className="text-white" /> : null}
-              {isLoading ? 'Menghapus...' : confirmLabel}
+              {isLoading && <Spinner size={14} className={style.btnText} />}
+              {isLoading ? style.loadingLabel : label}
             </button>
           )}
         </div>

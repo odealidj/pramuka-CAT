@@ -290,6 +290,8 @@ export default function ExamPage() {
         onConfirm={finishExam}
         title="Akhiri Ujian?"
         message={`Anda telah menjawab ${answeredCount} dari ${questions.length} soal. Sisa waktu Anda ${timeLeftStr}. Apakah Anda yakin ingin menyelesaikan ujian sekarang? Jawaban tidak dapat diubah setelah ini.`}
+        confirmLabel="Ya, Selesai"
+        variant="success"
         isLoading={submitting}
       />
     </div>
