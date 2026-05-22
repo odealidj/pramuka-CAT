@@ -59,6 +59,29 @@ function fmtDuration(minutes: number) {
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
   return m > 0 ? `${h} jam ${m} menit` : `${h} jam`;
+function fmtDurationFull(minutes: number) {
+  if (minutes <= 0) return '0 menit';
+  if (minutes < 60) return `${minutes} menit`;
+  const d = Math.floor(minutes / 1440);
+  const h = Math.floor((minutes % 1440) / 60);
+  const m = minutes % 60;
+  
+  let res = [];
+  if (d > 0) res.push(`${d} hari`);
+  if (h > 0) res.push(`${h} jam`);
+  if (m > 0) res.push(`${m} menit`);
+  return res.join(' ');
+}
+
+function fmtDateRange(startIso: string, endIso: string) {
+  const d1 = fmtDate(startIso);
+  const d2 = fmtDate(endIso);
+  const t1 = fmtTime(startIso);
+  const t2 = fmtTime(endIso);
+  if (d1 === d2) {
+    return `${d1} • ${t1} - ${t2}`;
+  }
+  return `${d1} ${t1} - ${d2} ${t2}`;
 }
 
 function getEventStatus(event: Event): {
@@ -125,10 +148,10 @@ function EventCard({
   let countdownText = '';
   let countdownColor = 'text-gray-500';
   if (countdown.status === 'upcoming') {
-    countdownText = `Dimulai dalam ${countdown.minutesLeft} menit`;
+    countdownText = `Dimulai dalam ${fmtDurationFull(countdown.minutesLeft)}`;
     countdownColor = 'text-blue-600';
   } else if (countdown.status === 'ongoing') {
-    countdownText = `${countdown.minutesLeft} menit akan berakhir`;
+    countdownText = `${fmtDurationFull(countdown.minutesLeft)} akan berakhir`;
     countdownColor = 'text-emerald-600 font-medium';
   } else {
     countdownText = '0 menit (Selesai)';
@@ -179,9 +202,7 @@ function EventCard({
         <div className="space-y-1.5 text-xs text-gray-500">
           <div className="flex items-center gap-2">
             <Calendar size={11} className="text-gray-400 flex-shrink-0" />
-            <span>
-              {fmtDate(event.start_time)} • {fmtTime(event.start_time)} – {fmtTime(event.end_time)}
-            </span>
+            <span>{fmtDateRange(event.start_time, event.end_time)}</span>
           </div>
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1">
@@ -504,12 +525,8 @@ function MyExamCard({ exam }: { exam: UserApproval }) {
         
         <div className="space-y-2 mb-6 flex-1">
           <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Calendar size={14} className="text-gray-400" />
-            <span>{fmtDate(exam.start_time)}</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Clock size={14} className="text-gray-400" />
-            <span>{fmtTime(exam.start_time)} - {fmtTime(exam.end_time)}</span>
+            <Calendar size={14} className="text-gray-400 flex-shrink-0" />
+            <span>{fmtDateRange(exam.start_time, exam.end_time)}</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
             <Clock size={14} className={countdownColor} />
@@ -549,10 +566,10 @@ function UpcomingExamCard({ event, onEnroll, enrolling }: { event: Event, onEnro
   let countdownText = '';
   let countdownColor = 'text-gray-500';
   if (countdown.status === 'upcoming') {
-    countdownText = `Dimulai dalam ${countdown.minutesLeft} menit`;
+    countdownText = `Dimulai dalam ${fmtDurationFull(countdown.minutesLeft)}`;
     countdownColor = 'text-blue-600';
   } else if (countdown.status === 'ongoing') {
-    countdownText = `${countdown.minutesLeft} menit akan berakhir`;
+    countdownText = `${fmtDurationFull(countdown.minutesLeft)} akan berakhir`;
     countdownColor = 'text-emerald-600 font-medium';
   } else {
     countdownText = '0 menit (Selesai)';
@@ -571,12 +588,8 @@ function UpcomingExamCard({ event, onEnroll, enrolling }: { event: Event, onEnro
         </div>
         <div className="space-y-2 mb-6 flex-1">
           <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Calendar size={14} className="text-gray-400" />
-            <span>{fmtDate(event.start_time)}</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Clock size={14} className="text-gray-400" />
-            <span>{fmtTime(event.start_time)} - {fmtTime(event.end_time)}</span>
+            <Calendar size={14} className="text-gray-400 flex-shrink-0" />
+            <span>{fmtDateRange(event.start_time, event.end_time)}</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-500">
             <Clock size={14} className="text-amber-500" />

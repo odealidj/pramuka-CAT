@@ -50,7 +50,7 @@ type Querier interface {
 	FinishExam(ctx context.Context, arg FinishExamParams) error
 	GetAllEventParticipantsForExport(ctx context.Context, eventID uuid.NullUUID) ([]GetAllEventParticipantsForExportRow, error)
 	GetApprovalById(ctx context.Context, id uuid.UUID) (UserEventApproval, error)
-	GetApprovalStatus(ctx context.Context, arg GetApprovalStatusParams) (UserEventApproval, error)
+	GetApprovalStatus(ctx context.Context, arg GetApprovalStatusParams) (GetApprovalStatusRow, error)
 	GetCategoryById(ctx context.Context, id int32) (Category, error)
 	GetCategoryByName(ctx context.Context, name string) (Category, error)
 	GetEventById(ctx context.Context, id uuid.UUID) (GetEventByIdRow, error)

@@ -156,6 +156,8 @@ func (r *examRepository) GetApprovalStatus(ctx context.Context, userID uuid.UUID
 		IsPassed:    row.IsPassed.Bool,
 		StartedAt:   startedAt,
 		CompletedAt: completedAt,
+		StartTime:   row.StartTime,
+		EndTime:     row.EndTime,
 	}, nil
 }
 

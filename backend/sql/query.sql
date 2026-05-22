@@ -260,8 +260,10 @@ SELECT COUNT(*) FROM user_event_approvals
 WHERE user_id = $1;
 
 -- name: GetApprovalStatus :one
-SELECT * FROM user_event_approvals
-WHERE user_id = $1 AND event_id = $2 LIMIT 1;
+SELECT uea.*, e.start_time, e.end_time 
+FROM user_event_approvals uea
+JOIN events e ON uea.event_id = e.id
+WHERE uea.user_id = $1 AND uea.event_id = $2 LIMIT 1;
 
 -- name: CalculateScore :one
 SELECT COALESCE(SUM(q.weight), 0)::numeric as total_score
