@@ -465,14 +465,17 @@ function AdminEventsContent() {
 // ─── Peserta Content ──────────────────────────────────────────────────────────
 
 function MyExamCard({ exam }: { exam: UserApproval }) {
-  const statusInfo = getEventStatus(exam as any);
+  // Gunakan is_event_finished dari server (lebih akurat, tidak bergantung clock browser)
+  // Fallback ke perhitungan client-side jika field belum ada (backward compat)
+  const isEventFinished = exam.is_event_finished ?? (Date.now() > new Date(exam.end_time).getTime());
   const countdown = useCountdown(exam.end_time, exam.start_time);
-  
-  const isEventFinished = Date.now() > new Date(exam.end_time).getTime();
 
   let countdownText = '';
   let countdownColor = 'text-gray-500';
-  if (countdown.status === 'upcoming') {
+  if (isEventFinished) {
+    countdownText = '0 menit (Selesai)';
+    countdownColor = 'text-gray-400';
+  } else if (countdown.status === 'upcoming') {
     countdownText = `Dimulai dalam ${countdown.minutesLeft} menit`;
     countdownColor = 'text-blue-600';
   } else if (countdown.status === 'ongoing') {
@@ -485,7 +488,7 @@ function MyExamCard({ exam }: { exam: UserApproval }) {
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group overflow-hidden flex flex-col">
-      <div className={`h-2 w-full ${statusInfo.dot}`} />
+      <div className={`h-2 w-full ${isEventFinished || exam.is_completed ? 'bg-gray-300' : exam.status === 'approved' ? 'bg-emerald-500' : exam.status === 'revoked' ? 'bg-red-400' : 'bg-amber-400'}`} />
       <div className="p-5 flex flex-col flex-1">
         <div className="flex justify-between items-start mb-4 gap-4">
           <h3 className="font-bold text-gray-900 text-lg line-clamp-2">{exam.name}</h3>
@@ -535,6 +538,7 @@ function MyExamCard({ exam }: { exam: UserApproval }) {
     </div>
   );
 }
+
 
 function UpcomingExamCard({ event, onEnroll, enrolling }: { event: Event, onEnroll: (id: string) => void, enrolling: string | null }) {
   const statusInfo = getEventStatus(event);

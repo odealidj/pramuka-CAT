@@ -31,7 +31,9 @@ type UserApproval struct {
 	IsPassed        bool       `json:"is_passed"`
 	StartedAt       *time.Time `json:"started_at"`
 	CompletedAt     *time.Time `json:"completed_at"`
+	IsEventFinished bool       `json:"is_event_finished"` // true jika end_time sudah lewat (dihitung server)
 }
+
 
 // EnrollEventRequest untuk payload mendaftar tryout
 type EnrollEventRequest struct {

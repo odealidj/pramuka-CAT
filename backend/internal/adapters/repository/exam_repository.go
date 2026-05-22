@@ -118,7 +118,9 @@ func (r *examRepository) ListUserApprovals(ctx context.Context, userID uuid.UUID
 			IsPassed:        row.IsPassed.Bool,
 			StartedAt:       startedAt,
 			CompletedAt:     completedAt,
+			IsEventFinished: time.Now().After(row.EndTime),
 		})
+
 	}
 	return approvals, total, nil
 }

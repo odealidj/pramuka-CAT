@@ -26,7 +26,9 @@ export interface UserApproval {
   is_passed: boolean;
   started_at: string | null;
   completed_at: string | null;
+  is_event_finished: boolean; // dihitung server: true jika end_time sudah lewat
 }
+
 
 export interface ParticipantQuestion {
   id: string;
