@@ -36,4 +36,5 @@ type ExamService interface {
 	FinishExam(ctx context.Context, userID uuid.UUID, eventID uuid.UUID) (domain.FinishExamResponse, error)
 
 	ReviewParticipantAnswers(ctx context.Context, approvalID uuid.UUID) ([]domain.UserAnswerDetail, error)
+	ReviewParticipantAnswersByEvent(ctx context.Context, userID uuid.UUID, eventID uuid.UUID) ([]domain.UserAnswerDetail, error)
 }

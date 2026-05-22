@@ -536,9 +536,23 @@ function MyExamCard({ exam }: { exam: UserApproval }) {
           </div>
         </div>
         
-        {isEventFinished || exam.is_completed ? (
+        {exam.is_completed ? (
+          <div className="space-y-3">
+            <div className={`p-3 rounded-xl border flex flex-col items-center justify-center ${exam.is_passed ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+              <span className={`text-xs font-bold uppercase tracking-wider mb-1 ${exam.is_passed ? 'text-emerald-600' : 'text-red-600'}`}>
+                {exam.is_passed ? 'Lulus' : 'Tidak Lulus'}
+              </span>
+              <span className={`text-2xl font-black ${exam.is_passed ? 'text-emerald-700' : 'text-red-700'}`}>
+                {exam.score.toFixed(2)}
+              </span>
+            </div>
+            <Link href={`/dashboard/exams/${exam.event_id}/result`} className="w-full flex items-center justify-center gap-2 bg-white text-indigo-600 hover:bg-indigo-50 border border-indigo-200 py-2.5 rounded-xl text-sm font-semibold transition-colors">
+              Lihat Hasil & Pembahasan
+            </Link>
+          </div>
+        ) : isEventFinished ? (
           <button disabled className="w-full flex items-center justify-center gap-2 bg-gray-100 text-gray-500 py-2.5 rounded-xl text-sm font-semibold transition-colors border border-gray-200">
-            <CheckCircle2 size={16} /> Ujian Selesai
+            <CheckCircle2 size={16} /> Waktu Habis
           </button>
         ) : exam.status === 'approved' ? (
           <Link href={`/dashboard/exams/${exam.event_id}`} className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors">

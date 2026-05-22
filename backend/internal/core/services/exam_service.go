@@ -175,3 +175,14 @@ func (s *examService) FinishExam(ctx context.Context, userID uuid.UUID, eventID 
 func (s *examService) ReviewParticipantAnswers(ctx context.Context, approvalID uuid.UUID) ([]domain.UserAnswerDetail, error) {
 	return s.repo.GetUserAnswersDetail(ctx, approvalID)
 }
+
+func (s *examService) ReviewParticipantAnswersByEvent(ctx context.Context, userID uuid.UUID, eventID uuid.UUID) ([]domain.UserAnswerDetail, error) {
+	approval, err := s.repo.GetApprovalStatus(ctx, userID, eventID)
+	if err != nil {
+		return nil, fmt.Errorf("peserta belum terdaftar pada ujian ini")
+	}
+	if !approval.IsCompleted {
+		return nil, fmt.Errorf("ujian belum diselesaikan")
+	}
+	return s.repo.GetUserAnswersDetail(ctx, approval.ApprovalID)
+}

@@ -104,3 +104,10 @@ export const reviewParticipantAnswersApi = async (approvalId: string): Promise<U
   );
   return res.data.data;
 };
+
+export const getExamResultParticipantApi = async (eventId: string): Promise<UserAnswerDetail[]> => {
+  const res = await httpClient.get<ApiSuccessResponse<UserAnswerDetail[]>>(
+    `/protected/exams/my-results/${eventId}`
+  );
+  return res.data.data;
+};

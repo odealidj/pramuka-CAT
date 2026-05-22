@@ -31,6 +31,7 @@ func (h *ExamHandler) RegisterParticipantRoutes(protectedGroup *echo.Group) {
 	examsGroup.GET("/:id/start", h.StartExam)
 	examsGroup.POST("/:id/submit-answer", h.SubmitAnswer)
 	examsGroup.POST("/:id/finish", h.FinishExam)
+	protectedGroup.GET("/exams/my-results/:event_id", h.ReviewAnswersParticipant)
 }
 
 func (h *ExamHandler) RegisterAdminRoutes(adminGroup *echo.Group) {
@@ -210,4 +211,32 @@ func (h *ExamHandler) ReviewAnswers(c echo.Context) error {
 	}
 
 	return response.Success(c, http.StatusOK, "Detail jawaban peserta berhasil diambil", answers)
+}
+
+// ReviewAnswersParticipant godoc
+// @Summary     Lihat Hasil Ujian Peserta
+// @Description Peserta melihat hasil ujian (skor, soal, jawaban, kunci jawaban) setelah menyelesaikan ujian
+// @Tags        Peserta - Ujian
+// @Security    BearerAuth
+// @Param       event_id path     string  true  "UUID Event"
+// @Success     200      {object} response.SuccessResponse
+// @Failure     400      {object} response.ErrorResponse
+// @Router      /protected/exams/my-results/{event_id} [get]
+func (h *ExamHandler) ReviewAnswersParticipant(c echo.Context) error {
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		return response.Error(c, http.StatusUnauthorized, err.Error(), nil)
+	}
+
+	eventID, err := uuid.Parse(c.Param("event_id"))
+	if err != nil {
+		return response.Error(c, http.StatusBadRequest, "ID event tidak valid", nil)
+	}
+
+	answers, err := h.service.ReviewParticipantAnswersByEvent(c.Request().Context(), userID, eventID)
+	if err != nil {
+		return response.Error(c, http.StatusInternalServerError, "Gagal mengambil data hasil ujian", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
+	}
+
+	return response.Success(c, http.StatusOK, "Detail hasil ujian berhasil diambil", answers)
 }
