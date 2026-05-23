@@ -433,15 +433,7 @@ function QuestionsContent() {
         <div className="flex flex-wrap items-center gap-3">
           {/* Action Group 1: Manage */}
           <div className="flex items-center bg-white border border-gray-200 rounded-xl p-1 shadow-sm">
-            <button
-              onClick={() => setCategoryModal(true)}
-              className="flex items-center gap-2 px-3 py-1.5 text-gray-600 hover:text-amber-700 hover:bg-amber-50 text-sm font-medium rounded-lg transition-all"
-              title="Kelola Kategori"
-            >
-              <Tag size={15} />
-              <span className="hidden sm:inline">Kategori</span>
-            </button>
-            <div className="w-px h-4 bg-gray-200 mx-1"></div>
+
             <a
               href="/template-soal-pramuka.xlsx"
               download
