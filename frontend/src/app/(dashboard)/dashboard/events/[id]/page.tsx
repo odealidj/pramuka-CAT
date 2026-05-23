@@ -353,10 +353,10 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
                 <Clock size={14} className="text-gray-400" />
                 <span className="font-semibold">{fmtDate(event.start_time)}</span> <span className="text-gray-400">—</span> <span className="font-semibold">{fmtDate(event.end_time)}</span>
               </span>
-              <span className="flex items-center gap-1.5 bg-amber-50 text-amber-700 px-3 py-1 rounded-lg font-semibold">
+              <span className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-semibold ${isFinished ? 'bg-gray-100 text-gray-600 border border-gray-200' : 'bg-amber-50 text-amber-700 border border-transparent'}`}>
                 ⏱ {event.duration_minutes} menit
               </span>
-              <span className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-lg font-semibold">
+              <span className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-semibold ${isFinished ? 'bg-gray-100 text-gray-600 border border-gray-200' : 'bg-emerald-50 text-emerald-700 border border-transparent'}`}>
                 <Trophy size={14} /> Batas Lulus {event.passing_grade}%
               </span>
             </div>
@@ -472,8 +472,9 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
                       </div>
                       <button
                         onClick={() => handleRemoveQuestion(q.id)}
-                        className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-gray-400 font-semibold text-xs hover:text-red-600 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100 border border-transparent hover:border-red-200"
-                        title="Hapus dari ujian"
+                        disabled={isFinished}
+                        className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all border ${isFinished ? 'text-gray-400 opacity-50 cursor-not-allowed bg-gray-50 border-gray-200' : 'text-gray-400 font-semibold hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 border-transparent hover:border-red-200'}`}
+                        title={isFinished ? "Ujian sudah selesai" : "Hapus dari ujian"}
                       >
                         <Trash2 size={14} /> Hapus
                       </button>
@@ -485,7 +486,8 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
           </div>
 
           {/* Right Pane: Sticky Bank Picker */}
-          <div className="w-[400px] border-l border-gray-200 bg-white flex flex-col shadow-[-4px_0_24px_rgba(0,0,0,0.02)] z-10">
+          {!isFinished && (
+            <div className="w-[400px] flex-shrink-0 border-l border-gray-200 bg-white flex flex-col shadow-[-4px_0_24px_rgba(0,0,0,0.02)] z-10">
             <div className="p-5 border-b border-gray-100 bg-gradient-to-br from-indigo-50/50 to-white">
               <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
                 <Search size={16} className="text-indigo-500" /> Bank Soal
@@ -573,7 +575,8 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
                 </ul>
               )}
             </div>
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Tab: Participants */}
@@ -673,8 +676,9 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
                               {(p.status.toLowerCase() === 'pending' || p.status.toLowerCase() === 'revoked') && (
                                 <button
                                   onClick={() => handleApprove(p.approval_id)}
-                                  disabled={approvingId === p.approval_id}
-                                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-all disabled:opacity-50"
+                                  disabled={approvingId === p.approval_id || isFinished}
+                                  title={isFinished ? "Ujian sudah selesai" : "Approve Peserta"}
+                                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                   {approvingId === p.approval_id ? <Spinner size={14} /> : <CheckCircle size={14} />} Approve
                                 </button>
@@ -683,8 +687,9 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
                               {p.status.toLowerCase() === 'approved' && (
                                 <button
                                   onClick={() => handleRevoke(p.approval_id)}
-                                  disabled={revokingId === p.approval_id}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+                                  disabled={revokingId === p.approval_id || isFinished}
+                                  title={isFinished ? "Ujian sudah selesai" : "Batalkan Peserta"}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                   {revokingId === p.approval_id ? <Spinner size={14} /> : <XCircle size={14} />} Revoke
                                 </button>
@@ -693,8 +698,9 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
                               {(p.status.toLowerCase() === 'pending' || p.status.toLowerCase() === 'approved' || p.status.toLowerCase() === 'revoked') && (
                                 <button
                                   onClick={() => handleRemoveParticipant(p.approval_id)}
-                                  disabled={removingParticipantId === p.approval_id}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100 transition-colors disabled:opacity-50"
+                                  disabled={removingParticipantId === p.approval_id || isFinished}
+                                  title={isFinished ? "Ujian sudah selesai" : "Hapus Peserta"}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                   {removingParticipantId === p.approval_id ? <Spinner size={14} /> : <Trash2 size={14} />} Hapus
                                 </button>
