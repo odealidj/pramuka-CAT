@@ -101,7 +101,7 @@ export const finishExamApi = async (eventId: string): Promise<FinishExamResponse
 
 export const reviewParticipantAnswersApi = async (approvalId: string): Promise<UserAnswerDetail[]> => {
   const res = await httpClient.get<ApiSuccessResponse<UserAnswerDetail[]>>(
-    `/admin-only/exams/approvals/${approvalId}/answers`
+    `/admin/exams/approvals/${approvalId}/answers`
   );
   return res.data.data;
 };
