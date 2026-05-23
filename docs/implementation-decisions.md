@@ -21,9 +21,9 @@ Aplikasi akan menggunakan arsitektur **Client-Server** berbasis web (Web Applica
 - **Database Tool:** **sqlc** (Sebagai pengganti ORM konvensional)
 - **Alasan:** Karena aplikasi ini melibatkan relasi data yang kuat, _Relational Database_ wajib digunakan. Untuk interaksi ke PostgreSQL, proyek ini secara eksplisit tidak menggunakan ORM (seperti GORM) demi performa maksimal, melainkan menggunakan **sqlc**. Sqlc akan membaca _raw SQL queries_ dan mengompilasinya menjadi kode Go yang _type-safe_, memastikan *query* dieksekusi dengan kecepatan super tinggi tanpa adanya _overhead_ eksekusi khas ORM.
 
-### 2.4. Temporary Storage & Caching (Untuk Fitur Ujian)
+### 2.4. Temporary Storage, Caching, & Message Broker
 - **Sistem:** Redis
-- **Alasan:** Sangat krusial untuk fitur **Auto-Resume** dan penyimpanan jawaban sementara secara _real-time_. Setiap kali peserta menjawab 1 soal, jawaban disimpan cepat di Redis sebelum disinkronisasikan secara *bulk* ke PostgreSQL saat _Submit_ atau waktu habis. Ini akan mengurangi beban *query* ke database utama.
+- **Alasan:** Sangat krusial untuk fitur **Auto-Resume** dan penyimpanan jawaban sementara secara _real-time_. Setiap kali peserta menjawab 1 soal, jawaban disimpan cepat di Redis sebelum disinkronisasikan secara *bulk* ke PostgreSQL saat _Submit_ atau waktu habis. Ini akan mengurangi beban *query* ke database utama. Selain itu, Redis digunakan sebagai *Message Broker* oleh antrean asinkron (menggunakan **Asynq**).
 
 ### 2.5. Framework Pengujian (Testing Stack)
 - **Unit Testing:** Go standard library `testing` dipadukan dengan **`github.com/stretchr/testify`** (untuk *assertions* dan *mocking*).
@@ -114,10 +114,10 @@ Semua *query* yang melibatkan soal melakukan `JOIN categories c ON q.category_id
 - Dibuka via CustomEvent `'openCommandPalette'` (dari Navbar) atau shortcut keyboard `Ctrl+K`/`Cmd+K` (event listener internal).
 - Mengembalikan `null` (bukan di-unmount) saat tertutup untuk menghindari biaya re-registrasi event listener dan menjaga state internal.
 
-### 3.13. Asynchronous Task & Notifikasi Email
-- Sistem mengimplementasikan pola asinkron untuk pengiriman email pemberitahuan dan notifikasi dalam aplikasi agar tidak memblokir laju _request_ HTTP utama.
-- Pengiriman ini dikelola melalui antrian tugas (*task queue*) menggunakan sistem asinkron bawaan/eksternal. Ketika status peserta diubah oleh Admin (misal: *Approve* atau *Revoke*), backend akan men-_distribute_ pesan tersebut ke *worker* di _background_.
-- *Worker* kemudian mengirim email melalui protokol SMTP secara mandiri, memastikan antarmuka frontend tetap responsif seketika tanpa perlu menunggu proses jaringan _handshake_ ke _server email_ selesai.
+### 3.13. Asynchronous Task, Background Jobs & Notifikasi Email
+- Sistem mengimplementasikan pola asinkron menggunakan *package* **`hibiken/asynq`** (berbasis Redis) untuk tugas-tugas berat di *background* agar tidak memblokir laju _request_ HTTP utama.
+- Pengiriman ini dikelola melalui antrian tugas (*task queue*). Ketika ada perubahan krusial (misal: pendaftaran otomatis, pembersihan sesi kedaluwarsa, atau pengiriman email massal), backend akan men-_distribute_ pesan tersebut ke *worker* di _background_.
+- *Worker* memproses pengiriman email melalui protokol SMTP secara mandiri, lengkap dengan mekanisme *retry* dan *Global Error Handling* jika terjadi kegagalan sistemik berulang kali, memastikan antarmuka frontend tetap responsif seketika tanpa perlu menunggu proses jaringan _handshake_ ke _server email_ selesai.
 
 ## 4. Infrastruktur dan Deployment
 - Aplikasi akan di-containerisasi menggunakan **Docker** agar mudah dideploy di berbagai server (VPS atau Cloud).

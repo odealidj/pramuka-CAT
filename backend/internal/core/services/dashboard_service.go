@@ -67,8 +67,14 @@ func (s *dashboardService) GetDashboardData(ctx context.Context) (*domain.Dashbo
 			activityTime = time.Now()
 		}
 
+		var photoUrl *string
+		if r.UserPhotoUrl.Valid {
+			photoUrl = &r.UserPhotoUrl.String
+		}
+
 		activities = append(activities, domain.DashboardActivity{
 			UserName:     r.UserName,
+			PhotoUrl:     photoUrl,
 			Action:       action,
 			Time:         activityTime,
 			Status:       r.Status,
@@ -132,8 +138,14 @@ func (s *dashboardService) ListActivities(ctx context.Context, page, limit int32
 			activityTime = time.Now()
 		}
 
+		var photoUrl *string
+		if r.UserPhotoUrl.Valid {
+			photoUrl = &r.UserPhotoUrl.String
+		}
+
 		activities = append(activities, domain.DashboardActivity{
 			UserName:     r.UserName,
+			PhotoUrl:     photoUrl,
 			Action:       action,
 			Time:         activityTime,
 			Status:       r.Status,

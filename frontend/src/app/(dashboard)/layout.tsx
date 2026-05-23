@@ -19,7 +19,8 @@ const pageTitles: Record<string, string> = {
   '/dashboard/events': 'Jadwal Ujian',
   '/dashboard/results': 'Hasil Ujian',
   '/dashboard/users': 'Manajemen Pengguna',
-  '/dashboard/profile': 'Profil Saya',
+  '/dashboard/jobs': 'Monitoring Jobs',
+  '/dashboard/profile': 'Pengaturan Akun',
 };
 
 function DashboardContent({ children }: { children: React.ReactNode }) {

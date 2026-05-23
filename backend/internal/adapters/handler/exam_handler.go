@@ -10,15 +10,17 @@ import (
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/domain"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/ports"
 	"github.com/odealidj/pramuka-CAT/backend/pkg/response"
+	"github.com/odealidj/pramuka-CAT/backend/pkg/sse"
 	"github.com/odealidj/pramuka-CAT/backend/pkg/utils"
 )
 
 type ExamHandler struct {
 	service ports.ExamService
+	broker  *sse.Broker
 }
 
-func NewExamHandler(service ports.ExamService) *ExamHandler {
-	return &ExamHandler{service: service}
+func NewExamHandler(service ports.ExamService, broker *sse.Broker) *ExamHandler {
+	return &ExamHandler{service: service, broker: broker}
 }
 
 func (h *ExamHandler) RegisterParticipantRoutes(protectedGroup *echo.Group) {
@@ -128,6 +130,10 @@ func (h *ExamHandler) Enroll(c echo.Context) error {
 	err = h.service.Enroll(c.Request().Context(), userID, req.EventID)
 	if err != nil {
 		return response.Error(c, http.StatusBadRequest, "Gagal mendaftar event", []response.ErrorDetail{{Field: "event", Message: err.Error()}})
+	}
+
+	if h.broker != nil {
+		_ = h.broker.Publish(c.Request().Context(), `{"event":"new_enrollment", "message":"Peserta baru mendaftar ujian"}`)
 	}
 
 	return response.Success(c, http.StatusOK, "Berhasil mendaftar, menunggu persetujuan Admin", nil)

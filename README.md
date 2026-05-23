@@ -6,7 +6,8 @@ Platform ujian berbasis komputer (CAT) untuk kegiatan kepramukaan. Dibangun deng
 
 ## Tech Stack
 
-- **Backend:** Go (Echo Framework) · **DB:** PostgreSQL · **Cache:** Redis
+- **Backend:** Go (Echo Framework) · **DB:** PostgreSQL · **Cache/MQ:** Redis
+- **Background Jobs:** Asynq · **Emailing:** SMTP
 - **DB Query:** sqlc · **Auth:** Stateful JWT · **Export:** Excel & PDF
 
 ---

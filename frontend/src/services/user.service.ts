@@ -107,6 +107,12 @@ export const updateProfileApi = async (
   return res.data.data;
 };
 
+export const changePasswordApi = async (
+  payload: any // Replace with UpdateProfilePasswordRequest if typed
+): Promise<void> => {
+  await httpClient.put('/protected/users/me/password', payload);
+};
+
 // === SUPER ADMIN ENDPOINTS ===
 
 export const listAdminsApi = async (

@@ -25,12 +25,13 @@ type RegisterResponse struct {
 
 // UserResponse adalah representasi data user tanpa password hash
 type UserResponse struct {
-	ID       uuid.UUID `json:"id"`
-	Username string    `json:"username"`
-	Email    *string   `json:"email"`
-	FullName string    `json:"full_name"`
-	Role     string    `json:"role"`
-	PhotoURL *string   `json:"photo_url,omitempty"`
+	ID                 uuid.UUID `json:"id"`
+	Username           string    `json:"username"`
+	Email              *string   `json:"email"`
+	FullName           string    `json:"full_name"`
+	Role               string    `json:"role"`
+	PhotoURL           *string   `json:"photo_url,omitempty"`
+	EmailNotifications bool      `json:"email_notifications"`
 }
 
 // LoginResponse adalah balasan sukses login yang mengandung JWT

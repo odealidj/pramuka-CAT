@@ -11,6 +11,7 @@ type DashboardStats struct {
 
 type DashboardActivity struct {
 	UserName     string    `json:"name"`
+	PhotoUrl     *string   `json:"photo_url"`
 	Action       string    `json:"action"`
 	Time         time.Time `json:"time"`
 	Status       string    `json:"status"` // "pending", "approved", "completed", "expired"

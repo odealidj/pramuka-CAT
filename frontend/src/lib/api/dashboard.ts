@@ -9,9 +9,10 @@ export interface DashboardStats {
 
 export interface DashboardActivity {
   name: string;
+  photo_url?: string;
   action: string;
   time: string;
-  status: 'pending' | 'approved' | 'completed' | 'expired';
+  status: 'pending' | 'approved' | 'completed' | 'expired' | 'revoked';
   event_end_time: string;
 }
 

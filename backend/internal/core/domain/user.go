@@ -12,8 +12,9 @@ type User struct {
 	Email     *string   `json:"email"`
 	FullName  string    `json:"full_name"`
 	Role      string    `json:"role"`
-	PhotoURL  *string   `json:"photo_url,omitempty"`
-	CreatedAt time.Time `json:"created_at"`
+	PhotoURL           *string   `json:"photo_url,omitempty"`
+	EmailNotifications bool      `json:"email_notifications"`
+	CreatedAt          time.Time `json:"created_at"`
 }
 
 type CreateUserRequest struct {
@@ -34,9 +35,15 @@ type UpdateUserRequest struct {
 }
 
 type UpdateProfileRequest struct {
-	Username string `json:"username" validate:"required"`
-	Email    string `json:"email" validate:"required,email"`
-	FullName string `json:"full_name" validate:"required"`
+	Username           string `json:"username" validate:"required"`
+	Email              string `json:"email" validate:"required,email"`
+	FullName           string `json:"full_name" validate:"required"`
+	EmailNotifications bool   `json:"email_notifications"`
+}
+
+type UpdateProfilePasswordRequest struct {
+	OldPassword string `json:"old_password" validate:"required"`
+	NewPassword string `json:"new_password" validate:"required,min=6"`
 }
 
 type UpdateUserPasswordRequest struct {

@@ -15,6 +15,7 @@ import {
   X,
   ShieldCheck,
   BarChart3,
+  Server,
 } from 'lucide-react';
 
 // --- Navigation Config ---
@@ -201,9 +202,18 @@ const SidebarContent = ({
             )}
             <NavLink
               item={{
-                label: 'Pengaturan',
+                label: 'Pengaturan Akun',
                 href: '/dashboard/profile',
                 icon: <Settings size={18} />,
+              }}
+              onClick={onClose}
+              isCollapsed={isCollapsed}
+            />
+            <NavLink
+              item={{
+                label: 'Monitoring Jobs',
+                href: '/dashboard/jobs',
+                icon: <Server size={18} />,
               }}
               onClick={onClose}
               isCollapsed={isCollapsed}

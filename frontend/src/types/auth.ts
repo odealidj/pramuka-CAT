@@ -32,6 +32,7 @@ export interface UserInfo {
   full_name: string;
   role: 'super_admin' | 'admin' | 'peserta';
   photo_url?: string | null;
+  email_notifications: boolean;
 }
 
 /** Response sukses dari POST /auth/login */
@@ -57,6 +58,7 @@ export interface User {
   full_name: string;
   role: 'super_admin' | 'admin' | 'peserta';
   photo_url?: string | null;
+  email_notifications: boolean;
   created_at: string;
   deleted_at?: string | null;
 }
@@ -89,6 +91,7 @@ export interface UpdateProfileRequest {
   username: string;
   email: string;
   full_name: string;
+  email_notifications: boolean;
 }
 
 // === Pagination Types ===

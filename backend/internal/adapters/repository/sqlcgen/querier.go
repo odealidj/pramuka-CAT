@@ -44,6 +44,7 @@ type Querier interface {
 	DeleteCategory(ctx context.Context, id int32) error
 	DeleteEvent(ctx context.Context, id uuid.UUID) error
 	DeleteEventQuestion(ctx context.Context, arg DeleteEventQuestionParams) error
+	DeleteNotificationsByMessageLike(ctx context.Context, eventName sql.NullString) error
 	DeleteQuestion(ctx context.Context, id uuid.UUID) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 	DeleteUserEventApproval(ctx context.Context, id uuid.UUID) error
@@ -57,6 +58,7 @@ type Querier interface {
 	GetCategoryByName(ctx context.Context, name string) (Category, error)
 	GetEventById(ctx context.Context, id uuid.UUID) (GetEventByIdRow, error)
 	GetEventTotalWeight(ctx context.Context, eventID uuid.UUID) (string, error)
+	GetExpiredEvents(ctx context.Context) ([]Event, error)
 	GetQuestionById(ctx context.Context, id uuid.UUID) (Question, error)
 	GetRecentActivitiesDashboard(ctx context.Context) ([]GetRecentActivitiesDashboardRow, error)
 	GetSession(ctx context.Context, id uuid.UUID) (Session, error)
@@ -68,6 +70,7 @@ type Querier interface {
 	GetUserById(ctx context.Context, id uuid.UUID) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUserNotifications(ctx context.Context, arg GetUserNotificationsParams) ([]Notification, error)
+	GetUserPasswordHash(ctx context.Context, id uuid.UUID) (string, error)
 	ListAdmins(ctx context.Context, arg ListAdminsParams) ([]User, error)
 	ListAllEventParticipants(ctx context.Context, eventID uuid.NullUUID) ([]ListAllEventParticipantsRow, error)
 	ListCategories(ctx context.Context, arg ListCategoriesParams) ([]Category, error)

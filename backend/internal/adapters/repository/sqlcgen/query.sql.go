@@ -190,8 +190,7 @@ func (q *Queries) CountAdmins(ctx context.Context, search string) (int64, error)
 
 const countAllActivitiesDashboard = `-- name: CountAllActivitiesDashboard :one
 SELECT COUNT(*) 
-FROM user_event_approvals uea 
-WHERE uea.status != 'revoked'
+FROM user_event_approvals uea
 `
 
 func (q *Queries) CountAllActivitiesDashboard(ctx context.Context) (int64, error) {
@@ -554,7 +553,7 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (S
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (username, password_hash, full_name, role, photo_url, email)
 VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at, email
+RETURNING id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at, email, email_notifications
 `
 
 type CreateUserParams struct {
@@ -587,6 +586,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.UpdatedAt,
 		&i.DeletedAt,
 		&i.Email,
+		&i.EmailNotifications,
 	)
 	return i, err
 }
@@ -634,6 +634,17 @@ type DeleteEventQuestionParams struct {
 
 func (q *Queries) DeleteEventQuestion(ctx context.Context, arg DeleteEventQuestionParams) error {
 	_, err := q.db.ExecContext(ctx, deleteEventQuestion, arg.EventID, arg.QuestionID)
+	return err
+}
+
+const deleteNotificationsByMessageLike = `-- name: DeleteNotificationsByMessageLike :exec
+DELETE FROM notifications
+WHERE type IN ('event_approval', 'event_revocation')
+AND message ILIKE '%' || $1 || '%'
+`
+
+func (q *Queries) DeleteNotificationsByMessageLike(ctx context.Context, eventName sql.NullString) error {
+	_, err := q.db.ExecContext(ctx, deleteNotificationsByMessageLike, eventName)
 	return err
 }
 
@@ -718,6 +729,7 @@ func (q *Queries) FinishExam(ctx context.Context, arg FinishExamParams) error {
 const getAllActivitiesDashboard = `-- name: GetAllActivitiesDashboard :many
 SELECT
     u.full_name as user_name,
+    u.photo_url as user_photo_url,
     e.name as event_name,
     uea.status,
     uea.is_completed,
@@ -727,7 +739,6 @@ SELECT
 FROM user_event_approvals uea
 JOIN users u ON uea.user_id = u.id
 JOIN events e ON uea.event_id = e.id
-WHERE uea.status != 'revoked'
 ORDER BY COALESCE(uea.updated_at, uea.created_at) DESC NULLS LAST
 LIMIT $1 OFFSET $2
 `
@@ -739,6 +750,7 @@ type GetAllActivitiesDashboardParams struct {
 
 type GetAllActivitiesDashboardRow struct {
 	UserName     string         `json:"user_name"`
+	UserPhotoUrl sql.NullString `json:"user_photo_url"`
 	EventName    string         `json:"event_name"`
 	Status       string         `json:"status"`
 	IsCompleted  bool           `json:"is_completed"`
@@ -758,6 +770,7 @@ func (q *Queries) GetAllActivitiesDashboard(ctx context.Context, arg GetAllActiv
 		var i GetAllActivitiesDashboardRow
 		if err := rows.Scan(
 			&i.UserName,
+			&i.UserPhotoUrl,
 			&i.EventName,
 			&i.Status,
 			&i.IsCompleted,
@@ -989,6 +1002,43 @@ func (q *Queries) GetEventTotalWeight(ctx context.Context, eventID uuid.UUID) (s
 	return total_weight, err
 }
 
+const getExpiredEvents = `-- name: GetExpiredEvents :many
+SELECT id, name, start_time, end_time, duration_minutes, passing_grade, created_at, deleted_at FROM events
+WHERE end_time < NOW() AND deleted_at IS NULL
+`
+
+func (q *Queries) GetExpiredEvents(ctx context.Context) ([]Event, error) {
+	rows, err := q.db.QueryContext(ctx, getExpiredEvents)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Event{}
+	for rows.Next() {
+		var i Event
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.StartTime,
+			&i.EndTime,
+			&i.DurationMinutes,
+			&i.PassingGrade,
+			&i.CreatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getQuestionById = `-- name: GetQuestionById :one
 SELECT id, category_id, question_text, option_a, option_b, option_c, option_d, correct_answer, weight, created_at, deleted_at FROM questions
 WHERE id = $1 AND deleted_at IS NULL LIMIT 1
@@ -1016,6 +1066,7 @@ func (q *Queries) GetQuestionById(ctx context.Context, id uuid.UUID) (Question, 
 const getRecentActivitiesDashboard = `-- name: GetRecentActivitiesDashboard :many
 SELECT
     u.full_name as user_name,
+    u.photo_url as user_photo_url,
     e.name as event_name,
     uea.status,
     uea.is_completed,
@@ -1025,13 +1076,13 @@ SELECT
 FROM user_event_approvals uea
 JOIN users u ON uea.user_id = u.id
 JOIN events e ON uea.event_id = e.id
-WHERE uea.status != 'revoked'
 ORDER BY COALESCE(uea.updated_at, uea.created_at) DESC NULLS LAST
 LIMIT 5
 `
 
 type GetRecentActivitiesDashboardRow struct {
 	UserName     string         `json:"user_name"`
+	UserPhotoUrl sql.NullString `json:"user_photo_url"`
 	EventName    string         `json:"event_name"`
 	Status       string         `json:"status"`
 	IsCompleted  bool           `json:"is_completed"`
@@ -1051,6 +1102,7 @@ func (q *Queries) GetRecentActivitiesDashboard(ctx context.Context) ([]GetRecent
 		var i GetRecentActivitiesDashboardRow
 		if err := rows.Scan(
 			&i.UserName,
+			&i.UserPhotoUrl,
 			&i.EventName,
 			&i.Status,
 			&i.IsCompleted,
@@ -1206,7 +1258,7 @@ func (q *Queries) GetUserAnswersDetail(ctx context.Context, approvalID uuid.Null
 }
 
 const getUserById = `-- name: GetUserById :one
-SELECT id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at, email FROM users
+SELECT id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at, email, email_notifications FROM users
 WHERE id = $1 AND deleted_at IS NULL LIMIT 1
 `
 
@@ -1224,12 +1276,13 @@ func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.UpdatedAt,
 		&i.DeletedAt,
 		&i.Email,
+		&i.EmailNotifications,
 	)
 	return i, err
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at, email FROM users
+SELECT id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at, email, email_notifications FROM users
 WHERE username = $1 AND deleted_at IS NULL LIMIT 1
 `
 
@@ -1247,6 +1300,7 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 		&i.UpdatedAt,
 		&i.DeletedAt,
 		&i.Email,
+		&i.EmailNotifications,
 	)
 	return i, err
 }
@@ -1295,8 +1349,19 @@ func (q *Queries) GetUserNotifications(ctx context.Context, arg GetUserNotificat
 	return items, nil
 }
 
+const getUserPasswordHash = `-- name: GetUserPasswordHash :one
+SELECT password_hash FROM users WHERE id = $1 AND deleted_at IS NULL
+`
+
+func (q *Queries) GetUserPasswordHash(ctx context.Context, id uuid.UUID) (string, error) {
+	row := q.db.QueryRowContext(ctx, getUserPasswordHash, id)
+	var password_hash string
+	err := row.Scan(&password_hash)
+	return password_hash, err
+}
+
 const listAdmins = `-- name: ListAdmins :many
-SELECT id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at, email FROM users
+SELECT id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at, email, email_notifications FROM users
 WHERE deleted_at IS NULL AND role = 'admin'
   AND ($3::text = '' OR full_name ILIKE '%' || $3::text || '%')
 ORDER BY created_at DESC
@@ -1329,6 +1394,7 @@ func (q *Queries) ListAdmins(ctx context.Context, arg ListAdminsParams) ([]User,
 			&i.UpdatedAt,
 			&i.DeletedAt,
 			&i.Email,
+			&i.EmailNotifications,
 		); err != nil {
 			return nil, err
 		}
@@ -1789,7 +1855,7 @@ func (q *Queries) ListUserApprovals(ctx context.Context, arg ListUserApprovalsPa
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at, email FROM users
+SELECT id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at, email, email_notifications FROM users
 WHERE deleted_at IS NULL AND role = 'peserta'
   AND ($3::text = '' OR full_name ILIKE '%' || $3::text || '%' OR email ILIKE '%' || $3::text || '%')
 ORDER BY created_at DESC
@@ -1822,6 +1888,7 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 			&i.UpdatedAt,
 			&i.DeletedAt,
 			&i.Email,
+			&i.EmailNotifications,
 		); err != nil {
 			return nil, err
 		}
@@ -2047,18 +2114,19 @@ func (q *Queries) UpdateQuestion(ctx context.Context, arg UpdateQuestionParams) 
 
 const updateUser = `-- name: UpdateUser :one
 UPDATE users
-SET username = $2, full_name = $3, role = $4, photo_url = $5, email = $6
+SET username = $2, full_name = $3, role = $4, photo_url = $5, email = $6, email_notifications = $7
 WHERE id = $1 AND deleted_at IS NULL
-RETURNING id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at, email
+RETURNING id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at, email, email_notifications
 `
 
 type UpdateUserParams struct {
-	ID       uuid.UUID      `json:"id"`
-	Username string         `json:"username"`
-	FullName string         `json:"full_name"`
-	Role     string         `json:"role"`
-	PhotoUrl sql.NullString `json:"photo_url"`
-	Email    sql.NullString `json:"email"`
+	ID                 uuid.UUID      `json:"id"`
+	Username           string         `json:"username"`
+	FullName           string         `json:"full_name"`
+	Role               string         `json:"role"`
+	PhotoUrl           sql.NullString `json:"photo_url"`
+	Email              sql.NullString `json:"email"`
+	EmailNotifications bool           `json:"email_notifications"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
@@ -2069,6 +2137,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		arg.Role,
 		arg.PhotoUrl,
 		arg.Email,
+		arg.EmailNotifications,
 	)
 	var i User
 	err := row.Scan(
@@ -2082,6 +2151,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.UpdatedAt,
 		&i.DeletedAt,
 		&i.Email,
+		&i.EmailNotifications,
 	)
 	return i, err
 }

@@ -68,16 +68,17 @@ type Session struct {
 }
 
 type User struct {
-	ID           uuid.UUID      `json:"id"`
-	Username     string         `json:"username"`
-	PasswordHash string         `json:"password_hash"`
-	FullName     string         `json:"full_name"`
-	Role         string         `json:"role"`
-	PhotoUrl     sql.NullString `json:"photo_url"`
-	CreatedAt    sql.NullTime   `json:"created_at"`
-	UpdatedAt    sql.NullTime   `json:"updated_at"`
-	DeletedAt    sql.NullTime   `json:"deleted_at"`
-	Email        sql.NullString `json:"email"`
+	ID                 uuid.UUID      `json:"id"`
+	Username           string         `json:"username"`
+	PasswordHash       string         `json:"password_hash"`
+	FullName           string         `json:"full_name"`
+	Role               string         `json:"role"`
+	PhotoUrl           sql.NullString `json:"photo_url"`
+	CreatedAt          sql.NullTime   `json:"created_at"`
+	UpdatedAt          sql.NullTime   `json:"updated_at"`
+	DeletedAt          sql.NullTime   `json:"deleted_at"`
+	Email              sql.NullString `json:"email"`
+	EmailNotifications bool           `json:"email_notifications"`
 }
 
 type UserAnswer struct {

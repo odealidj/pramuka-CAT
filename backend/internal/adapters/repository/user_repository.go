@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -40,9 +41,10 @@ func mapSqlcToDomainUser(u sqlcgen.User) domain.User {
 		Username:  u.Username,
 		Email:     email,
 		FullName:  u.FullName,
-		Role:      u.Role,
-		PhotoURL:  photoURL,
-		CreatedAt: createdAt,
+		Role:               u.Role,
+		PhotoURL:           photoURL,
+		EmailNotifications: u.EmailNotifications,
+		CreatedAt:          createdAt,
 	}
 }
 
@@ -77,6 +79,17 @@ func (r *userRepository) GetUserById(ctx context.Context, id uuid.UUID) (domain.
 		return domain.User{}, err
 	}
 	return mapSqlcToDomainUser(res), nil
+}
+
+func (r *userRepository) GetUserPasswordHash(ctx context.Context, id uuid.UUID) (string, error) {
+	hash, err := r.queries.GetUserPasswordHash(ctx, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", fmt.Errorf("user tidak ditemukan")
+		}
+		return "", err
+	}
+	return hash, nil
 }
 
 func (r *userRepository) ListUsers(ctx context.Context, page int32, limit int32, search string) ([]domain.User, int64, error) {

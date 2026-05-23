@@ -11,6 +11,9 @@ WHERE username = $1 AND deleted_at IS NULL LIMIT 1;
 SELECT * FROM users
 WHERE id = $1 AND deleted_at IS NULL LIMIT 1;
 
+-- name: GetUserPasswordHash :one
+SELECT password_hash FROM users WHERE id = $1 AND deleted_at IS NULL;
+
 -- name: ListUsers :many
 SELECT * FROM users
 WHERE deleted_at IS NULL AND role = 'peserta'
@@ -37,7 +40,7 @@ WHERE deleted_at IS NULL AND role = 'admin'
 
 -- name: UpdateUser :one
 UPDATE users
-SET username = $2, full_name = $3, role = $4, photo_url = $5, email = $6
+SET username = $2, full_name = $3, role = $4, photo_url = $5, email = $6, email_notifications = $7
 WHERE id = $1 AND deleted_at IS NULL
 RETURNING *;
 
@@ -388,6 +391,7 @@ WHERE is_completed = true;
 -- name: GetRecentActivitiesDashboard :many
 SELECT
     u.full_name as user_name,
+    u.photo_url as user_photo_url,
     e.name as event_name,
     uea.status,
     uea.is_completed,
@@ -397,13 +401,13 @@ SELECT
 FROM user_event_approvals uea
 JOIN users u ON uea.user_id = u.id
 JOIN events e ON uea.event_id = e.id
-WHERE uea.status != 'revoked'
 ORDER BY COALESCE(uea.updated_at, uea.created_at) DESC NULLS LAST
 LIMIT 5;
 
 -- name: GetAllActivitiesDashboard :many
 SELECT
     u.full_name as user_name,
+    u.photo_url as user_photo_url,
     e.name as event_name,
     uea.status,
     uea.is_completed,
@@ -413,14 +417,12 @@ SELECT
 FROM user_event_approvals uea
 JOIN users u ON uea.user_id = u.id
 JOIN events e ON uea.event_id = e.id
-WHERE uea.status != 'revoked'
 ORDER BY COALESCE(uea.updated_at, uea.created_at) DESC NULLS LAST
 LIMIT $1 OFFSET $2;
 
 -- name: CountAllActivitiesDashboard :one
 SELECT COUNT(*) 
-FROM user_event_approvals uea 
-WHERE uea.status != 'revoked';
+FROM user_event_approvals uea;
 -- name: DeleteUserEventApproval :exec
 DELETE FROM user_event_approvals WHERE id = $1;
 
@@ -448,3 +450,12 @@ WHERE id = $1 AND user_id = $2;
 UPDATE notifications
 SET is_read = TRUE
 WHERE user_id = $1 AND is_read = FALSE;
+
+-- name: GetExpiredEvents :many
+SELECT * FROM events
+WHERE end_time < NOW() AND deleted_at IS NULL;
+
+-- name: DeleteNotificationsByMessageLike :exec
+DELETE FROM notifications
+WHERE type IN ('event_approval', 'event_revocation')
+AND message ILIKE '%' || sqlc.arg('event_name') || '%';

@@ -9,15 +9,17 @@ import (
 	"github.com/google/uuid"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/domain"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/ports"
+	"github.com/odealidj/pramuka-CAT/backend/internal/worker"
 )
 
 type examService struct {
 	repo  ports.ExamRepository
 	cache ports.ExamCache
+	task  worker.TaskDistributor
 }
 
-func NewExamService(repo ports.ExamRepository, cache ports.ExamCache) ports.ExamService {
-	return &examService{repo: repo, cache: cache}
+func NewExamService(repo ports.ExamRepository, cache ports.ExamCache, task worker.TaskDistributor) ports.ExamService {
+	return &examService{repo: repo, cache: cache, task: task}
 }
 
 func (s *examService) ListUpcomingEvents(ctx context.Context, page int32, limit int32) ([]domain.UpcomingEvent, int64, error) {
@@ -122,53 +124,23 @@ func (s *examService) FinishExam(ctx context.Context, userID uuid.UUID, eventID 
 		return domain.FinishExamResponse{}, fmt.Errorf("ujian ini sudah diselesaikan")
 	}
 
-	// Tarik semua jawaban dari Redis
-	answers, err := s.cache.GetAllAnswers(ctx, approval.ApprovalID)
+	// Kirim tugas ke Asynq Background Worker
+	payload := &worker.PayloadFinishExam{
+		ApprovalID:   approval.ApprovalID,
+		UserID:       userID,
+		EventID:      eventID,
+		PassingGrade: approval.PassingGrade,
+	}
+
+	err = s.task.DistributeTaskFinishExam(ctx, payload)
 	if err != nil {
-		return domain.FinishExamResponse{}, fmt.Errorf("gagal mengambil jawaban dari cache: %w", err)
+		return domain.FinishExamResponse{}, fmt.Errorf("gagal mengantrekan proses penyelesaian ujian: %w", err)
 	}
-
-	// Untuk setiap jawaban: cek kebenaran dan simpan ke PostgreSQL secara permanen
-	for questionIDStr, selectedAnswer := range answers {
-		questionID, err := uuid.Parse(questionIDStr)
-		if err != nil {
-			continue // skip invalid IDs
-		}
-
-		correctAnswer, err := s.repo.GetQuestionCorrectAnswer(ctx, questionID)
-		if err != nil {
-			continue // skip if question not found
-		}
-
-		isCorrect := (selectedAnswer == correctAnswer)
-		_ = s.repo.SaveUserAnswer(ctx, approval.ApprovalID, questionID, selectedAnswer, isCorrect)
-	}
-
-	// Kalkulasi skor menggunakan rumus Auto-Bobot: (Skor Benar / Total Bobot) * 100
-	score, err := s.repo.CalculateScore(ctx, approval.ApprovalID)
-	if err != nil {
-		score = 0
-	}
-
-	totalWeight, err := s.repo.GetEventTotalWeight(ctx, approval.EventID)
-	if err == nil && totalWeight > 0 {
-		score = (score / totalWeight) * 100
-	}
-
-	isPassed := score >= approval.PassingGrade
-
-	err = s.repo.FinishExam(ctx, approval.ApprovalID, score, isPassed)
-	if err != nil {
-		return domain.FinishExamResponse{}, err
-	}
-
-	// Bersihkan cache Redis setelah ujian selesai
-	_ = s.cache.ClearExamSession(ctx, approval.ApprovalID)
 
 	return domain.FinishExamResponse{
-		Message:  "Ujian berhasil diselesaikan",
-		Score:    score,
-		IsPassed: isPassed,
+		Message:  "Jawaban sedang diproses di latar belakang. Silakan tunggu beberapa saat.",
+		Score:    0,     // Akan dihitung oleh worker
+		IsPassed: false, // Akan dievaluasi oleh worker
 	}, nil
 }
 

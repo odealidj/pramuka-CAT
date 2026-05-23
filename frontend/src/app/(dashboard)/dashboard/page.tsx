@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { getInMemoryToken } from "@/lib/http-client";
 import {
   Users,
   BookOpen,
@@ -11,7 +12,9 @@ import {
   TrendingUp,
   Activity,
   ArrowUpRight,
+  User as UserIcon,
 } from "lucide-react";
+import { getPhotoUrl } from "@/lib/constants";
 
 // --- Stat Card ---
 interface StatCardProps {
@@ -61,14 +64,16 @@ function StatCard({
 // --- Recent Activity Item ---
 function ActivityItem({
   name,
+  photo_url,
   action,
   time,
   status,
 }: {
   name: string;
+  photo_url?: string;
   action: string;
   time: string;
-  status: "approved" | "pending" | "completed" | "expired";
+  status: "approved" | "pending" | "completed" | "expired" | "revoked";
 }) {
   const statusConfig = {
     approved: {
@@ -87,13 +92,23 @@ function ActivityItem({
       label: "Waktu Habis",
       cls: "bg-gray-50 text-gray-500 border-gray-200",
     },
+    revoked: {
+      label: "Dibatalkan",
+      cls: "bg-red-50 text-red-600 border-red-100",
+    },
   };
   const s = statusConfig[status];
 
   return (
     <div className="flex items-center gap-4 py-3 border-b border-gray-50 last:border-0">
-      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-        {name.charAt(0).toUpperCase()}
+      <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 overflow-hidden shadow-sm">
+        {photo_url ? (
+          <img src={getPhotoUrl(photo_url) || ''} alt={name} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
+            {name.charAt(0).toUpperCase()}
+          </div>
+        )}
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-gray-800 text-sm font-semibold truncate">{name}</p>
@@ -118,18 +133,67 @@ function AdminDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const token = getInMemoryToken();
+    if (!token) {
+      setError("Tidak ada token otorisasi");
+      setLoading(false);
+      return;
+    }
+
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+    // Menghubungkan ke endpoint SSE dengan token di query string
+    const eventSource = new EventSource(`${apiUrl}/admin/dashboard/stream?token=${token}`);
+
+    const fetchDashboardData = async () => {
       try {
-        const { dashboardApi } = await import('@/lib/api/dashboard');
-        const res = await dashboardApi.getStats();
-        setData(res.data);
-      } catch (err: any) {
-        setError(err.message || 'Gagal memuat statistik');
+        const token = getInMemoryToken();
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+        const res = await fetch(`${apiUrl}/admin/dashboard/stats`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        const json = await res.json();
+        if (json.data) {
+          setData(json.data);
+          setError(null);
+        }
+      } catch (err) {
+        console.error("Failed to fetch dashboard data", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
+
+    eventSource.onmessage = (event) => {
+      try {
+        const res = JSON.parse(event.data);
+        if (res) {
+          if (res.event) {
+            // Merupakan notifikasi update dari server (misal: event = 'approval_changed')
+            // Lakukan refetch data terbaru
+            fetchDashboardData();
+          } else if (res.stats) {
+            // Merupakan data penuh inisial yang dikirim server saat pertama kali connect
+            setData(res);
+            setLoading(false);
+            setError(null);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to parse SSE data", err);
+      }
+    };
+
+    eventSource.onerror = (err) => {
+      console.error("SSE Error:", err);
+      // EventSource akan otomatis mencoba reconnect
+    };
+
+    // Bersihkan listener saat komponen dilepas
+    return () => {
+      eventSource.close();
+    };
   }, []);
 
   if (loading) {
@@ -196,11 +260,13 @@ function AdminDashboard() {
     else if (diffInSeconds < 86400) timeStr = `${Math.floor(diffInSeconds / 3600)} jam lalu`;
     else timeStr = `${Math.floor(diffInSeconds / 86400)} hari lalu`;
     
-    let statusConfig: "pending" | "completed" | "approved" | "expired" = "pending";
+    let statusConfig: "pending" | "completed" | "approved" | "expired" | "revoked" = "pending";
     if (a.status === "completed" || a.action.includes("Menyelesaikan")) {
       statusConfig = "completed";
     } else if (a.status === "approved") {
       statusConfig = "approved";
+    } else if (a.status === "revoked") {
+      statusConfig = "revoked";
     } else if (a.status === "pending" && a.event_end_time) {
       if (now.getTime() > new Date(a.event_end_time).getTime()) {
         statusConfig = "expired";
@@ -209,6 +275,7 @@ function AdminDashboard() {
 
     return {
       name: a.name,
+      photo_url: a.photo_url,
       action: a.action,
       time: timeStr,
       status: statusConfig,

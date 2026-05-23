@@ -26,22 +26,29 @@ func RequireAuth(cache ports.AuthCache) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			authHeader := c.Request().Header.Get(authorizationHeaderKey)
+			var accessToken string
 
 			if len(authHeader) == 0 {
-				return response.Error(c, http.StatusUnauthorized, "Header otorisasi tidak disertakan", nil)
-			}
+				// Cek query parameter "token", khusus digunakan untuk EventSource (SSE)
+				queryToken := c.QueryParam("token")
+				if queryToken != "" {
+					accessToken = queryToken
+				} else {
+					return response.Error(c, http.StatusUnauthorized, "Header otorisasi tidak disertakan", nil)
+				}
+			} else {
+				fields := strings.Fields(authHeader)
+				if len(fields) < 2 {
+					return response.Error(c, http.StatusUnauthorized, "Format header otorisasi tidak valid", nil)
+				}
 
-			fields := strings.Fields(authHeader)
-			if len(fields) < 2 {
-				return response.Error(c, http.StatusUnauthorized, "Format header otorisasi tidak valid", nil)
-			}
+				authType := strings.ToLower(fields[0])
+				if authType != authorizationTypeBearer {
+					return response.Error(c, http.StatusUnauthorized, "Tipe otorisasi tidak didukung (harus Bearer)", nil)
+				}
 
-			authType := strings.ToLower(fields[0])
-			if authType != authorizationTypeBearer {
-				return response.Error(c, http.StatusUnauthorized, "Tipe otorisasi tidak didukung (harus Bearer)", nil)
+				accessToken = fields[1]
 			}
-
-			accessToken := fields[1]
 			payload, err := utils.ValidateToken(accessToken, false)
 			if err != nil {
 				return response.Error(c, http.StatusUnauthorized, "Token tidak valid atau kedaluwarsa", nil)

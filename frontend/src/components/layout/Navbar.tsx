@@ -158,7 +158,7 @@ export default function Navbar({ onMenuToggle, pageTitle = 'Dashboard', isCollap
                     onClick={() => setIsProfileOpen(false)}
                   >
                     <User size={15} className="text-gray-400" />
-                    Profil Saya
+                    Pengaturan Akun
                   </Link>
                 </div>
 

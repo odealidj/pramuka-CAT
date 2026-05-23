@@ -16,6 +16,7 @@ erDiagram
         string full_name
         string role "ENUM: super_admin, admin, peserta"
         string photo_url "Nullable"
+        boolean email_notifications "Default: true"
         timestamp created_at
         timestamp updated_at
         timestamp deleted_at "Soft Delete Indicator"
@@ -107,6 +108,7 @@ Menyimpan data identitas Peserta dan Admin.
 - Terdapat kolom `role` untuk membedakan otoritas (`super_admin`, `admin`, `peserta`). `super_admin` memiliki akses tak terbatas ke seluruh sistem termasuk manajemen admin lainnya.
 - Terdapat kolom `deleted_at` untuk mendukung **Soft-Delete**; data user yang dihapus tetap tersimpan utuh di sistem agar relasi ujian historisnya tidak rusak, namun user tersebut berstatus dinonaktifkan.
 - Menyediakan kolom `photo_url` untuk menyimpan referensi/tautan ke foto profil pengguna yang di-upload ke server lokal.
+- Kolom `email_notifications` menyimpan preferensi pengguna apakah bersedia dikirimi email oleh sistem (seperti notifikasi _background job_).
 - Kolom `updated_at` diperbarui otomatis setiap kali data user diubah.
 
 ### b. Tabel `sessions`

@@ -30,6 +30,10 @@ Aplikasi memiliki 3 jenis peran utama:
    - Nilai akhir langsung muncul di layar sesaat setelah peserta menekan tombol selesai/submit ujian.
    - Sistem membandingkan nilai peserta dengan **Passing Grade (Batas Lulus)** event tersebut, sehingga menampilkan status **"LULUS"** atau **"TIDAK LULUS"**.
    - Peserta dapat melihat **Waktu Mulai** dan **Waktu Selesai** (timestamp `started_at` dan `completed_at`) pengerjaan mereka sebagai bukti transparansi.
+6. **Notifikasi Pintar & Auto-Cleanup:**
+   - Peserta menerima pemberitahuan otomatis jika pendaftarannya disetujui atau dibatalkan oleh Admin.
+   - Peserta dapat mengatur preferensi penerimaan notifikasi Email di halaman Pengaturan Akun.
+   - **Pembersihan Otomatis:** Notifikasi yang berkaitan dengan jadwal ujian tertentu akan otomatis terhapus dari kotak masuk (*inbox*) peserta apabila jadwal ujian tersebut telah kedaluwarsa atau berakhir.
 
 ### 3.3. Fitur Admin & Super Admin
 1. **Manajemen Admin (Khusus Super Admin):** Super Admin dapat mendaftarkan, mengubah, atau menghapus akun admin/panitia dari dalam sistem.
@@ -72,6 +76,9 @@ Aplikasi memiliki 3 jenis peran utama:
    - Daftar perintah difilter berdasarkan peran (`role`) pengguna yang sedang login.
    - Mendukung navigasi keyboard penuh: tombol `↑`/`↓` untuk berpindah pilihan, `Enter` untuk memilih, `ESC` untuk menutup.
    - Terdapat dua jenis perintah: **Navigasi** (berpindah halaman) dan **Aksi Cepat** (membuka modal buat soal/event/peserta langsung).
+10. **Pemantauan Sistem (Monitoring Jobs & Alerting):**
+    - Terdapat halaman panel khusus untuk memantau status antrean pemrosesan di latar belakang (*background jobs*) seperti proses pengiriman email masal atau *auto-submit* massal.
+    - **Global Error Alert:** Apabila terdapat antrean tugas yang gagal berulang kali hingga batas maksimal percobaan (*permanent failure*), sistem akan otomatis membunyikan alarm darurat dengan mengirimkan pemberitahuan ke **Lonceng Notifikasi** dan **Email** ke semua Admin / Super Admin agar perbaikan bisa segera dilakukan tanpa perlu menatap panel *monitoring* secara konstan.
 
 ---
 

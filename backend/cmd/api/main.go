@@ -39,6 +39,7 @@ import (
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/services"
 	"github.com/odealidj/pramuka-CAT/backend/internal/worker"
 	"github.com/odealidj/pramuka-CAT/backend/pkg/database"
+	"github.com/odealidj/pramuka-CAT/backend/pkg/sse"
 	"github.com/odealidj/pramuka-CAT/backend/pkg/tracer"
 	"github.com/hibiken/asynq"
 	"fmt"
@@ -82,13 +83,20 @@ func main() {
 	// 4. Setup Dependency Injection (Hexagonal Wiring)
 	queries := sqlcgen.New(db)
 
+	// Inisialisasi Broker SSE terlebih dahulu karena dibutuhkan oleh Worker
+	sseBroker := sse.NewBroker(rdb)
+
+	// Inisialisasi Repo/Cache yang dibutuhkan Worker
+	examRepo := repository.NewExamRepository(queries)
+	examCache := repository.NewExamCache(rdb)
+
 	// Setup Asynq Worker
 	redisOpt := asynq.RedisClientOpt{
 		Addr:     fmt.Sprintf("%s:%s", os.Getenv("REDIS_HOST"), os.Getenv("REDIS_PORT")),
 		Password: os.Getenv("REDIS_PASSWORD"),
 	}
 	taskDistributor := worker.NewRedisTaskDistributor(redisOpt)
-	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, queries)
+	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, queries, examRepo, examCache, sseBroker, taskDistributor)
 
 	go func() {
 		log.Println("Memulai Asynq Worker Server...")
@@ -97,9 +105,22 @@ func main() {
 		}
 	}()
 
+	// Setup Asynq Scheduler
+	scheduler := asynq.NewScheduler(redisOpt, nil)
+	// Jadwalkan TaskCleanupNotifications setiap 1 jam
+	if _, err := scheduler.Register("@every 1h", asynq.NewTask(worker.TaskCleanupNotifications, nil)); err != nil {
+		log.Fatalf("Gagal mendaftarkan task jadwal: %v", err)
+	}
+
+	go func() {
+		log.Println("Memulai Asynq Scheduler...")
+		if err := scheduler.Run(); err != nil {
+			log.Fatalf("Gagal menjalankan Asynq Scheduler: %v", err)
+		}
+	}()
+
 	authRepo := repository.NewAuthRepository(queries)
 	authCache := repository.NewAuthCache(rdb)
-
 	authService := services.NewAuthService(authRepo, authCache)
 	authHandler := handler.NewAuthHandler(authService)
 
@@ -114,25 +135,24 @@ func main() {
 
 	eventRepo := repository.NewEventRepository(queries)
 	eventService := services.NewEventService(eventRepo, taskDistributor)
-	eventHandler := handler.NewEventHandler(eventService)
+	eventHandler := handler.NewEventHandler(eventService, sseBroker)
 
-	examRepo := repository.NewExamRepository(queries)
-	examCache := repository.NewExamCache(rdb)
-	examService := services.NewExamService(examRepo, examCache)
-	examHandler := handler.NewExamHandler(examService)
+	examService := services.NewExamService(examRepo, examCache, taskDistributor)
+	examHandler := handler.NewExamHandler(examService, sseBroker)
 
 	notifRepo := repository.NewNotificationRepository(queries)
 	notifService := services.NewNotificationService(notifRepo)
 	notifHandler := handler.NewNotificationHandler(notifService)
 
-
 	userRepo := repository.NewUserRepository(queries)
 	userService := services.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService)
 
+	inspector := asynq.NewInspector(redisOpt)
+
 	dashboardRepo := repository.NewDashboardRepository(queries)
 	dashboardService := services.NewDashboardService(dashboardRepo)
-	dashboardHandler := handler.NewDashboardHandler(dashboardService)
+	dashboardHandler := handler.NewDashboardHandler(dashboardService, sseBroker, inspector)
 
 	uploadHandler := handler.NewUploadHandler()
 

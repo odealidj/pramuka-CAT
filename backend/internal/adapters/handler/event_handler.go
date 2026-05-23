@@ -9,14 +9,16 @@ import (
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/domain"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/ports"
 	"github.com/odealidj/pramuka-CAT/backend/pkg/response"
+	"github.com/odealidj/pramuka-CAT/backend/pkg/sse"
 )
 
 type EventHandler struct {
 	service ports.EventService
+	broker  *sse.Broker
 }
 
-func NewEventHandler(service ports.EventService) *EventHandler {
-	return &EventHandler{service: service}
+func NewEventHandler(service ports.EventService, broker *sse.Broker) *EventHandler {
+	return &EventHandler{service: service, broker: broker}
 }
 
 func (h *EventHandler) RegisterAdminRoutes(adminGroup *echo.Group) {
@@ -272,6 +274,10 @@ func (h *EventHandler) ApproveParticipant(c echo.Context) error {
 		return response.Error(c, http.StatusInternalServerError, "Gagal menyetujui peserta", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}
 
+	if h.broker != nil {
+		_ = h.broker.Publish(c.Request().Context(), `{"event":"approval_changed", "message":"Persetujuan peserta ujian diperbarui"}`)
+	}
+
 	return response.Success(c, http.StatusOK, "Peserta berhasil disetujui (Approved)", nil)
 }
 
@@ -296,6 +302,10 @@ func (h *EventHandler) RevokeParticipant(c echo.Context) error {
 		return response.Error(c, http.StatusInternalServerError, "Gagal membatalkan persetujuan peserta", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}
 
+	if h.broker != nil {
+		_ = h.broker.Publish(c.Request().Context(), `{"event":"approval_changed", "message":"Persetujuan peserta ujian dibatalkan"}`)
+	}
+
 	return response.Success(c, http.StatusOK, "Persetujuan peserta berhasil dibatalkan (Revoked)", nil)
 }
 
@@ -318,6 +328,10 @@ func (h *EventHandler) RemoveParticipant(c echo.Context) error {
 	err = h.service.RemoveUserEvent(c.Request().Context(), approvalID)
 	if err != nil {
 		return response.Error(c, http.StatusInternalServerError, "Gagal menghapus peserta", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
+	}
+
+	if h.broker != nil {
+		_ = h.broker.Publish(c.Request().Context(), `{"event":"approval_changed", "message":"Peserta dihapus dari event"}`)
 	}
 
 	return response.Success(c, http.StatusOK, "Peserta berhasil dihapus dari event", nil)

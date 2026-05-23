@@ -95,12 +95,13 @@ func (s *authService) Login(ctx context.Context, req domain.LoginRequest) (domai
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		User: domain.UserResponse{
-			ID:       user.ID,
-			Username: user.Username,
-			Email:    emailStr,
-			FullName: user.FullName,
-			Role:     user.Role,
-			PhotoURL: photoUrl,
+			ID:                 user.ID,
+			Username:           user.Username,
+			Email:              emailStr,
+			FullName:           user.FullName,
+			Role:               user.Role,
+			PhotoURL:           photoUrl,
+			EmailNotifications: user.EmailNotifications,
 		},
 	}, nil
 }
@@ -217,11 +218,12 @@ func (s *authService) Register(ctx context.Context, req domain.RegisterRequest) 
 
 	return domain.RegisterResponse{
 		User: domain.UserResponse{
-			ID:       user.ID,
-			Username: user.Username,
-			Email:    emailStr,
-			FullName: user.FullName,
-			Role:     user.Role,
+			ID:                 user.ID,
+			Username:           user.Username,
+			Email:              emailStr,
+			FullName:           user.FullName,
+			Role:               user.Role,
+			EmailNotifications: user.EmailNotifications,
 		},
 	}, nil
 }

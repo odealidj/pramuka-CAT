@@ -49,6 +49,7 @@ func (h *UserHandler) RegisterParticipantRoutes(participantGroup *echo.Group) {
 	usersGroup := participantGroup.Group("/users")
 	usersGroup.POST("/me/photo", h.UploadPhoto)
 	usersGroup.PUT("/me", h.UpdateProfile)
+	usersGroup.PUT("/me/password", h.ChangePassword)
 }
 
 // CreatePesertaOnly godoc
@@ -279,6 +280,40 @@ func (h *UserHandler) UpdateProfile(c echo.Context) error {
 	}
 
 	return response.Success(c, http.StatusOK, "Profil berhasil diperbarui", u)
+}
+
+// ChangePassword godoc
+// @Summary     Ganti Kata Sandi Sendiri
+// @Description Pengguna mengganti kata sandi mereka sendiri
+// @Tags        User
+// @Security    BearerAuth
+// @Accept      json
+// @Produce     json
+// @Param       body  body      domain.UpdateProfilePasswordRequest  true  "Kata Sandi Lama & Baru"
+// @Success     200   {object}  response.SuccessResponse
+// @Failure     400   {object}  response.ErrorResponse
+// @Router      /protected/users/me/password [put]
+func (h *UserHandler) ChangePassword(c echo.Context) error {
+	payloadValue := c.Get(appMiddleware.AuthorizationPayloadKey)
+	if payloadValue == nil {
+		return response.Error(c, http.StatusUnauthorized, "Tidak terautentikasi", nil)
+	}
+	payload, ok := payloadValue.(*utils.TokenPayload)
+	if !ok {
+		return response.Error(c, http.StatusInternalServerError, "Terjadi kesalahan internal membaca sesi", nil)
+	}
+
+	var req domain.UpdateProfilePasswordRequest
+	if err := c.Bind(&req); err != nil {
+		return response.Error(c, http.StatusBadRequest, "Format request tidak valid", nil)
+	}
+
+	err := h.service.ChangePassword(c.Request().Context(), payload.UserID, req)
+	if err != nil {
+		return response.Error(c, http.StatusBadRequest, err.Error(), nil)
+	}
+
+	return response.Success(c, http.StatusOK, "Kata sandi berhasil diperbarui", nil)
 }
 
 // DeleteUser godoc

@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { dashboardApi, DashboardActivity } from "@/lib/api/dashboard";
-import { ChevronLeft, ChevronRight, Activity, ArrowLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight, Activity, ArrowLeft, X, Eye } from "lucide-react";
 import Link from "next/link";
 import Spinner from "@/components/ui/Spinner";
+import { getPhotoUrl } from "@/lib/constants";
 
 export default function ActivitiesPage() {
   const { user } = useAuth();
@@ -16,6 +17,7 @@ export default function ActivitiesPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [selectedActivity, setSelectedActivity] = useState<DashboardActivity | null>(null);
 
   const limit = 10;
 
@@ -75,11 +77,13 @@ export default function ActivitiesPage() {
     else if (diffInSeconds < 86400) timeStr = `${Math.floor(diffInSeconds / 3600)} jam lalu`;
     else timeStr = `${Math.floor(diffInSeconds / 86400)} hari lalu`;
     
-    let statusConfig: "pending" | "completed" | "approved" | "expired" = "pending";
+    let statusConfig: "pending" | "completed" | "approved" | "expired" | "revoked" = "pending";
     if (a.status === "completed" || a.action.includes("Menyelesaikan")) {
       statusConfig = "completed";
     } else if (a.status === "approved") {
       statusConfig = "approved";
+    } else if (a.status === "revoked") {
+      statusConfig = "revoked";
     } else if (a.status === "pending" && a.event_end_time) {
       if (now.getTime() > new Date(a.event_end_time).getTime()) {
         statusConfig = "expired";
@@ -103,16 +107,30 @@ export default function ActivitiesPage() {
         label: "Waktu Habis",
         cls: "bg-gray-50 text-gray-500 border-gray-200",
       },
+      revoked: {
+        label: "Dibatalkan",
+        cls: "bg-red-50 text-red-600 border-red-100",
+      },
     };
     const s = sConfig[statusConfig];
 
     return (
-      <div key={index} className="flex items-center gap-4 py-4 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors px-4 rounded-lg">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-sm">
-          {a.name.charAt(0).toUpperCase()}
+      <div 
+        key={index} 
+        onClick={() => setSelectedActivity(a)}
+        className="flex items-center gap-4 py-4 border-b border-gray-50 last:border-0 hover:bg-amber-50/30 transition-colors px-4 rounded-xl cursor-pointer group"
+      >
+        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 overflow-hidden shadow-sm group-hover:scale-105 transition-transform">
+          {a.photo_url ? (
+            <img src={getPhotoUrl(a.photo_url) || ''} alt={a.name} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
+              {a.name.charAt(0).toUpperCase()}
+            </div>
+          )}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-gray-800 text-sm font-semibold truncate">{a.name}</p>
+          <p className="text-gray-800 text-sm font-semibold truncate group-hover:text-amber-700 transition-colors">{a.name}</p>
           <p className="text-gray-500 text-sm truncate mt-0.5">{a.action}</p>
         </div>
         <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
@@ -121,7 +139,10 @@ export default function ActivitiesPage() {
           >
             {s.label}
           </span>
-          <span className="text-gray-400 text-xs">{timeStr}</span>
+          <span className="text-gray-400 text-xs flex items-center gap-1">
+            {timeStr}
+            <Eye size={12} className="opacity-0 group-hover:opacity-100 text-amber-500 transition-opacity" />
+          </span>
         </div>
       </div>
     );
@@ -194,6 +215,67 @@ export default function ActivitiesPage() {
           </div>
         )}
       </div>
+
+      {/* Activity Detail Modal */}
+      {selectedActivity && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-amber-50/50">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+                  {selectedActivity.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 text-lg">{selectedActivity.name}</h3>
+                  <p className="text-xs text-amber-700 font-medium mt-0.5">Detail Aktivitas</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setSelectedActivity(null)}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-5">
+              <div>
+                <p className="text-xs text-gray-500 font-medium mb-1">Aktivitas</p>
+                <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 text-gray-800 font-medium">
+                  {selectedActivity.action}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-500 font-medium mb-1">Status</p>
+                  <p className="font-semibold text-gray-900 capitalize">{selectedActivity.status}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 font-medium mb-1">Waktu</p>
+                  <p className="font-semibold text-gray-900">{new Date(selectedActivity.time).toLocaleString('id-ID')}</p>
+                </div>
+              </div>
+              
+              {selectedActivity.event_end_time && (
+                <div className="pt-4 border-t border-gray-100">
+                  <p className="text-xs text-gray-500 font-medium mb-1">Batas Waktu Ujian</p>
+                  <p className="font-semibold text-gray-900">{new Date(selectedActivity.event_end_time).toLocaleString('id-ID')}</p>
+                </div>
+              )}
+            </div>
+            
+            <div className="p-4 border-t border-gray-100 bg-gray-50/50 flex justify-end">
+              <button
+                onClick={() => setSelectedActivity(null)}
+                className="px-5 py-2 bg-white border border-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors text-sm"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

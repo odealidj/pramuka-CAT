@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/domain"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/ports"
+	"github.com/odealidj/pramuka-CAT/backend/pkg/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -107,11 +108,12 @@ func (s *userService) UpdateProfile(ctx context.Context, id uuid.UUID, req domai
 	}
 
 	u := domain.User{
-		Username: req.Username,
-		Email:    emailPtr,
-		FullName: req.FullName,
-		Role:     existingUser.Role,     // Do not allow role change
-		PhotoURL: existingUser.PhotoURL, // Do not change photo here
+		Username:           req.Username,
+		Email:              emailPtr,
+		FullName:           req.FullName,
+		Role:               existingUser.Role,     // Do not allow role change
+		PhotoURL:           existingUser.PhotoURL, // Do not change photo here
+		EmailNotifications: req.EmailNotifications,
 	}
 
 	return s.repo.UpdateUser(ctx, id, u)
@@ -128,6 +130,29 @@ func (s *userService) UpdateUserPassword(ctx context.Context, id uuid.UUID, req 
 		return fmt.Errorf("gagal mengenkripsi kata sandi: %w", err)
 	}
 
+	return s.repo.UpdateUserPassword(ctx, id, hashedPassword)
+}
+
+func (s *userService) ChangePassword(ctx context.Context, id uuid.UUID, req domain.UpdateProfilePasswordRequest) error {
+	// 1. Ambil password lama dari database
+	oldHash, err := s.repo.GetUserPasswordHash(ctx, id)
+	if err != nil {
+		return fmt.Errorf("user tidak ditemukan")
+	}
+
+	// 2. Verifikasi kecocokan password lama
+	err = utils.CheckPassword(req.OldPassword, oldHash)
+	if err != nil {
+		return fmt.Errorf("kata sandi lama tidak sesuai")
+	}
+
+	// 3. Hash password baru
+	hashedPassword, err := hashPassword(req.NewPassword)
+	if err != nil {
+		return fmt.Errorf("gagal mengenkripsi kata sandi baru: %w", err)
+	}
+
+	// 4. Update
 	return s.repo.UpdateUserPassword(ctx, id, hashedPassword)
 }
 
