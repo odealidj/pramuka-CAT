@@ -392,13 +392,35 @@ SELECT
     uea.status,
     uea.is_completed,
     uea.score,
-    COALESCE(uea.updated_at, uea.created_at) as activity_time
+    COALESCE(uea.updated_at, uea.created_at) as activity_time,
+    e.end_time as event_end_time
 FROM user_event_approvals uea
 JOIN users u ON uea.user_id = u.id
 JOIN events e ON uea.event_id = e.id
 WHERE uea.status != 'revoked'
 ORDER BY COALESCE(uea.updated_at, uea.created_at) DESC NULLS LAST
 LIMIT 5;
+
+-- name: GetAllActivitiesDashboard :many
+SELECT
+    u.full_name as user_name,
+    e.name as event_name,
+    uea.status,
+    uea.is_completed,
+    uea.score,
+    COALESCE(uea.updated_at, uea.created_at) as activity_time,
+    e.end_time as event_end_time
+FROM user_event_approvals uea
+JOIN users u ON uea.user_id = u.id
+JOIN events e ON uea.event_id = e.id
+WHERE uea.status != 'revoked'
+ORDER BY COALESCE(uea.updated_at, uea.created_at) DESC NULLS LAST
+LIMIT $1 OFFSET $2;
+
+-- name: CountAllActivitiesDashboard :one
+SELECT COUNT(*) 
+FROM user_event_approvals uea 
+WHERE uea.status != 'revoked';
 -- name: DeleteUserEventApproval :exec
 DELETE FROM user_event_approvals WHERE id = $1;
 

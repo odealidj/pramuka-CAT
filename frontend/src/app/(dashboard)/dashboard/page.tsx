@@ -68,7 +68,7 @@ function ActivityItem({
   name: string;
   action: string;
   time: string;
-  status: "approved" | "pending" | "completed";
+  status: "approved" | "pending" | "completed" | "expired";
 }) {
   const statusConfig = {
     approved: {
@@ -82,6 +82,10 @@ function ActivityItem({
     completed: {
       label: "Selesai",
       cls: "bg-blue-50 text-blue-600 border-blue-100",
+    },
+    expired: {
+      label: "Waktu Habis",
+      cls: "bg-gray-50 text-gray-500 border-gray-200",
     },
   };
   const s = statusConfig[status];
@@ -192,9 +196,16 @@ function AdminDashboard() {
     else if (diffInSeconds < 86400) timeStr = `${Math.floor(diffInSeconds / 3600)} jam lalu`;
     else timeStr = `${Math.floor(diffInSeconds / 86400)} hari lalu`;
     
-    let statusConfig: "pending" | "completed" | "approved" = "pending";
-    if (a.status === "completed" || a.action.includes("Menyelesaikan")) statusConfig = "completed" as const;
-    else if (a.status === "approved") statusConfig = "approved" as const;
+    let statusConfig: "pending" | "completed" | "approved" | "expired" = "pending";
+    if (a.status === "completed" || a.action.includes("Menyelesaikan")) {
+      statusConfig = "completed";
+    } else if (a.status === "approved") {
+      statusConfig = "approved";
+    } else if (a.status === "pending" && a.event_end_time) {
+      if (now.getTime() > new Date(a.event_end_time).getTime()) {
+        statusConfig = "expired";
+      }
+    }
 
     return {
       name: a.name,
@@ -254,9 +265,9 @@ function AdminDashboard() {
               <Activity size={16} className="text-amber-600" />
               Aktivitas Terkini
             </h3>
-            <button className="text-amber-700 text-xs font-medium hover:text-amber-900 flex items-center gap-1">
+            <Link href="/dashboard/activities" className="text-amber-700 text-xs font-medium hover:text-amber-900 flex items-center gap-1">
               Lihat semua <ArrowUpRight size={12} />
-            </button>
+            </Link>
           </div>
           <div>
             {activities.length > 0 ? (

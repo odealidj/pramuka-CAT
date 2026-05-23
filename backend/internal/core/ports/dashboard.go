@@ -13,8 +13,11 @@ type DashboardRepository interface {
 	GetTotalActiveEvents(ctx context.Context) (int64, error)
 	GetTotalCompletedExams(ctx context.Context) (int64, error)
 	GetRecentActivities(ctx context.Context) ([]sqlcgen.GetRecentActivitiesDashboardRow, error)
+	GetAllActivities(ctx context.Context, limit, offset int32) ([]sqlcgen.GetAllActivitiesDashboardRow, error)
+	CountAllActivities(ctx context.Context) (int64, error)
 }
 
 type DashboardService interface {
 	GetDashboardData(ctx context.Context) (*domain.DashboardData, error)
+	ListActivities(ctx context.Context, page, limit int32) (*domain.DashboardActivityList, error)
 }

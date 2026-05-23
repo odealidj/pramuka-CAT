@@ -188,6 +188,19 @@ func (q *Queries) CountAdmins(ctx context.Context, search string) (int64, error)
 	return count, err
 }
 
+const countAllActivitiesDashboard = `-- name: CountAllActivitiesDashboard :one
+SELECT COUNT(*) 
+FROM user_event_approvals uea 
+WHERE uea.status != 'revoked'
+`
+
+func (q *Queries) CountAllActivitiesDashboard(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countAllActivitiesDashboard)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countAvailableQuestionsForEventAll = `-- name: CountAvailableQuestionsForEventAll :one
 SELECT COUNT(*) FROM questions q
 JOIN categories c ON q.category_id = c.id
@@ -702,6 +715,69 @@ func (q *Queries) FinishExam(ctx context.Context, arg FinishExamParams) error {
 	return err
 }
 
+const getAllActivitiesDashboard = `-- name: GetAllActivitiesDashboard :many
+SELECT
+    u.full_name as user_name,
+    e.name as event_name,
+    uea.status,
+    uea.is_completed,
+    uea.score,
+    COALESCE(uea.updated_at, uea.created_at) as activity_time,
+    e.end_time as event_end_time
+FROM user_event_approvals uea
+JOIN users u ON uea.user_id = u.id
+JOIN events e ON uea.event_id = e.id
+WHERE uea.status != 'revoked'
+ORDER BY COALESCE(uea.updated_at, uea.created_at) DESC NULLS LAST
+LIMIT $1 OFFSET $2
+`
+
+type GetAllActivitiesDashboardParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+type GetAllActivitiesDashboardRow struct {
+	UserName     string         `json:"user_name"`
+	EventName    string         `json:"event_name"`
+	Status       string         `json:"status"`
+	IsCompleted  bool           `json:"is_completed"`
+	Score        sql.NullString `json:"score"`
+	ActivityTime sql.NullTime   `json:"activity_time"`
+	EventEndTime time.Time      `json:"event_end_time"`
+}
+
+func (q *Queries) GetAllActivitiesDashboard(ctx context.Context, arg GetAllActivitiesDashboardParams) ([]GetAllActivitiesDashboardRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAllActivitiesDashboard, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetAllActivitiesDashboardRow{}
+	for rows.Next() {
+		var i GetAllActivitiesDashboardRow
+		if err := rows.Scan(
+			&i.UserName,
+			&i.EventName,
+			&i.Status,
+			&i.IsCompleted,
+			&i.Score,
+			&i.ActivityTime,
+			&i.EventEndTime,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getAllEventParticipantsForExport = `-- name: GetAllEventParticipantsForExport :many
 SELECT u.username, u.full_name, uea.status, uea.is_completed, uea.score, uea.is_passed, uea.started_at, uea.completed_at
 FROM users u
@@ -944,7 +1020,8 @@ SELECT
     uea.status,
     uea.is_completed,
     uea.score,
-    COALESCE(uea.updated_at, uea.created_at) as activity_time
+    COALESCE(uea.updated_at, uea.created_at) as activity_time,
+    e.end_time as event_end_time
 FROM user_event_approvals uea
 JOIN users u ON uea.user_id = u.id
 JOIN events e ON uea.event_id = e.id
@@ -960,6 +1037,7 @@ type GetRecentActivitiesDashboardRow struct {
 	IsCompleted  bool           `json:"is_completed"`
 	Score        sql.NullString `json:"score"`
 	ActivityTime sql.NullTime   `json:"activity_time"`
+	EventEndTime time.Time      `json:"event_end_time"`
 }
 
 func (q *Queries) GetRecentActivitiesDashboard(ctx context.Context) ([]GetRecentActivitiesDashboardRow, error) {
@@ -978,6 +1056,7 @@ func (q *Queries) GetRecentActivitiesDashboard(ctx context.Context) ([]GetRecent
 			&i.IsCompleted,
 			&i.Score,
 			&i.ActivityTime,
+			&i.EventEndTime,
 		); err != nil {
 			return nil, err
 		}

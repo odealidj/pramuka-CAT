@@ -20,6 +20,7 @@ type Querier interface {
 	CheckDuplicateEvent(ctx context.Context, arg CheckDuplicateEventParams) (Event, error)
 	CheckDuplicateQuestion(ctx context.Context, arg CheckDuplicateQuestionParams) (Question, error)
 	CountAdmins(ctx context.Context, search string) (int64, error)
+	CountAllActivitiesDashboard(ctx context.Context) (int64, error)
 	CountAvailableQuestionsForEventAll(ctx context.Context, eventID uuid.UUID) (int64, error)
 	CountAvailableQuestionsForEventByCategory(ctx context.Context, arg CountAvailableQuestionsForEventByCategoryParams) (int64, error)
 	CountCategories(ctx context.Context, search string) (int64, error)
@@ -48,6 +49,7 @@ type Querier interface {
 	DeleteUserEventApproval(ctx context.Context, id uuid.UUID) error
 	EnrollUserToEvent(ctx context.Context, arg EnrollUserToEventParams) (UserEventApproval, error)
 	FinishExam(ctx context.Context, arg FinishExamParams) error
+	GetAllActivitiesDashboard(ctx context.Context, arg GetAllActivitiesDashboardParams) ([]GetAllActivitiesDashboardRow, error)
 	GetAllEventParticipantsForExport(ctx context.Context, eventID uuid.NullUUID) ([]GetAllEventParticipantsForExportRow, error)
 	GetApprovalById(ctx context.Context, id uuid.UUID) (UserEventApproval, error)
 	GetApprovalStatus(ctx context.Context, arg GetApprovalStatusParams) (GetApprovalStatusRow, error)

@@ -36,3 +36,14 @@ func (r *dashboardRepository) GetTotalCompletedExams(ctx context.Context) (int64
 func (r *dashboardRepository) GetRecentActivities(ctx context.Context) ([]sqlcgen.GetRecentActivitiesDashboardRow, error) {
 	return r.queries.GetRecentActivitiesDashboard(ctx)
 }
+
+func (r *dashboardRepository) GetAllActivities(ctx context.Context, limit, offset int32) ([]sqlcgen.GetAllActivitiesDashboardRow, error) {
+	return r.queries.GetAllActivitiesDashboard(ctx, sqlcgen.GetAllActivitiesDashboardParams{
+		Limit:  limit,
+		Offset: offset,
+	})
+}
+
+func (r *dashboardRepository) CountAllActivities(ctx context.Context) (int64, error) {
+	return r.queries.CountAllActivitiesDashboard(ctx)
+}
