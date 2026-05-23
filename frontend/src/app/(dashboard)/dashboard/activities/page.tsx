@@ -8,7 +8,8 @@ import Link from "next/link";
 import Spinner from "@/components/ui/Spinner";
 
 export default function ActivitiesPage() {
-  const { isSuperAdmin } = useAuth();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
   const [activities, setActivities] = useState<DashboardActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,10 +36,14 @@ export default function ActivitiesPage() {
       }
     };
 
-    fetchActivities();
-  }, [page]);
+    if (isAdmin) {
+      fetchActivities();
+    } else {
+      setLoading(false);
+    }
+  }, [page, isAdmin]);
 
-  if (!isSuperAdmin) {
+  if (!isAdmin && !loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
         <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
