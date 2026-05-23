@@ -58,6 +58,16 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+// ─── Helper ───────────────────────────────────────────────────────────────────
+function getAnswerText(q: Question) {
+  switch (q.correct_answer) {
+    case 'A': return q.option_a;
+    case 'B': return q.option_b;
+    case 'C': return q.option_c;
+    case 'D': return q.option_d;
+    default: return '';
+  }
+}
 type Tab = 'questions' | 'participants';
 
 export default function EventManagerPage({ params }: { params: Promise<{ id: string }> }) {
@@ -438,8 +448,8 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
                           <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-600 border border-indigo-100">
                             Bobot: {q.weight || 1}
                           </span>
-                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-100">
-                            Jawaban: {q.correct_answer || 'N/A'}
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-100 line-clamp-1" title={getAnswerText(q)}>
+                            Jawaban: {q.correct_answer || 'N/A'} - {getAnswerText(q)}
                           </span>
                         </div>
                       </div>
