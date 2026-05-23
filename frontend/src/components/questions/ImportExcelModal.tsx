@@ -116,21 +116,7 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
 
           {phase === "upload" ? (
             <div className="space-y-6">
-              {/* Template Download */}
-              <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-100 rounded-xl">
-                <div>
-                  <h4 className="text-sm font-semibold text-blue-900">Download Template Excel</h4>
-                  <p className="text-sm text-blue-700 mt-1">Gunakan template ini agar format data sesuai dengan sistem.</p>
-                </div>
-                <a
-                  href="/template-soal-pramuka.xlsx"
-                  download
-                  className="flex items-center gap-2 px-4 py-2 bg-white text-blue-700 border border-blue-200 hover:bg-blue-100 font-semibold text-sm rounded-lg transition-colors"
-                >
-                  <FileDown size={16} />
-                  Download
-                </a>
-              </div>
+
 
               {/* Upload Area */}
               <div 
