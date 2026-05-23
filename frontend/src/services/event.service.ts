@@ -133,10 +133,35 @@ export const revokeParticipantApi = async (
 
 // ─── Export ───────────────────────────────────────────────────────────────────
 
-/** Returns the download URL — caller opens it in a new tab */
-export const getExportUrl = (eventId: string, format: 'excel' | 'pdf'): string => {
-  const base = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
-  return `${base}/admin/events/${eventId}/export?format=${format}`;
+export const exportEventParticipantsApi = async (
+  eventId: string,
+  format: 'excel' | 'pdf'
+): Promise<void> => {
+  const res = await httpClient.get(
+    `/admin/events/${eventId}/export?format=${format}`,
+    { responseType: 'blob' }
+  );
+
+  let filename = `laporan_event_${eventId}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+  const disposition = res.headers['content-disposition'];
+  if (disposition && disposition.indexOf('filename=') !== -1) {
+    const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+    const matches = filenameRegex.exec(disposition);
+    if (matches != null && matches[1]) {
+      filename = matches[1].replace(/['"]/g, '');
+    }
+  }
+
+  const blob = new Blob([res.data]);
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
 };
 
 export const removeEventParticipantApi = async (

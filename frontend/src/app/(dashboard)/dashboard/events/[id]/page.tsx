@@ -31,7 +31,7 @@ import {
   approveParticipantApi,
   revokeParticipantApi,
   removeEventParticipantApi,
-  getExportUrl,
+  exportEventParticipantsApi,
 } from '@/services/event.service';
 import { listQuestionsApi } from '@/services/question.service';
 import { listCategoriesApi } from '@/services/category.service';
@@ -105,6 +105,7 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [removingParticipantId, setRemovingParticipantId] = useState<string | null>(null);
+  const [exportingFormat, setExportingFormat] = useState<'excel' | 'pdf' | null>(null);
 
   // ── Toast (Simulated via alert for now, can be replaced by real toast) ──
   const onToast = (type: 'success' | 'error', msg: string) => {
@@ -292,8 +293,16 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
   };
 
   // ─── Export ──────────────────────────────────────────────────────────────────
-  const handleExport = (format: 'excel' | 'pdf') => {
-    window.open(getExportUrl(eventId, format), '_blank');
+  const handleExport = async (format: 'excel' | 'pdf') => {
+    try {
+      setExportingFormat(format);
+      await exportEventParticipantsApi(eventId, format);
+    } catch (err) {
+      console.error('Failed to export', err);
+      onToast('error', 'Gagal mengekspor data peserta.');
+    } finally {
+      setExportingFormat(null);
+    }
   };
 
   // ─── Render ──────────────────────────────────────────────────────────────────
@@ -604,15 +613,17 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
               <div className="flex justify-end gap-3 flex-shrink-0">
                 <button
                   onClick={() => handleExport('excel')}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-emerald-100 bg-emerald-50 text-emerald-700 text-sm font-bold hover:bg-emerald-100 transition-all shadow-sm"
+                  disabled={!!exportingFormat}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-emerald-100 bg-emerald-50 text-emerald-700 text-sm font-bold hover:bg-emerald-100 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Download size={16} /> Export Excel
+                  {exportingFormat === 'excel' ? <Spinner size={16} /> : <Download size={16} />} Export Excel
                 </button>
                 <button
                   onClick={() => handleExport('pdf')}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-red-100 bg-red-50 text-red-600 text-sm font-bold hover:bg-red-100 transition-all shadow-sm"
+                  disabled={!!exportingFormat}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-red-100 bg-red-50 text-red-600 text-sm font-bold hover:bg-red-100 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Download size={16} /> Export PDF
+                  {exportingFormat === 'pdf' ? <Spinner size={16} /> : <Download size={16} />} Export PDF
                 </button>
               </div>
             </div>
