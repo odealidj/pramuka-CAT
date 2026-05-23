@@ -39,7 +39,7 @@ export default function AnswerReviewDrawer({
     setError(null);
     setIsLoading(true);
     // approval_id == user_id dari EventParticipant (sesuai handler)
-    reviewParticipantAnswersApi(participant.user_id)
+    reviewParticipantAnswersApi(participant.approval_id)
       .then(setAnswers)
       .catch(() => setError('Gagal memuat data jawaban peserta.'))
       .finally(() => setIsLoading(false));
