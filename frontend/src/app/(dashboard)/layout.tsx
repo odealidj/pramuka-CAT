@@ -29,7 +29,10 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   const { toasts, toast: addToast, dismiss } = useToast();
   
   const pathname = usePathname();
-  const pageTitle = pageTitles[pathname] ?? 'Halaman';
+  let pageTitle = pageTitles[pathname] ?? 'Halaman';
+  if (pathname.startsWith('/dashboard/events/') && pathname !== '/dashboard/events') {
+    pageTitle = 'Kelola Jadwal Ujian';
+  }
   const { user } = useAuth();
   
   const isExamMode = pathname.includes('/dashboard/exams/');

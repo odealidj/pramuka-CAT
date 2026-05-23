@@ -330,7 +330,22 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
         </button>
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-black text-gray-900 tracking-tight">{event.name}</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-black text-gray-900 tracking-tight">{event.name}</h1>
+              {Date.now() > new Date(event.end_time).getTime() ? (
+                <span className="inline-flex px-2.5 py-1 rounded-full border text-xs font-bold uppercase tracking-wider bg-gray-100 text-gray-600 border-gray-200">
+                  Selesai
+                </span>
+              ) : Date.now() >= new Date(event.start_time).getTime() ? (
+                <span className="inline-flex px-2.5 py-1 rounded-full border text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 border-emerald-200">
+                  Sedang Berlangsung
+                </span>
+              ) : (
+                <span className="inline-flex px-2.5 py-1 rounded-full border text-xs font-bold uppercase tracking-wider bg-blue-100 text-blue-700 border-blue-200">
+                  Akan Datang
+                </span>
+              )}
+            </div>
             <div className="flex flex-wrap gap-4 mt-3 text-sm text-gray-600">
               <span className="flex items-center gap-1.5 bg-gray-100 px-3 py-1 rounded-lg">
                 <Clock size={14} className="text-gray-400" />
