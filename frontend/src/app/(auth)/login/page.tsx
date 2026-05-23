@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Spinner from '@/components/ui/Spinner';
 import { isAxiosError } from 'axios';
 import type { ApiErrorResponse } from '@/types/auth';
+import Link from 'next/link';
 
 // ============================================================
 // Zod Schema — Validasi Form
@@ -202,7 +203,13 @@ export default function LoginPage() {
           </div>
 
           {/* Card Footer */}
-          <div className="px-8 pb-6 text-center border-t border-gray-100 pt-4">
+          <div className="px-8 pb-6 text-center border-t border-gray-100 pt-5 bg-gray-50/50">
+            <p className="text-gray-600 text-sm mb-3">
+              Belum punya akun?{' '}
+              <Link href="/register" className="text-amber-600 font-bold hover:text-amber-700 transition-colors">
+                Daftar di sini
+              </Link>
+            </p>
             <p className="text-gray-400 text-xs">
               © {new Date().getFullYear()} Gerakan Pramuka — Sistem Ujian Digital
             </p>
