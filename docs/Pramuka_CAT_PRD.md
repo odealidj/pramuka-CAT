@@ -58,10 +58,11 @@ Aplikasi memiliki 3 jenis peran utama:
    - **Pemilihan Soal (Distribusi):** Admin dapat mengambil sebagian soal dari Bank Soal untuk dimasukkan ke Event. Misalnya, dari 1000 soal yang ada, Admin bisa memilih 200 soal spesifik secara manual, atau mengatur agar sistem menarik jumlah soal tertentu secara acak (contoh: "Ambil 100 soal acak dari kategori Sandi").
    - Mengatur parameter waktu kapan event ujian dimulai dan ditutup.
    - Menentukan **Passing Grade (Batas Lulus)** untuk event tersebut.
+   - **Visualisasi Event Selesai:** Jika waktu event telah kedaluwarsa atau ujian dinyatakan selesai, sistem secara otomatis meredupkan tampilan (*dimming/grayscale*) pada card atau konten ujian tersebut. Fitur untuk mengedit soal (tambah/hapus) dan mengelola status peserta (Approve/Revoke) akan di-*disable* (dinonaktifkan) guna mencegah manipulasi data pasca-ujian.
 7. **Laporan & Review Jawaban (Monitoring & Export):**
-   - Melihat daftar riwayat nilai dari semua peserta yang telah selesai mengerjakan.
+   - Melihat daftar riwayat nilai dari semua peserta yang telah selesai mengerjakan. **Semua tampilan daftar (list) pada panel admin diurutkan secara *descending* (terbaru di atas) secara default.**
    - Melihat rincian ujian per peserta: meninjau soal-soal apa saja yang dikerjakan peserta, apa jawaban yang dipilih peserta, dan mencocokkannya dengan kunci jawaban (via endpoint `GET /admin/exams/approvals/:approval_id/answers`).
-   - **Export Laporan (Excel & PDF):** Mengunduh rekap nilai seluruh peserta pada suatu event dalam format **Excel (.xlsx)** atau **PDF** untuk keperluan pelaporan kegiatan Gugus Depan/Kwartir (via endpoint `GET /admin/events/:id/export?format=excel` atau `?format=pdf`).
+   - **Export Laporan (Excel & PDF):** Mengunduh rekap nilai seluruh peserta pada suatu event dalam format **Excel (.xlsx)** atau **PDF** untuk keperluan pelaporan kegiatan Gugus Depan/Kwartir (via endpoint `GET /admin/events/:id/export?format=excel` atau `?format=pdf`). Ekspor dilakukan dengan perantara *HTTP Client* yang tersertifikasi *Bearer Token* secara otomatis.
 8. **Dashboard Admin (Statistik Sistem):**
    - Halaman *Dashboard* Admin menampilkan **4 kartu statistik** secara *real-time* dari Backend: jumlah total peserta terdaftar, total soal dalam bank soal, jumlah event yang sedang aktif, dan total ujian yang sudah diselesaikan.
    - Terdapat panel **Aktivitas Terkini** yang memperlihatkan 5 log aktivitas terakhir (enroll, approval, atau penyelesaian ujian) beserta waktu relatif ("Baru saja", "X menit lalu", dst).
