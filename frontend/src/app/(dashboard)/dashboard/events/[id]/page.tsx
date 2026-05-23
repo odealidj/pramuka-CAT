@@ -317,6 +317,8 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
     q.question_text.toLowerCase().includes(eventQuestionSearch.toLowerCase())
   );
 
+  const isFinished = Date.now() > new Date(event.end_time).getTime();
+
   return (
     <div className="flex flex-col h-[calc(100vh-theme(spacing.16))] bg-gray-50 -m-6 rounded-tl-xl overflow-hidden">
       {/* ─── Header ─── */}
@@ -389,7 +391,7 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
       </div>
 
       {/* ─── Main Workspace ─── */}
-      <div className="flex-1 overflow-hidden flex flex-col relative">
+      <div className={`flex-1 overflow-hidden flex flex-col relative transition-all duration-300 ${isFinished ? 'opacity-60 grayscale-[0.3]' : ''}`}>
         {/* Tab: Questions (Split Pane) */}
         <div className={`flex-1 flex overflow-hidden transition-all duration-300 ${tab === 'questions' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8 hidden'}`}>
           {/* Left Pane: Current Questions */}
