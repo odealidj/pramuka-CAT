@@ -25,9 +25,10 @@ graph TD
     B13 --> B14[14. feature/auto-bobot]
     B14 --> B15[15. feature/jaeger-tracing]
     B15 --> B16[16. feature/advanced-search-index]
+    B16 --> B17[17. feat/dashboard-detailed-logs]
     
     style B1 fill:#4F46E5,stroke:#312E81,stroke-width:2px,color:#fff
-    style B16 fill:#10B981,stroke:#064E3B,stroke-width:2px,color:#fff
+    style B17 fill:#10B981,stroke:#064E3B,stroke-width:2px,color:#fff
 ```
 
 ---
@@ -148,7 +149,7 @@ graph TD
     *   Modifikasi response helper untuk menyuntikkan field `trace_id` ke dalam JSON response body pada status sukses maupun error.
     *   Pembersihan Swagger annotations dan integrasi konfigurasi Jaeger di `docker-compose.yml` dan `Makefile`.
 
-### 16. `feature/advanced-search-index` *(Branch Terakhir)*
+### 16. `feature/advanced-search-index`
 *   **Tujuan:** Menerapkan fitur pencarian (search) pada endpoint admin menggunakan optimasi database PostgreSQL tingkat lanjut.
 *   **Aktivitas:**
     *   Membuat script migration database untuk mengaktifkan ekstensi `pg_trgm`.
@@ -156,6 +157,14 @@ graph TD
     *   Menambahkan Full Text Search (FTS) Index GIN (`to_tsvector`) pada kolom `question_text` di `questions` dan `name` di `events` menggunakan operator `@@`.
     *   Memperbarui layer SQL (SQLC), Service, dan HTTP Handler untuk menerima parameter `search`.
     *   Memperbarui Swagger Documentation API.
+
+### 17. `feat/dashboard-detailed-logs` *(Branch Terakhir)*
+*   **Tujuan:** Menyempurnakan pemantauan dashboard, pengaturan profil dengan preferensi notifikasi, dan pengelolaan Asynq job queue secara real-time.
+*   **Aktivitas:**
+    *   Mengimplementasikan UI `Aktivitas Terkini` dengan detail lengkap termasuk foto pengguna dan waktu aktivitas.
+    *   Menambahkan preferensi fitur notifikasi email di pengaturan Profil Super Admin dan Admin.
+    *   Menambahkan endpoint API dan Worker Asynq untuk menampilkan metrik Failed, Archived, dan Retried Jobs.
+    *   Memperbaiki bug cache pada unggahan foto pengguna dengan timestamp cache-busting.
 
 ---
 
