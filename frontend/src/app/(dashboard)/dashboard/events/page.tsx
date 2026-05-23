@@ -147,6 +147,7 @@ function EventCard({
 }) {
   const status = getEventStatus(event);
   const countdown = useCountdown(event.end_time, event.start_time);
+  const isEventFinished = countdown.status === 'finished';
 
   let countdownText = '';
   let countdownColor = 'text-gray-500';
@@ -208,17 +209,17 @@ function EventCard({
             <span>{fmtDateRange(event.start_time, event.end_time)}</span>
           </div>
           <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1">
-              <Clock size={11} className="text-amber-500" />
-              {fmtDuration(event.duration_minutes)}
+            <span className={`flex items-center gap-1 ${isEventFinished ? 'opacity-70' : ''}`}>
+              <Clock size={11} className={isEventFinished ? 'text-gray-400' : 'text-amber-500'} />
+              <span className={isEventFinished ? 'text-gray-400' : ''}>{fmtDuration(event.duration_minutes)}</span>
             </span>
-            <span className="flex items-center gap-1" title="Total Soal Didaftarkan">
-              <div className="w-2.5 h-2.5 rounded-full bg-blue-100 flex items-center justify-center text-[7px] text-blue-600 font-bold border border-blue-200">?</div>
-              <strong className="text-gray-700">{event.total_questions || 0}</strong> soal
+            <span className={`flex items-center gap-1 ${isEventFinished ? 'opacity-70' : ''}`} title="Total Soal Didaftarkan">
+              <div className={`w-2.5 h-2.5 rounded-full flex items-center justify-center text-[7px] font-bold border ${isEventFinished ? 'bg-gray-100 text-gray-400 border-gray-200' : 'bg-blue-100 text-blue-600 border-blue-200'}`}>?</div>
+              <strong className={isEventFinished ? 'text-gray-400' : 'text-gray-700'}>{event.total_questions || 0}</strong> <span className={isEventFinished ? 'text-gray-400' : ''}>soal</span>
             </span>
-            <span className="flex items-center gap-1">
-              <Trophy size={11} className="text-emerald-500" />
-              Batas Lulus <strong className="text-gray-700">{event.passing_grade}%</strong>
+            <span className={`flex items-center gap-1 ${isEventFinished ? 'opacity-70' : ''}`}>
+              <Trophy size={11} className={isEventFinished ? 'text-gray-400' : 'text-emerald-500'} />
+              <span className={isEventFinished ? 'text-gray-400' : ''}>Batas Lulus <strong className={isEventFinished ? 'text-gray-500' : 'text-gray-700'}>{event.passing_grade}%</strong></span>
             </span>
           </div>
         </div>

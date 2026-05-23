@@ -433,7 +433,15 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
                         {i + 1}
                       </span>
                       <div className="flex-1">
-                        <p className="text-gray-800 text-sm font-medium leading-relaxed">{q.question_text}</p>
+                        <p className="text-gray-800 text-sm font-medium leading-relaxed mb-2">{q.question_text}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-600 border border-indigo-100">
+                            Bobot: {q.weight || 1}
+                          </span>
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-100">
+                            Jawaban: {q.correct_answer || 'N/A'}
+                          </span>
+                        </div>
                       </div>
                       <button
                         onClick={() => handleRemoveQuestion(q.id)}
