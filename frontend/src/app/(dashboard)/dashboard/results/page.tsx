@@ -22,7 +22,7 @@ import Spinner from '@/components/ui/Spinner';
 import Pagination from '@/components/ui/Pagination';
 import { ToastContainer, useToast } from '@/components/ui/Toast';
 import AnswerReviewDrawer from '@/components/results/AnswerReviewDrawer';
-import { listEventsApi, getExportUrl, listEventParticipantsApi } from '@/services/event.service';
+import { listEventsApi, exportEventParticipantsApi, listEventParticipantsApi } from '@/services/event.service';
 import type { Event, EventParticipant, PaginationMeta } from '@/types/auth';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -191,6 +191,20 @@ function EventResultCard({
   const [search, setSearch]           = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [exportingFormat, setExportingFormat] = useState<'excel' | 'pdf' | null>(null);
+
+  const handleExport = async (e: React.MouseEvent, format: 'excel' | 'pdf') => {
+    e.stopPropagation();
+    try {
+      setExportingFormat(format);
+      await exportEventParticipantsApi(event.id, format);
+    } catch (err) {
+      console.error('Export error', err);
+      alert('Gagal mengekspor data peserta');
+    } finally {
+      setExportingFormat(null);
+    }
+  };
 
   // Debounce search
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -310,16 +324,18 @@ function EventResultCard({
 
         <div className="flex items-center gap-2 flex-shrink-0">
           <button
-            onClick={(e) => { e.stopPropagation(); window.open(getExportUrl(event.id, 'excel'), '_blank'); }}
-            className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-emerald-600 border border-emerald-200 text-xs font-medium hover:bg-emerald-50 transition-all"
+            onClick={(e) => handleExport(e, 'excel')}
+            disabled={!!exportingFormat}
+            className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-emerald-600 border border-emerald-200 text-xs font-medium hover:bg-emerald-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Download size={11} /> Excel
+            {exportingFormat === 'excel' ? <Spinner size={11} /> : <Download size={11} />} Excel
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); window.open(getExportUrl(event.id, 'pdf'), '_blank'); }}
-            className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-red-500 border border-red-200 text-xs font-medium hover:bg-red-50 transition-all"
+            onClick={(e) => handleExport(e, 'pdf')}
+            disabled={!!exportingFormat}
+            className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-red-500 border border-red-200 text-xs font-medium hover:bg-red-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Download size={11} /> PDF
+            {exportingFormat === 'pdf' ? <Spinner size={11} /> : <Download size={11} />} PDF
           </button>
           {isExpanded ? <ChevronUp size={18} className="text-gray-400" /> : <ChevronDown size={18} className="text-gray-400" />}
         </div>
