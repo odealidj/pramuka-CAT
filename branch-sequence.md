@@ -158,13 +158,23 @@ graph TD
     *   Memperbarui layer SQL (SQLC), Service, dan HTTP Handler untuk menerima parameter `search`.
     *   Memperbarui Swagger Documentation API.
 
-### 17. `feat/dashboard-detailed-logs` *(Branch Terakhir)*
+### 17. `feat/dashboard-detailed-logs`
 *   **Tujuan:** Menyempurnakan pemantauan dashboard, pengaturan profil dengan preferensi notifikasi, dan pengelolaan Asynq job queue secara real-time.
 *   **Aktivitas:**
-    *   Mengimplementasikan UI `Aktivitas Terkini` dengan detail lengkap termasuk foto pengguna dan waktu aktivitas.
-    *   Menambahkan preferensi fitur notifikasi email di pengaturan Profil Super Admin dan Admin.
+    *   17. **Menambahkan Detailed Logs (Real-time Photo & Auth Logic)**
+    - Memperbaiki fitur Aktifitas Terkini Dasbor Admin untuk merender foto profil secara real-time.
+    - Menambah logic dan penyesuaian email profile untuk Super Admin dan Admin.
     *   Menambahkan endpoint API dan Worker Asynq untuk menampilkan metrik Failed, Archived, dan Retried Jobs.
     *   Memperbaiki bug cache pada unggahan foto pengguna dengan timestamp cache-busting.
+
+### 18. `feat/import-soal-excel`
+*   **Tujuan:** Implementasi Fitur Import Soal via Excel.
+*   **Aktivitas:**
+    - Mengintegrasikan pustaka `excelize/v2` di backend.
+    - Menambahkan mekanisme preview validasi baris soal, deteksi duplikat teks soal cerdas (mengabaikan spasi dan kapitalisasi).
+    - Membangun Modal "Import Excel" interaktif di halaman Bank Soal yang memisahkan tahap unggah file dan validasi.
+    - Menyediakan fitur Batch Insert di backend menggunakan Database Transaction untuk performa dan keamanan.
+    - Mengenerate template otomatis `template-soal-pramuka.xlsx` yang dapat diunduh oleh Admin.
 
 ---
 

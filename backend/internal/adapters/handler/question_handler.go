@@ -5,10 +5,12 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/jung-kurt/gofpdf"
 	"github.com/labstack/echo/v4"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/domain"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/ports"
 	"github.com/odealidj/pramuka-CAT/backend/pkg/response"
+	"github.com/xuri/excelize/v2"
 )
 
 type QuestionHandler struct {
@@ -23,6 +25,8 @@ func (h *QuestionHandler) RegisterAdminRoutes(adminGroup *echo.Group) {
 	questionsGroup := adminGroup.Group("/questions")
 	questionsGroup.POST("", h.CreateQuestion)
 	questionsGroup.GET("", h.ListQuestions)
+	questionsGroup.GET("/export/excel", h.ExportQuestionsExcel)
+	questionsGroup.GET("/export/pdf", h.ExportQuestionsPDF)
 	questionsGroup.GET("/:id", h.GetQuestion)
 	questionsGroup.PUT("/:id", h.UpdateQuestion)
 	questionsGroup.DELETE("/:id", h.DeleteQuestion)
@@ -244,4 +248,122 @@ func (h *QuestionHandler) ConfirmImport(c echo.Context) error {
 
 	msg := fmt.Sprintf("%d soal berhasil di-import", count)
 	return response.Success(c, http.StatusCreated, msg, nil)
+}
+
+func (h *QuestionHandler) ExportQuestionsExcel(c echo.Context) error {
+	search := c.QueryParam("search")
+	var categoryId *int32
+	if catStr := c.QueryParam("category_id"); catStr != "" {
+		var cat int
+		_, err := fmt.Sscanf(catStr, "%d", &cat)
+		if err == nil {
+			cInt := int32(cat)
+			categoryId = &cInt
+		}
+	}
+
+	questions, _, err := h.service.ListQuestions(c.Request().Context(), 1, 1000000, search, categoryId)
+	if err != nil {
+		return response.Error(c, http.StatusInternalServerError, "Gagal memuat soal", nil)
+	}
+
+	f := excelize.NewFile()
+	sheetName := "Bank Soal"
+	f.SetSheetName("Sheet1", sheetName)
+
+	headers := []string{"Kategori ID", "Teks Soal", "Opsi A", "Opsi B", "Opsi C", "Opsi D", "Kunci Jawaban", "Bobot Nilai"}
+	for i, header := range headers {
+		col := string(rune('A'+i)) + "1"
+		f.SetCellValue(sheetName, col, header)
+	}
+
+	for i, q := range questions {
+		row := i + 2
+		f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), q.CategoryID)
+		f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), q.QuestionText)
+		f.SetCellValue(sheetName, fmt.Sprintf("C%d", row), q.OptionA)
+		f.SetCellValue(sheetName, fmt.Sprintf("D%d", row), q.OptionB)
+		f.SetCellValue(sheetName, fmt.Sprintf("E%d", row), q.OptionC)
+		f.SetCellValue(sheetName, fmt.Sprintf("F%d", row), q.OptionD)
+		f.SetCellValue(sheetName, fmt.Sprintf("G%d", row), q.CorrectAnswer)
+		f.SetCellValue(sheetName, fmt.Sprintf("H%d", row), q.Weight)
+	}
+
+	c.Response().Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.Response().Header().Set("Content-Disposition", "attachment; filename=Bank_Soal.xlsx")
+
+	return f.Write(c.Response().Writer)
+}
+
+func (h *QuestionHandler) ExportQuestionsPDF(c echo.Context) error {
+	search := c.QueryParam("search")
+	var categoryId *int32
+	if catStr := c.QueryParam("category_id"); catStr != "" {
+		var cat int
+		_, err := fmt.Sscanf(catStr, "%d", &cat)
+		if err == nil {
+			cInt := int32(cat)
+			categoryId = &cInt
+		}
+	}
+
+	questions, _, err := h.service.ListQuestions(c.Request().Context(), 1, 1000000, search, categoryId)
+	if err != nil {
+		return response.Error(c, http.StatusInternalServerError, "Gagal memuat soal", nil)
+	}
+
+	pdf := gofpdf.New("P", "mm", "A4", "")
+	pdf.AddPage()
+	pdf.SetFont("Arial", "B", 16)
+	pdf.CellFormat(190, 10, "Daftar Bank Soal", "", 0, "C", false, 0, "")
+	pdf.Ln(15)
+
+	pdf.SetFont("Arial", "B", 10)
+	pdf.CellFormat(10, 10, "No", "1", 0, "C", false, 0, "")
+	pdf.CellFormat(20, 10, "Kat ID", "1", 0, "C", false, 0, "")
+	pdf.CellFormat(140, 10, "Teks Soal", "1", 0, "L", false, 0, "")
+	pdf.CellFormat(20, 10, "Kunci", "1", 0, "C", false, 0, "")
+	pdf.Ln(-1)
+
+	pdf.SetFont("Arial", "", 10)
+	for i, q := range questions {
+		// Calculate height for text wrapping
+		lines := pdf.SplitText(q.QuestionText, 140)
+		h := float64(len(lines)) * 6
+		if h < 10 {
+			h = 10
+		}
+		
+		// Get current Y, check if need page break
+		if pdf.GetY()+h > 270 {
+			pdf.AddPage()
+		}
+		
+		x, y := pdf.GetXY()
+		
+		pdf.Rect(x, y, 10, h, "D")
+		pdf.SetXY(x, y+(h-6)/2)
+		pdf.CellFormat(10, 6, fmt.Sprintf("%d", i+1), "", 0, "C", false, 0, "")
+		
+		pdf.SetXY(x+10, y)
+		pdf.Rect(x+10, y, 20, h, "D")
+		pdf.SetXY(x+10, y+(h-6)/2)
+		pdf.CellFormat(20, 6, fmt.Sprintf("%d", q.CategoryID), "", 0, "C", false, 0, "")
+		
+		pdf.SetXY(x+30, y)
+		pdf.Rect(x+30, y, 140, h, "D")
+		pdf.MultiCell(140, 6, q.QuestionText, "", "L", false)
+		
+		pdf.SetXY(x+170, y)
+		pdf.Rect(x+170, y, 20, h, "D")
+		pdf.SetXY(x+170, y+(h-6)/2)
+		pdf.CellFormat(20, 6, q.CorrectAnswer, "", 0, "C", false, 0, "")
+		
+		pdf.SetXY(x, y+h)
+	}
+
+	c.Response().Header().Set("Content-Type", "application/pdf")
+	c.Response().Header().Set("Content-Disposition", "attachment; filename=Bank_Soal.pdf")
+
+	return pdf.Output(c.Response().Writer)
 }

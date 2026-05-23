@@ -57,3 +57,19 @@ export const updateCategoryApi = async (
 export const deleteCategoryApi = async (id: number): Promise<void> => {
   await httpClient.delete(`/admin/categories/${id}`);
 };
+
+/** GET /admin/categories/export/excel */
+export const exportCategoriesExcelApi = async (): Promise<Blob> => {
+  const res = await httpClient.get<Blob>('/admin/categories/export/excel', {
+    responseType: 'blob',
+  });
+  return res.data;
+};
+
+/** GET /admin/categories/export/pdf */
+export const exportCategoriesPdfApi = async (): Promise<Blob> => {
+  const res = await httpClient.get<Blob>('/admin/categories/export/pdf', {
+    responseType: 'blob',
+  });
+  return res.data;
+};

@@ -92,3 +92,35 @@ export const confirmImportExcelApi = async (
 ): Promise<void> => {
   await httpClient.post('/admin/questions/import/confirm', payload);
 };
+
+/** GET /admin/questions/export/excel */
+export const exportQuestionsExcelApi = async (
+  search = '',
+  categoryId?: number
+): Promise<Blob> => {
+  const params = new URLSearchParams();
+  if (search) params.append('search', search);
+  if (categoryId) params.append('category_id', String(categoryId));
+
+  const res = await httpClient.get<Blob>(
+    `/admin/questions/export/excel?${params.toString()}`,
+    { responseType: 'blob' }
+  );
+  return res.data;
+};
+
+/** GET /admin/questions/export/pdf */
+export const exportQuestionsPdfApi = async (
+  search = '',
+  categoryId?: number
+): Promise<Blob> => {
+  const params = new URLSearchParams();
+  if (search) params.append('search', search);
+  if (categoryId) params.append('category_id', String(categoryId));
+
+  const res = await httpClient.get<Blob>(
+    `/admin/questions/export/pdf?${params.toString()}`,
+    { responseType: 'blob' }
+  );
+  return res.data;
+};

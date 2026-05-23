@@ -1,14 +1,17 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 
+	"github.com/jung-kurt/gofpdf"
 	"github.com/labstack/echo/v4"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/domain"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/ports"
 	"github.com/odealidj/pramuka-CAT/backend/pkg/response"
+	"github.com/xuri/excelize/v2"
 )
 
 type CategoryHandler struct {
@@ -23,6 +26,8 @@ func (h *CategoryHandler) RegisterAdminRoutes(adminGroup *echo.Group) {
 	categoriesGroup := adminGroup.Group("/categories")
 	categoriesGroup.POST("", h.CreateCategory)
 	categoriesGroup.GET("", h.ListCategories)
+	categoriesGroup.GET("/export/excel", h.ExportCategoriesExcel)
+	categoriesGroup.GET("/export/pdf", h.ExportCategoriesPDF)
 	categoriesGroup.PUT("/:id", h.UpdateCategory)
 	categoriesGroup.DELETE("/:id", h.DeleteCategory)
 }
@@ -133,4 +138,70 @@ func (h *CategoryHandler) DeleteCategory(c echo.Context) error {
 	}
 
 	return response.Success(c, http.StatusOK, "Kategori berhasil dihapus", nil)
+}
+
+func (h *CategoryHandler) ExportCategoriesExcel(c echo.Context) error {
+	categories, _, err := h.service.ListCategories(c.Request().Context(), 1, 1000000, "")
+	if err != nil {
+		return response.Error(c, http.StatusInternalServerError, "Gagal memuat kategori", nil)
+	}
+
+	f := excelize.NewFile()
+	sheetName := "Kategori Soal"
+	f.SetSheetName("Sheet1", sheetName)
+
+	headers := []string{"No", "ID", "Nama Kategori", "Jumlah Soal"}
+	for i, header := range headers {
+		col := string(rune('A'+i)) + "1"
+		f.SetCellValue(sheetName, col, header)
+	}
+
+	for i, cat := range categories {
+		row := i + 2
+		f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), i+1)
+		f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), cat.ID)
+		f.SetCellValue(sheetName, fmt.Sprintf("C%d", row), cat.Name)
+		f.SetCellValue(sheetName, fmt.Sprintf("D%d", row), cat.QuestionCount)
+	}
+
+	c.Response().Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.Response().Header().Set("Content-Disposition", "attachment; filename=Kategori_Soal.xlsx")
+
+	return f.Write(c.Response().Writer)
+}
+
+func (h *CategoryHandler) ExportCategoriesPDF(c echo.Context) error {
+	categories, _, err := h.service.ListCategories(c.Request().Context(), 1, 1000000, "")
+	if err != nil {
+		return response.Error(c, http.StatusInternalServerError, "Gagal memuat kategori", nil)
+	}
+
+	pdf := gofpdf.New("P", "mm", "A4", "")
+	pdf.AddPage()
+	pdf.SetFont("Arial", "B", 16)
+	pdf.CellFormat(190, 10, "Daftar Kategori Soal", "", 0, "C", false, 0, "")
+	pdf.Ln(15)
+
+	// Headers
+	pdf.SetFont("Arial", "B", 12)
+	pdf.CellFormat(15, 10, "No", "1", 0, "C", false, 0, "")
+	pdf.CellFormat(20, 10, "ID", "1", 0, "C", false, 0, "")
+	pdf.CellFormat(115, 10, "Nama Kategori", "1", 0, "L", false, 0, "")
+	pdf.CellFormat(40, 10, "Jumlah Soal", "1", 0, "C", false, 0, "")
+	pdf.Ln(-1)
+
+	// Rows
+	pdf.SetFont("Arial", "", 12)
+	for i, cat := range categories {
+		pdf.CellFormat(15, 10, fmt.Sprintf("%d", i+1), "1", 0, "C", false, 0, "")
+		pdf.CellFormat(20, 10, fmt.Sprintf("%d", cat.ID), "1", 0, "C", false, 0, "")
+		pdf.CellFormat(115, 10, cat.Name, "1", 0, "L", false, 0, "")
+		pdf.CellFormat(40, 10, fmt.Sprintf("%d", cat.QuestionCount), "1", 0, "C", false, 0, "")
+		pdf.Ln(-1)
+	}
+
+	c.Response().Header().Set("Content-Type", "application/pdf")
+	c.Response().Header().Set("Content-Disposition", "attachment; filename=Kategori_Soal.pdf")
+
+	return pdf.Output(c.Response().Writer)
 }

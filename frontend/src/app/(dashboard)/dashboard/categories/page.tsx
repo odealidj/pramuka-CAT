@@ -11,6 +11,9 @@ import {
   RefreshCw,
   XCircle,
   BookOpen,
+  Download,
+  FileText,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { isAxiosError } from 'axios';
 import { useForm } from 'react-hook-form';
@@ -28,6 +31,8 @@ import {
   createCategoryApi,
   updateCategoryApi,
   deleteCategoryApi,
+  exportCategoriesExcelApi,
+  exportCategoriesPdfApi,
 } from '@/services/category.service';
 import type {
   Category,
@@ -177,6 +182,31 @@ export default function CategoriesPage() {
     }
   };
 
+  const handleExport = async (type: 'excel' | 'pdf') => {
+    try {
+      let blob: Blob;
+      let filename: string;
+      if (type === 'excel') {
+        blob = await exportCategoriesExcelApi();
+        filename = 'Kategori_Soal.xlsx';
+      } else {
+        blob = await exportCategoriesPdfApi();
+        filename = 'Kategori_Soal.pdf';
+      }
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast('error', `Gagal mengekspor data ${type.toUpperCase()}.`);
+    }
+  };
+
   // ============================================================
   // Render
   // ============================================================
@@ -193,17 +223,35 @@ export default function CategoriesPage() {
             Kelola rumpun/kategori materi untuk pengelompokan bank soal
           </p>
         </div>
-        <button
-          onClick={() => {
-            setFormApiError(null);
-            setFormModal({ open: true, mode: 'create', category: null });
-          }}
-          id="btn-add-category"
-          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#7C4318] to-[#9C5A22] text-white text-sm font-semibold rounded-xl shadow-sm shadow-amber-900/20 hover:from-[#5C3010] hover:to-[#7C4318] transition-all"
-        >
-          <Plus size={16} />
-          Tambah Kategori
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2 mr-2">
+            <button
+              onClick={() => handleExport('excel')}
+              className="flex items-center gap-2 px-3 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm font-semibold rounded-xl hover:bg-emerald-100 transition-all"
+            >
+              <FileSpreadsheet size={15} className="text-emerald-600" />
+              Excel
+            </button>
+            <button
+              onClick={() => handleExport('pdf')}
+              className="flex items-center gap-2 px-3 py-2.5 bg-red-50 text-red-700 border border-red-200 text-sm font-semibold rounded-xl hover:bg-red-100 transition-all"
+            >
+              <FileText size={15} className="text-red-600" />
+              PDF
+            </button>
+          </div>
+          <button
+            onClick={() => {
+              setFormApiError(null);
+              setFormModal({ open: true, mode: 'create', category: null });
+            }}
+            id="btn-add-category"
+            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#7C4318] to-[#9C5A22] text-white text-sm font-semibold rounded-xl shadow-sm shadow-amber-900/20 hover:from-[#5C3010] hover:to-[#7C4318] transition-all"
+          >
+            <Plus size={16} />
+            Tambah Kategori
+          </button>
+        </div>
       </div>
 
       {/* ── Stats Card ── */}

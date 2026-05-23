@@ -15,6 +15,10 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
+  UploadCloud,
+  Download,
+  FileText,
+  FileSpreadsheet,
 } from "lucide-react";
 import { isAxiosError } from "axios";
 import Spinner from "@/components/ui/Spinner";
@@ -29,6 +33,8 @@ import {
   createQuestionApi,
   updateQuestionApi,
   deleteQuestionApi,
+  exportQuestionsExcelApi,
+  exportQuestionsPdfApi,
 } from "@/services/question.service";
 import { listCategoriesApi } from "@/services/category.service";
 import type {
@@ -382,6 +388,33 @@ function QuestionsContent() {
     }
   };
 
+  const handleExport = async (type: "excel" | "pdf") => {
+    try {
+      let blob: Blob;
+      let filename: string;
+      const catId = categoryIdFilter;
+      
+      if (type === "excel") {
+        blob = await exportQuestionsExcelApi(search, catId);
+        filename = "Bank_Soal.xlsx";
+      } else {
+        blob = await exportQuestionsPdfApi(search, catId);
+        filename = "Bank_Soal.pdf";
+      }
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast("error", `Gagal mengekspor data ${type.toUpperCase()}.`);
+    }
+  };
+
   // ============================================================
   // Render
   // ============================================================
@@ -397,7 +430,23 @@ function QuestionsContent() {
             Kelola daftar soal ujian beserta kategorinya
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2 mr-2">
+            <button
+              onClick={() => handleExport('excel')}
+              className="flex items-center gap-2 px-3 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm font-semibold rounded-xl hover:bg-emerald-100 transition-all"
+            >
+              <FileSpreadsheet size={15} className="text-emerald-600" />
+              Excel
+            </button>
+            <button
+              onClick={() => handleExport('pdf')}
+              className="flex items-center gap-2 px-3 py-2.5 bg-red-50 text-red-700 border border-red-200 text-sm font-semibold rounded-xl hover:bg-red-100 transition-all"
+            >
+              <FileText size={15} className="text-red-600" />
+              PDF
+            </button>
+          </div>
           <button
             onClick={() => setCategoryModal(true)}
             className="flex items-center gap-2 px-4 py-2.5 border border-amber-300 text-amber-700 text-sm font-semibold rounded-xl hover:bg-amber-50 transition-all"
@@ -405,11 +454,19 @@ function QuestionsContent() {
             <Tag size={15} />
             Kategori
           </button>
+          <a
+            href="/template-soal-pramuka.xlsx"
+            download
+            className="flex items-center gap-2 px-3 py-2.5 bg-blue-50 text-blue-700 border border-blue-200 text-sm font-semibold rounded-xl hover:bg-blue-100 transition-all"
+          >
+            <Download size={15} className="text-blue-600" />
+            Template
+          </a>
           <button
             onClick={() => setImportModal(true)}
             className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm font-semibold rounded-xl hover:bg-emerald-100 transition-all"
           >
-            <BookOpen size={15} className="text-emerald-600" />
+            <UploadCloud size={15} className="text-emerald-600" />
             Import Excel
           </button>
           <button
