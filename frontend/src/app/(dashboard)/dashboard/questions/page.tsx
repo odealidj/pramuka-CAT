@@ -430,50 +430,43 @@ function QuestionsContent() {
             Kelola daftar soal ujian beserta kategorinya
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Action Group 1: Manage */}
-          <div className="flex items-center bg-white border border-gray-200 rounded-xl p-1 shadow-sm">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            onClick={() => handleExport('excel')}
+            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm font-bold rounded-2xl hover:bg-emerald-100 transition-all"
+            title="Export ke Excel"
+          >
+            <FileSpreadsheet size={16} />
+            <span className="hidden xl:inline">Excel</span>
+          </button>
+          
+          <button
+            onClick={() => handleExport('pdf')}
+            className="flex items-center gap-2 px-4 py-2.5 bg-red-50 text-red-700 border border-red-200 text-sm font-bold rounded-2xl hover:bg-red-100 transition-all"
+            title="Export ke PDF"
+          >
+            <FileText size={16} />
+            <span className="hidden xl:inline">PDF</span>
+          </button>
 
-            <a
-              href="/template-soal-pramuka.xlsx"
-              download
-              className="flex items-center gap-2 px-3 py-1.5 text-gray-600 hover:text-blue-700 hover:bg-blue-50 text-sm font-medium rounded-lg transition-all"
-              title="Download Template Excel"
-            >
-              <Download size={15} />
-              <span className="hidden sm:inline">Template</span>
-            </a>
-          </div>
+          <a
+            href="/template-soal-pramuka.xlsx"
+            download
+            className="flex items-center gap-2 px-4 py-2.5 bg-blue-50 text-blue-700 border border-blue-200 text-sm font-bold rounded-2xl hover:bg-blue-100 transition-all"
+            title="Download Template Excel"
+          >
+            <Download size={16} />
+            <span className="hidden sm:inline">Template</span>
+          </a>
 
-          {/* Action Group 2: Import & Export */}
-          <div className="flex items-center bg-white border border-gray-200 rounded-xl p-1 shadow-sm">
-            <button
-              onClick={() => handleExport('excel')}
-              className="flex items-center gap-2 px-3 py-1.5 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 text-sm font-medium rounded-lg transition-all"
-              title="Export ke Excel"
-            >
-              <FileSpreadsheet size={15} />
-              <span className="hidden xl:inline">Excel</span>
-            </button>
-            <div className="w-px h-4 bg-gray-200 mx-1"></div>
-            <button
-              onClick={() => handleExport('pdf')}
-              className="flex items-center gap-2 px-3 py-1.5 text-gray-600 hover:text-red-700 hover:bg-red-50 text-sm font-medium rounded-lg transition-all"
-              title="Export ke PDF"
-            >
-              <FileText size={15} />
-              <span className="hidden xl:inline">PDF</span>
-            </button>
-            <div className="w-px h-4 bg-gray-200 mx-1"></div>
-            <button
-              onClick={() => setImportModal(true)}
-              className="flex items-center gap-2 px-3 py-1.5 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 text-sm font-medium rounded-lg transition-all"
-              title="Import dari Excel"
-            >
-              <UploadCloud size={15} />
-              <span className="hidden sm:inline">Import</span>
-            </button>
-          </div>
+          <button
+            onClick={() => setImportModal(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-indigo-50 text-indigo-700 border border-indigo-200 text-sm font-bold rounded-2xl hover:bg-indigo-100 transition-all"
+            title="Import dari Excel"
+          >
+            <UploadCloud size={16} />
+            <span className="hidden sm:inline">Import</span>
+          </button>
 
           <button
             onClick={() => {
@@ -481,9 +474,9 @@ function QuestionsContent() {
               setFormModal({ open: true, mode: "create", question: null });
             }}
             id="btn-add-question"
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#7C4318] to-[#9C5A22] text-white text-sm font-semibold rounded-xl shadow-sm shadow-amber-900/20 hover:from-[#5C3010] hover:to-[#7C4318] transition-all"
+            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#7C4318] to-[#9C5A22] text-white text-sm font-bold rounded-2xl shadow-sm shadow-amber-900/20 hover:from-[#5C3010] hover:to-[#7C4318] transition-all"
           >
-            <Plus size={15} />
+            <Plus size={16} />
             <span className="hidden sm:inline">Tambah Soal</span>
           </button>
         </div>
