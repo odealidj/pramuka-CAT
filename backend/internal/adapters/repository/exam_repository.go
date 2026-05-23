@@ -46,6 +46,7 @@ func (r *examRepository) ListUpcomingEvents(ctx context.Context, page int32, lim
 			EndTime:         e.EndTime,
 			DurationMinutes: e.DurationMinutes,
 			PassingGrade:    passingGrade,
+			TotalQuestions:  e.TotalQuestions,
 		})
 	}
 	return events, total, nil

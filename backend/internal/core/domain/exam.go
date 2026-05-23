@@ -14,6 +14,7 @@ type UpcomingEvent struct {
 	EndTime         time.Time `json:"end_time"`
 	DurationMinutes int32     `json:"duration_minutes"`
 	PassingGrade    float64   `json:"passing_grade"`
+	TotalQuestions  int32     `json:"total_questions"`
 }
 
 // UserApproval merepresentasikan riwayat atau status pendaftaran peserta ke suatu event

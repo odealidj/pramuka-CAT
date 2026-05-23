@@ -9,6 +9,7 @@ export interface UpcomingEvent {
   end_time: string;
   duration_minutes: number;
   passing_grade: number;
+  total_questions: number;
 }
 
 // Tipe data riwayat ujian (My Exams)
