@@ -15,7 +15,7 @@ WHERE id = $1 AND deleted_at IS NULL LIMIT 1;
 SELECT * FROM users
 WHERE deleted_at IS NULL AND role = 'peserta'
   AND (sqlc.arg('search')::text = '' OR full_name ILIKE '%' || sqlc.arg('search')::text || '%' OR email ILIKE '%' || sqlc.arg('search')::text || '%')
-ORDER BY full_name ASC
+ORDER BY created_at DESC
 LIMIT $1 OFFSET $2;
 
 -- name: CountUsers :one
@@ -27,7 +27,7 @@ WHERE deleted_at IS NULL AND role = 'peserta'
 SELECT * FROM users
 WHERE deleted_at IS NULL AND role = 'admin'
   AND (sqlc.arg('search')::text = '' OR full_name ILIKE '%' || sqlc.arg('search')::text || '%')
-ORDER BY full_name ASC
+ORDER BY created_at DESC
 LIMIT $1 OFFSET $2;
 
 -- name: CountAdmins :one
@@ -63,7 +63,7 @@ WHERE id = $1 AND deleted_at IS NULL LIMIT 1;
 -- name: ListCategories :many
 SELECT * FROM categories
 WHERE deleted_at IS NULL AND (sqlc.arg('search')::text = '' OR name ILIKE '%' || sqlc.arg('search')::text || '%')
-ORDER BY created_at ASC
+ORDER BY created_at DESC
 LIMIT $1 OFFSET $2;
 
 -- name: CountCategories :one
@@ -104,7 +104,7 @@ JOIN categories c ON q.category_id = c.id
 WHERE c.deleted_at IS NULL AND q.deleted_at IS NULL
   AND (sqlc.narg('category_id')::int IS NULL OR q.category_id = sqlc.narg('category_id')::int)
   AND (sqlc.arg('search')::text = '' OR to_tsvector('indonesian', q.question_text) @@ plainto_tsquery('indonesian', sqlc.arg('search')::text))
-ORDER BY q.category_id ASC, q.question_text ASC
+ORDER BY q.created_at DESC
 LIMIT $1 OFFSET $2;
 
 -- name: CountQuestions :one
@@ -139,7 +139,7 @@ WHERE e.id = $1 AND e.deleted_at IS NULL LIMIT 1;
 SELECT e.*, (SELECT COUNT(*)::int FROM event_questions eq WHERE eq.event_id = e.id) as total_questions
 FROM events e
 WHERE e.deleted_at IS NULL AND (sqlc.arg('search')::text = '' OR to_tsvector('indonesian', e.name) @@ plainto_tsquery('indonesian', sqlc.arg('search')::text))
-ORDER BY e.name ASC, e.start_time ASC, e.end_time ASC
+ORDER BY e.created_at DESC
 LIMIT $1 OFFSET $2;
 
 -- name: CountEvents :one
@@ -209,7 +209,7 @@ VALUES ($1, $2);
 SELECT q.* FROM questions q
 JOIN event_questions eq ON q.id = eq.question_id
 WHERE eq.event_id = $1
-ORDER BY q.created_at ASC
+ORDER BY q.created_at DESC
 LIMIT $2 OFFSET $3;
 
 -- name: CountEventQuestions :one
@@ -226,7 +226,7 @@ FROM users u
 JOIN user_event_approvals uea ON u.id = uea.user_id
 WHERE uea.event_id = $1
   AND (sqlc.arg('search')::text = '' OR u.username ILIKE '%' || sqlc.arg('search')::text || '%' OR u.full_name ILIKE '%' || sqlc.arg('search')::text || '%')
-ORDER BY u.full_name ASC
+ORDER BY uea.created_at DESC
 LIMIT $2 OFFSET $3;
 
 -- name: CountEventParticipants :one
@@ -239,7 +239,7 @@ WHERE uea.event_id = $1
 SELECT e.*, (SELECT COUNT(*)::int FROM event_questions eq WHERE eq.event_id = e.id) as total_questions
 FROM events e
 WHERE e.end_time > NOW() AND e.deleted_at IS NULL
-ORDER BY e.start_time ASC
+ORDER BY e.created_at DESC
 LIMIT $1 OFFSET $2;
 
 -- name: CountUpcomingEvents :one
@@ -338,7 +338,7 @@ SELECT u.username, u.full_name, uea.status, uea.is_completed, uea.score, uea.is_
 FROM users u
 JOIN user_event_approvals uea ON u.id = uea.user_id
 WHERE uea.event_id = $1
-ORDER BY u.full_name ASC;
+ORDER BY uea.created_at DESC;
 
 -- name: SetStartedAt :exec
 UPDATE user_event_approvals SET started_at = NOW(), updated_at = NOW() WHERE id = $1 AND started_at IS NULL;

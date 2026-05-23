@@ -707,7 +707,7 @@ SELECT u.username, u.full_name, uea.status, uea.is_completed, uea.score, uea.is_
 FROM users u
 JOIN user_event_approvals uea ON u.id = uea.user_id
 WHERE uea.event_id = $1
-ORDER BY u.full_name ASC
+ORDER BY uea.created_at DESC
 `
 
 type GetAllEventParticipantsForExportRow struct {
@@ -1220,7 +1220,7 @@ const listAdmins = `-- name: ListAdmins :many
 SELECT id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at, email FROM users
 WHERE deleted_at IS NULL AND role = 'admin'
   AND ($3::text = '' OR full_name ILIKE '%' || $3::text || '%')
-ORDER BY full_name ASC
+ORDER BY created_at DESC
 LIMIT $1 OFFSET $2
 `
 
@@ -1311,7 +1311,7 @@ func (q *Queries) ListAllEventParticipants(ctx context.Context, eventID uuid.Nul
 const listCategories = `-- name: ListCategories :many
 SELECT id, name, deleted_at, created_at FROM categories
 WHERE deleted_at IS NULL AND ($3::text = '' OR name ILIKE '%' || $3::text || '%')
-ORDER BY created_at ASC
+ORDER BY created_at DESC
 LIMIT $1 OFFSET $2
 `
 
@@ -1355,7 +1355,7 @@ FROM users u
 JOIN user_event_approvals uea ON u.id = uea.user_id
 WHERE uea.event_id = $1
   AND ($4::text = '' OR u.username ILIKE '%' || $4::text || '%' OR u.full_name ILIKE '%' || $4::text || '%')
-ORDER BY u.full_name ASC
+ORDER BY uea.created_at DESC
 LIMIT $2 OFFSET $3
 `
 
@@ -1418,7 +1418,7 @@ const listEventQuestions = `-- name: ListEventQuestions :many
 SELECT q.id, q.category_id, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_answer, q.weight, q.created_at, q.deleted_at FROM questions q
 JOIN event_questions eq ON q.id = eq.question_id
 WHERE eq.event_id = $1
-ORDER BY q.created_at ASC
+ORDER BY q.created_at DESC
 LIMIT $2 OFFSET $3
 `
 
@@ -1467,7 +1467,7 @@ const listEvents = `-- name: ListEvents :many
 SELECT e.id, e.name, e.start_time, e.end_time, e.duration_minutes, e.passing_grade, e.created_at, e.deleted_at, (SELECT COUNT(*)::int FROM event_questions eq WHERE eq.event_id = e.id) as total_questions
 FROM events e
 WHERE e.deleted_at IS NULL AND ($3::text = '' OR to_tsvector('indonesian', e.name) @@ plainto_tsquery('indonesian', $3::text))
-ORDER BY e.name ASC, e.start_time ASC, e.end_time ASC
+ORDER BY e.created_at DESC
 LIMIT $1 OFFSET $2
 `
 
@@ -1528,7 +1528,7 @@ JOIN categories c ON q.category_id = c.id
 WHERE c.deleted_at IS NULL AND q.deleted_at IS NULL
   AND ($3::int IS NULL OR q.category_id = $3::int)
   AND ($4::text = '' OR to_tsvector('indonesian', q.question_text) @@ plainto_tsquery('indonesian', $4::text))
-ORDER BY q.category_id ASC, q.question_text ASC
+ORDER BY q.created_at DESC
 LIMIT $1 OFFSET $2
 `
 
@@ -1583,7 +1583,7 @@ const listUpcomingEvents = `-- name: ListUpcomingEvents :many
 SELECT e.id, e.name, e.start_time, e.end_time, e.duration_minutes, e.passing_grade, e.created_at, e.deleted_at, (SELECT COUNT(*)::int FROM event_questions eq WHERE eq.event_id = e.id) as total_questions
 FROM events e
 WHERE e.end_time > NOW() AND e.deleted_at IS NULL
-ORDER BY e.start_time ASC
+ORDER BY e.created_at DESC
 LIMIT $1 OFFSET $2
 `
 
@@ -1713,7 +1713,7 @@ const listUsers = `-- name: ListUsers :many
 SELECT id, username, password_hash, full_name, role, photo_url, created_at, updated_at, deleted_at, email FROM users
 WHERE deleted_at IS NULL AND role = 'peserta'
   AND ($3::text = '' OR full_name ILIKE '%' || $3::text || '%' OR email ILIKE '%' || $3::text || '%')
-ORDER BY full_name ASC
+ORDER BY created_at DESC
 LIMIT $1 OFFSET $2
 `
 
