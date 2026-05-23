@@ -19,6 +19,7 @@ type Querier interface {
 	CalculateScore(ctx context.Context, approvalID uuid.NullUUID) (string, error)
 	CheckDuplicateEvent(ctx context.Context, arg CheckDuplicateEventParams) (Event, error)
 	CheckDuplicateQuestion(ctx context.Context, arg CheckDuplicateQuestionParams) (Question, error)
+	CheckQuestionDuplicate(ctx context.Context, questionText string) (bool, error)
 	CountAdmins(ctx context.Context, search string) (int64, error)
 	CountAllActivitiesDashboard(ctx context.Context) (int64, error)
 	CountAvailableQuestionsForEventAll(ctx context.Context, eventID uuid.UUID) (int64, error)

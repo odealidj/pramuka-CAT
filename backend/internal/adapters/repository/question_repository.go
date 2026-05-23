@@ -154,3 +154,37 @@ func (r *questionRepository) CheckDuplicateQuestion(ctx context.Context, text st
 	}
 	return true, nil
 }
+
+func (r *questionRepository) CreateQuestionsBatch(ctx context.Context, questions []domain.Question) error {
+	// Not all database drivers support native bulk insert easily without specific libraries
+	// Here we use a transaction and standard parameterized inserts
+	db, ok := r.queries.GetDB().(*sql.DB)
+	if !ok {
+		// If it's already a Tx, just execute in loop
+		for _, q := range questions {
+			_, err := r.CreateQuestion(ctx, q)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	qtx := r.queries.WithTx(tx)
+	repoTx := NewQuestionRepository(qtx)
+
+	for _, q := range questions {
+		_, err := repoTx.CreateQuestion(ctx, q)
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
+}

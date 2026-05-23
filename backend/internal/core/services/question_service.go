@@ -1,12 +1,16 @@
 package services
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/domain"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/ports"
+	"github.com/xuri/excelize/v2"
 )
 
 const defaultCategoryName = "Umum"
@@ -115,4 +119,176 @@ func (s *questionService) DeleteQuestion(ctx context.Context, id uuid.UUID) erro
 		return fmt.Errorf("pertanyaan tidak ditemukan")
 	}
 	return s.repo.DeleteQuestion(ctx, id)
+}
+
+func (s *questionService) PreviewImportExcel(ctx context.Context, fileData []byte) (*domain.ImportQuestionsPreviewResponse, error) {
+	f, err := excelize.OpenReader(bytes.NewReader(fileData))
+	if err != nil {
+		return nil, fmt.Errorf("gagal membaca file Excel: %w", err)
+	}
+	defer f.Close()
+
+	rows, err := f.GetRows("Sheet1")
+	if err != nil {
+		return nil, fmt.Errorf("gagal membaca Sheet1: %w", err)
+	}
+
+	if len(rows) < 2 {
+		return nil, fmt.Errorf("file Excel kosong atau tidak memiliki data")
+	}
+
+	var response domain.ImportQuestionsPreviewResponse
+	var data []domain.ImportQuestionRow
+	validCount := 0
+	errorCount := 0
+
+	// Menyimpan teks soal yang ada di dalam file ini untuk mendeteksi duplikat internal
+	seenQuestions := make(map[string]int)
+
+	for i, row := range rows {
+		if i == 0 {
+			continue // Skip header
+		}
+
+		// Ensure row has enough columns (up to H, which is 8 columns)
+		for len(row) < 8 {
+			row = append(row, "")
+		}
+
+		rowNum := i + 1
+		importRow := domain.ImportQuestionRow{
+			Row:           rowNum,
+			IsValid:       true,
+		}
+
+		// Kolom A: Kategori ID
+		if row[0] == "" {
+			importRow.IsValid = false
+			importRow.Error = "Kategori ID tidak boleh kosong"
+		} else {
+			catID, err := strconv.Atoi(row[0])
+			if err != nil {
+				importRow.IsValid = false
+				importRow.Error = "Kategori ID harus berupa angka"
+			} else {
+				id32 := int32(catID)
+				importRow.CategoryID = &id32
+			}
+		}
+
+		// Kolom B: Teks Soal
+		qText := strings.TrimSpace(row[1])
+		importRow.QuestionText = qText
+		if qText == "" {
+			importRow.IsValid = false
+			importRow.Error = "Teks Soal tidak boleh kosong"
+		}
+
+		// Kolom C, D, E, F: Opsi A - D
+		importRow.OptionA = strings.TrimSpace(row[2])
+		importRow.OptionB = strings.TrimSpace(row[3])
+		importRow.OptionC = strings.TrimSpace(row[4])
+		importRow.OptionD = strings.TrimSpace(row[5])
+		if importRow.OptionA == "" || importRow.OptionB == "" || importRow.OptionC == "" || importRow.OptionD == "" {
+			importRow.IsValid = false
+			if importRow.Error == "" {
+				importRow.Error = "Opsi A, B, C, dan D tidak boleh kosong"
+			}
+		}
+
+		// Kolom G: Kunci Jawaban
+		ans := strings.ToUpper(strings.TrimSpace(row[6]))
+		importRow.CorrectAnswer = ans
+		if ans != "A" && ans != "B" && ans != "C" && ans != "D" {
+			importRow.IsValid = false
+			if importRow.Error == "" {
+				importRow.Error = "Kunci Jawaban harus A, B, C, atau D"
+			}
+		}
+
+		// Kolom H: Bobot
+		if row[7] == "" {
+			importRow.IsValid = false
+			if importRow.Error == "" {
+				importRow.Error = "Bobot Nilai tidak boleh kosong"
+			}
+		} else {
+			w, err := strconv.Atoi(strings.TrimSpace(row[7]))
+			if err != nil || w < 1 {
+				importRow.IsValid = false
+				if importRow.Error == "" {
+					importRow.Error = "Bobot Nilai harus berupa angka positif minimal 1"
+				}
+			} else {
+				importRow.Weight = int32(w)
+			}
+		}
+
+		// Cek Duplikat Internal (dalam file)
+		if qText != "" {
+			normalizedQText := strings.ToLower(strings.ReplaceAll(qText, " ", ""))
+			if prevRow, exists := seenQuestions[normalizedQText]; exists {
+				importRow.IsValid = false
+				if importRow.Error == "" {
+					importRow.Error = fmt.Sprintf("Soal ini duplikat dengan baris ke-%d", prevRow)
+				}
+			} else {
+				seenQuestions[normalizedQText] = rowNum
+			}
+
+			// Cek Duplikat di Database (hanya jika valid sejauh ini)
+			if importRow.IsValid {
+				isDupDB, err := s.repo.CheckDuplicateQuestion(ctx, qText, nil)
+				if err == nil && isDupDB {
+					importRow.IsValid = false
+					importRow.Error = "Soal dengan pertanyaan serupa sudah ada di database"
+				}
+			}
+		}
+
+		if importRow.IsValid {
+			validCount++
+		} else {
+			errorCount++
+		}
+		data = append(data, importRow)
+	}
+
+	response.TotalRows = len(data)
+	response.ValidRows = validCount
+	response.ErrorRows = errorCount
+	response.Data = data
+
+	return &response, nil
+}
+
+func (s *questionService) ConfirmImportExcel(ctx context.Context, req domain.ConfirmImportRequest) (int, error) {
+	if len(req.Questions) == 0 {
+		return 0, fmt.Errorf("tidak ada soal yang di-import")
+	}
+
+	var questionsToInsert []domain.Question
+	for _, row := range req.Questions {
+		if !row.IsValid {
+			return 0, fmt.Errorf("terdapat soal yang tidak valid pada baris ke-%d. Simpan dibatalkan", row.Row)
+		}
+
+		questionsToInsert = append(questionsToInsert, domain.Question{
+			CategoryID:    row.CategoryID,
+			QuestionText:  row.QuestionText,
+			OptionA:       row.OptionA,
+			OptionB:       row.OptionB,
+			OptionC:       row.OptionC,
+			OptionD:       row.OptionD,
+			CorrectAnswer: row.CorrectAnswer,
+			Weight:        row.Weight,
+		})
+	}
+
+	err := s.repo.CreateQuestionsBatch(ctx, questionsToInsert)
+	if err != nil {
+		return 0, fmt.Errorf("gagal menyimpan batch soal: %w", err)
+	}
+
+	return len(questionsToInsert), nil
 }

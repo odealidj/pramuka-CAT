@@ -97,6 +97,14 @@ INSERT INTO questions (category_id, question_text, option_a, option_b, option_c,
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 RETURNING *;
 
+-- name: CheckQuestionDuplicate :one
+SELECT EXISTS(
+    SELECT 1 FROM questions q
+    JOIN categories c ON q.category_id = c.id
+    WHERE c.deleted_at IS NULL AND q.deleted_at IS NULL
+    AND LOWER(TRIM(q.question_text)) = LOWER(TRIM(sqlc.arg('question_text')::text))
+);
+
 -- name: GetQuestionById :one
 SELECT * FROM questions
 WHERE id = $1 AND deleted_at IS NULL LIMIT 1;

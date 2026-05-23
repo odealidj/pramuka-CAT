@@ -175,6 +175,31 @@ export interface CreateQuestionRequest {
 
 export type UpdateQuestionRequest = CreateQuestionRequest;
 
+export interface ImportQuestionRow {
+  row: number;
+  category_id: number | null;
+  question_text: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+  correct_answer: CorrectAnswer;
+  weight: number;
+  is_valid: boolean;
+  error?: string;
+}
+
+export interface ImportQuestionsPreviewResponse {
+  total_rows: number;
+  valid_rows: number;
+  error_rows: number;
+  data: ImportQuestionRow[];
+}
+
+export interface ConfirmImportRequest {
+  questions: ImportQuestionRow[];
+}
+
 // === Event / Jadwal Ujian Types ===
 
 export interface Event {

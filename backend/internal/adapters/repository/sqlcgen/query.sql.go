@@ -175,6 +175,22 @@ func (q *Queries) CheckDuplicateQuestion(ctx context.Context, arg CheckDuplicate
 	return i, err
 }
 
+const checkQuestionDuplicate = `-- name: CheckQuestionDuplicate :one
+SELECT EXISTS(
+    SELECT 1 FROM questions q
+    JOIN categories c ON q.category_id = c.id
+    WHERE c.deleted_at IS NULL AND q.deleted_at IS NULL
+    AND LOWER(TRIM(q.question_text)) = LOWER(TRIM($1::text))
+)
+`
+
+func (q *Queries) CheckQuestionDuplicate(ctx context.Context, questionText string) (bool, error) {
+	row := q.db.QueryRowContext(ctx, checkQuestionDuplicate, questionText)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const countAdmins = `-- name: CountAdmins :one
 SELECT COUNT(*) FROM users
 WHERE deleted_at IS NULL AND role = 'admin'

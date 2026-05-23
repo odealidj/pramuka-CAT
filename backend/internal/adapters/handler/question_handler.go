@@ -26,6 +26,8 @@ func (h *QuestionHandler) RegisterAdminRoutes(adminGroup *echo.Group) {
 	questionsGroup.GET("/:id", h.GetQuestion)
 	questionsGroup.PUT("/:id", h.UpdateQuestion)
 	questionsGroup.DELETE("/:id", h.DeleteQuestion)
+	questionsGroup.POST("/import/preview", h.PreviewImport)
+	questionsGroup.POST("/import/confirm", h.ConfirmImport)
 }
 
 // CreateQuestion godoc
@@ -172,4 +174,74 @@ func (h *QuestionHandler) DeleteQuestion(c echo.Context) error {
 	}
 
 	return response.Success(c, http.StatusOK, "Pertanyaan berhasil dihapus", nil)
+}
+
+// PreviewImport godoc
+// @Summary     Preview Import Soal via Excel
+// @Tags        Admin - Bank Soal
+// @Security    BearerAuth
+// @Accept      mpfd
+// @Produce     json
+// @Param       file formData file true "File Excel (.xlsx)"
+// @Success     200  {object}  response.SuccessResponse{data=domain.ImportQuestionsPreviewResponse}
+// @Router      /admin/questions/import/preview [post]
+func (h *QuestionHandler) PreviewImport(c echo.Context) error {
+	file, err := c.FormFile("file")
+	if err != nil {
+		return response.Error(c, http.StatusBadRequest, "File tidak ditemukan dalam request", nil)
+	}
+
+	src, err := file.Open()
+	if err != nil {
+		return response.Error(c, http.StatusInternalServerError, "Gagal membuka file upload", nil)
+	}
+	defer src.Close()
+
+	// Baca seluruh byte file ke memori
+	fileData := make([]byte, file.Size)
+	_, err = src.Read(fileData)
+	if err != nil {
+		return response.Error(c, http.StatusInternalServerError, "Gagal membaca isi file", nil)
+	}
+
+	res, err := h.service.PreviewImportExcel(c.Request().Context(), fileData)
+	if err != nil {
+		return response.Error(c, http.StatusBadRequest, err.Error(), nil)
+	}
+
+	// Walaupun ada yang error per baris, kita tetap merespons 200 OK karena API berhasil memproses validasi,
+	// Namun kita beri response kode khusus (misal 422) jika errorRows > 0 sesuai kesepakatan agar mudah dibaca Frontend
+	if res.ErrorRows > 0 {
+		return c.JSON(http.StatusUnprocessableEntity, map[string]interface{}{
+			"status":  "error",
+			"message": "Terdapat baris data yang tidak valid. Silakan periksa kembali.",
+			"data":    res,
+		})
+	}
+
+	return response.Success(c, http.StatusOK, "Preview file berhasil divalidasi", res)
+}
+
+// ConfirmImport godoc
+// @Summary     Konfirmasi Simpan Import Soal
+// @Tags        Admin - Bank Soal
+// @Security    BearerAuth
+// @Accept      json
+// @Produce     json
+// @Param       body body domain.ConfirmImportRequest true "Data Soal Valid"
+// @Success     200  {object}  response.SuccessResponse
+// @Router      /admin/questions/import/confirm [post]
+func (h *QuestionHandler) ConfirmImport(c echo.Context) error {
+	var req domain.ConfirmImportRequest
+	if err := c.Bind(&req); err != nil {
+		return response.Error(c, http.StatusBadRequest, "Format JSON tidak valid", nil)
+	}
+
+	count, err := h.service.ConfirmImportExcel(c.Request().Context(), req)
+	if err != nil {
+		return response.Error(c, http.StatusInternalServerError, "Gagal menyimpan import", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
+	}
+
+	msg := fmt.Sprintf("%d soal berhasil di-import", count)
+	return response.Success(c, http.StatusCreated, msg, nil)
 }

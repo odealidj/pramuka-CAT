@@ -15,6 +15,7 @@ type QuestionRepository interface {
 	UpdateQuestion(ctx context.Context, id uuid.UUID, q domain.Question) (domain.Question, error)
 	DeleteQuestion(ctx context.Context, id uuid.UUID) error
 	CheckDuplicateQuestion(ctx context.Context, text string, excludeID *uuid.UUID) (bool, error)
+	CreateQuestionsBatch(ctx context.Context, questions []domain.Question) error
 }
 
 // QuestionService menangani business logic untuk Question
@@ -24,4 +25,6 @@ type QuestionService interface {
 	ListQuestions(ctx context.Context, page int32, limit int32, search string, categoryId *int32) ([]domain.Question, int64, error)
 	UpdateQuestion(ctx context.Context, id uuid.UUID, req domain.UpdateQuestionRequest) (domain.Question, error)
 	DeleteQuestion(ctx context.Context, id uuid.UUID) error
+	PreviewImportExcel(ctx context.Context, file []byte) (*domain.ImportQuestionsPreviewResponse, error)
+	ConfirmImportExcel(ctx context.Context, req domain.ConfirmImportRequest) (int, error)
 }

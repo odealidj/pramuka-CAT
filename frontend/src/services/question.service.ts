@@ -10,6 +10,8 @@ import type {
   CreateQuestionRequest,
   UpdateQuestionRequest,
   PaginatedResponse,
+  ImportQuestionsPreviewResponse,
+  ConfirmImportRequest,
 } from '@/types/auth';
 
 export const listQuestionsApi = async (
@@ -64,4 +66,29 @@ export const updateQuestionApi = async (
 /** DELETE /admin/questions/:id */
 export const deleteQuestionApi = async (id: string): Promise<void> => {
   await httpClient.delete(`/admin/questions/${id}`);
+};
+
+/** POST /admin/questions/import/preview */
+export const previewImportExcelApi = async (
+  file: File
+): Promise<ImportQuestionsPreviewResponse> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await httpClient.post<ApiSuccessResponse<ImportQuestionsPreviewResponse>>(
+    '/admin/questions/import/preview',
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  );
+  return res.data.data;
+};
+
+/** POST /admin/questions/import/confirm */
+export const confirmImportExcelApi = async (
+  payload: ConfirmImportRequest
+): Promise<void> => {
+  await httpClient.post('/admin/questions/import/confirm', payload);
 };

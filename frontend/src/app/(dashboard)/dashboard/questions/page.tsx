@@ -23,6 +23,7 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { ToastContainer, useToast } from "@/components/ui/Toast";
 import QuestionFormModal from "@/components/questions/QuestionFormModal";
 import CategoryManagerModal from "@/components/questions/CategoryManagerModal";
+import ImportExcelModal from "@/components/questions/ImportExcelModal";
 import {
   listQuestionsApi,
   createQuestionApi,
@@ -222,6 +223,7 @@ function QuestionsContent() {
   }>({ open: false, mode: "create", question: null });
 
   const [categoryModal, setCategoryModal] = useState(false);
+  const [importModal, setImportModal] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
     question: Question | null;
@@ -402,6 +404,13 @@ function QuestionsContent() {
           >
             <Tag size={15} />
             Kategori
+          </button>
+          <button
+            onClick={() => setImportModal(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm font-semibold rounded-xl hover:bg-emerald-100 transition-all"
+          >
+            <BookOpen size={15} className="text-emerald-600" />
+            Import Excel
           </button>
           <button
             onClick={() => {
@@ -705,6 +714,16 @@ function QuestionsContent() {
         isOpen={categoryModal}
         onClose={() => setCategoryModal(false)}
         onCategoriesChanged={fetchCategories}
+      />
+
+      <ImportExcelModal
+        isOpen={importModal}
+        onClose={() => setImportModal(false)}
+        onSuccess={() => {
+          fetchQuestions();
+          fetchCategories();
+          toast("success", "Soal berhasil di-import dari Excel.");
+        }}
       />
 
       <ConfirmDialog
