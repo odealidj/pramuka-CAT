@@ -164,11 +164,13 @@ function EventCard({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-[#E8DCC8] shadow-sm hover:shadow-lg hover:border-[#D4924A] hover:-translate-y-1 transition-all duration-300 group overflow-hidden flex flex-col h-full">
+    <div className="bg-white rounded-2xl border border-[#E8DCC8] shadow-md hover:shadow-2xl hover:border-[#D4924A] hover:-translate-y-1.5 transition-all duration-300 group overflow-hidden flex flex-col h-full relative">
+      {/* Decorative gradient background (subtle) */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#D4924A]/5 to-transparent rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
       {/* Top accent */}
-      <div className="h-1.5 bg-gradient-to-r from-[#E8DCC8] via-[#D4924A] to-[#7C4318]" />
+      <div className="h-1.5 bg-gradient-to-r from-[#D4924A] to-[#5C3010]" />
 
-      <div className="p-5">
+      <div className="p-5 relative z-10 flex flex-col flex-1">
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex-1">
             {/* Status badge */}
@@ -182,7 +184,7 @@ function EventCard({
                 {countdownText}
               </span>
             </div>
-            <h3 className="text-gray-900 font-bold text-sm leading-snug">{event.name}</h3>
+            <h3 className="text-[#5C3010] font-black text-lg tracking-tight leading-snug mt-1">{event.name}</h3>
           </div>
           {/* Action buttons */}
           <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
@@ -204,39 +206,41 @@ function EventCard({
         </div>
 
         {/* Details */}
-        <div className="space-y-1.5 text-xs text-gray-500">
-          <div className="flex items-center gap-2">
-            <Calendar size={11} className="text-gray-400 flex-shrink-0" />
+        <div className="space-y-2.5 text-[13px] text-[#7A4520] font-medium mt-2">
+          <div className="flex items-center gap-2.5">
+            <div className="p-1.5 rounded-lg bg-[#FAF7F2] text-[#D4924A] border border-[#E8DCC8]">
+              <Calendar size={14} className="flex-shrink-0" />
+            </div>
             <span>{fmtDateRange(event.start_time, event.end_time)}</span>
           </div>
           <div className="flex items-center gap-4">
-            <span className={`flex items-center gap-1 ${isEventFinished ? 'opacity-70' : ''}`}>
-              <Clock size={11} className={isEventFinished ? 'text-gray-400' : 'text-amber-500'} />
-              <span className={isEventFinished ? 'text-gray-400' : ''}>{fmtDuration(event.duration_minutes)}</span>
+            <span className={`flex items-center gap-1.5 ${isEventFinished ? 'opacity-70' : ''}`}>
+              <Clock size={14} className={isEventFinished ? 'text-gray-400' : 'text-[#D4924A]'} />
+              <span className={isEventFinished ? 'text-gray-500' : ''}>{fmtDuration(event.duration_minutes)}</span>
             </span>
-            <span className={`flex items-center gap-1 ${isEventFinished ? 'opacity-70' : ''}`} title="Total Soal Didaftarkan">
-              <div className={`w-2.5 h-2.5 rounded-full flex items-center justify-center text-[7px] font-bold border ${isEventFinished ? 'bg-gray-100 text-gray-400 border-gray-200' : 'bg-blue-100 text-blue-600 border-blue-200'}`}>?</div>
-              <strong className={isEventFinished ? 'text-gray-400' : 'text-gray-700'}>{event.total_questions || 0}</strong> <span className={isEventFinished ? 'text-gray-400' : ''}>soal</span>
+            <span className={`flex items-center gap-1.5 ${isEventFinished ? 'opacity-70' : ''}`} title="Total Soal Didaftarkan">
+              <HelpCircle size={14} className={isEventFinished ? 'text-gray-400' : 'text-[#D4924A]'} />
+              <strong className={isEventFinished ? 'text-gray-500' : 'text-[#5C3010] font-bold'}>{event.total_questions || 0}</strong> <span className={isEventFinished ? 'text-gray-500' : ''}>soal</span>
             </span>
-            <span className={`flex items-center gap-1 ${isEventFinished ? 'opacity-70' : ''}`}>
-              <Trophy size={11} className={isEventFinished ? 'text-gray-400' : 'text-emerald-500'} />
-              <span className={isEventFinished ? 'text-gray-400' : ''}>Batas Lulus <strong className={isEventFinished ? 'text-gray-500' : 'text-gray-700'}>{event.passing_grade}%</strong></span>
+            <span className={`flex items-center gap-1.5 ${isEventFinished ? 'opacity-70' : ''}`}>
+              <Trophy size={14} className={isEventFinished ? 'text-gray-400' : 'text-emerald-500'} />
+              <span className={isEventFinished ? 'text-gray-500' : ''}>Batas Lulus <strong className={isEventFinished ? 'text-gray-500' : 'text-[#5C3010] font-bold'}>{event.passing_grade}%</strong></span>
             </span>
           </div>
         </div>
 
         {/* Detail button */}
-        <div className="mt-auto pt-4">
+        <div className="mt-auto pt-6">
           <Link
             href={`/dashboard/events/${event.id}`}
-            className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border text-xs font-bold transition-all shadow-sm group-hover:shadow ${
+            className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-bold transition-all duration-300 shadow-sm hover:shadow-lg ${
               countdown.status === 'ongoing'
-                ? 'bg-emerald-600 border-emerald-600 text-white hover:bg-emerald-700 hover:border-emerald-700 shadow-emerald-600/20'
-                : 'bg-[#FAF7F2]/50 border-[#E8DCC8] text-[#9C5A22] hover:bg-[#9C5A22] hover:text-white hover:border-[#9C5A22]'
+                ? 'bg-gradient-to-r from-emerald-500 to-teal-600 border-transparent text-white hover:from-emerald-600 hover:to-teal-700 shadow-emerald-500/30 hover:shadow-emerald-500/40'
+                : 'bg-gradient-to-r from-[#FAF7F2] to-white border-[#E8DCC8] text-[#9C5A22] hover:border-[#D4924A] hover:bg-gradient-to-r hover:from-[#9C5A22] hover:to-[#5C3010] hover:text-white'
             }`}
           >
             Kelola Soal & Peserta
-            <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+            <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
       </div>

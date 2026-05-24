@@ -126,84 +126,88 @@ export default function CommandPalette() {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-start justify-center pt-24 sm:pt-32 px-4">
-      <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-md" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-md transition-opacity" onClick={onClose} />
       
       <div 
-        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden border border-gray-100 flex flex-col transform scale-100 animate-in fade-in zoom-in duration-200"
+        className="relative bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl overflow-hidden ring-1 ring-white/10 border border-[#E8DCC8] flex flex-col transform scale-100 animate-in fade-in zoom-in duration-300"
         role="dialog"
         aria-modal="true"
       >
         {/* Search Input */}
-        <div className="flex items-center px-4 py-3 border-b border-gray-100 bg-gray-50/50">
-          <Search size={20} className="text-amber-500 flex-shrink-0" />
+        <div className="flex items-center px-6 py-5 border-b border-[#E8DCC8] bg-gradient-to-r from-[#FAF7F2] to-white relative overflow-hidden">
+          <Search size={24} className="text-[#D4924A] flex-shrink-0 relative z-10" />
           <input
             ref={inputRef}
             type="text"
-            className="flex-1 bg-transparent border-none outline-none px-3 py-1 text-gray-800 placeholder-gray-400 text-base font-medium"
+            className="flex-1 bg-transparent border-none outline-none px-4 py-1 text-[#5C3010] placeholder-[#D4924A]/60 text-lg font-bold relative z-10"
             placeholder="Cari menu atau perintah..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
           />
-          <div className="flex items-center gap-1.5 hidden sm:flex">
-             <kbd className="bg-gray-200/60 text-gray-500 rounded px-1.5 py-0.5 text-[10px] font-semibold border border-gray-300 border-b-2">ESC</kbd>
+          <div className="flex items-center gap-1.5 hidden sm:flex relative z-10">
+             <kbd className="bg-white text-[#9C5A22] rounded-md px-2 py-1 text-[11px] font-bold border border-[#E8DCC8] shadow-sm uppercase tracking-widest">ESC</kbd>
           </div>
         </div>
 
         {/* Results */}
-        <div ref={listRef} className="max-h-80 overflow-y-auto p-2" onMouseLeave={() => setSelectedIndex(-1)}>
+        <div ref={listRef} className="max-h-[28rem] overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-[#E8DCC8] scrollbar-track-transparent" onMouseLeave={() => setSelectedIndex(-1)}>
           {filteredItems.length === 0 ? (
-            <div className="py-12 px-4 text-center">
-              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Search size={24} className="text-gray-400" />
+            <div className="py-16 px-4 text-center">
+              <div className="w-16 h-16 bg-[#FAF7F2] rounded-full flex items-center justify-center mx-auto mb-4 border border-[#E8DCC8]">
+                <Search size={28} className="text-[#D4924A]/60" />
               </div>
-              <p className="text-gray-500 font-medium">Pencarian tidak ditemukan.</p>
-              <p className="text-gray-400 text-sm mt-1">Coba kata kunci lain.</p>
+              <p className="text-[#5C3010] font-extrabold text-lg">Pencarian tidak ditemukan.</p>
+              <p className="text-[#7A4520] text-sm mt-1 font-medium">Coba gunakan kata kunci lain.</p>
             </div>
           ) : (
             Object.entries(groupedItems).map(([category, items]) => (
-              <div key={category} className="mb-4 last:mb-0">
-                <div className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">
+              <div key={category} className="mb-6 last:mb-0">
+                <div className="px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-[#D4924A]/70 mb-2">
                   {category}
                 </div>
-                {items.map((item) => {
-                  const globalIndex = filteredItems.findIndex(i => i.id === item.id);
-                  const isSelected = selectedIndex === globalIndex;
-                  return (
-                    <button
-                      key={item.id}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors cursor-pointer mb-0.5
-                        ${isSelected ? 'bg-amber-50 text-amber-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
-                      onMouseEnter={() => setSelectedIndex(globalIndex)}
-                      onClick={() => handleSelect(item)}
-                    >
-                      <div className={`p-1.5 rounded-lg ${isSelected ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
-                        {item.icon}
-                      </div>
-                      <span className={`font-medium ${isSelected ? 'text-amber-900' : ''}`}>
-                        {item.label}
-                      </span>
-                      {isSelected && (
-                        <div className="ml-auto text-xs text-amber-600 font-medium">
-                          Enter
+                <div className="space-y-1">
+                  {items.map((item) => {
+                    const globalIndex = filteredItems.findIndex(i => i.id === item.id);
+                    const isSelected = selectedIndex === globalIndex;
+                    return (
+                      <button
+                        key={item.id}
+                        className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 cursor-pointer
+                          ${isSelected ? 'bg-gradient-to-r from-[#FAF7F2] to-white border-l-4 border-[#D4924A] shadow-sm ring-1 ring-[#E8DCC8]' : 'border-l-4 border-transparent hover:bg-gray-50 text-[#7A4520]'}`}
+                        onMouseEnter={() => setSelectedIndex(globalIndex)}
+                        onClick={() => handleSelect(item)}
+                      >
+                        <div className={`p-2.5 rounded-xl transition-colors duration-300 ${isSelected ? 'bg-[#9C5A22] text-white shadow-md' : 'bg-[#FAF7F2] text-[#9C5A22] border border-[#E8DCC8]'}`}>
+                          {item.icon}
                         </div>
-                      )}
-                    </button>
-                  );
-                })}
+                        <span className={`font-bold text-base transition-colors duration-300 ${isSelected ? 'text-[#5C3010]' : ''}`}>
+                          {item.label}
+                        </span>
+                        {isSelected && (
+                          <div className="ml-auto flex items-center">
+                            <span className="text-xs text-[#9C5A22] font-black uppercase tracking-widest bg-[#D4924A]/10 px-2.5 py-1 rounded-md">
+                              Enter ↵
+                            </span>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             ))
           )}
         </div>
         
         {/* Footer info */}
-        <div className="px-4 py-2 border-t border-gray-100 bg-gray-50 text-xs text-gray-500 flex justify-between items-center hidden sm:flex">
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1.5"><kbd className="bg-gray-200/60 rounded px-1 text-[10px] border border-gray-300">↑</kbd><kbd className="bg-gray-200/60 rounded px-1 text-[10px] border border-gray-300">↓</kbd> Navigasi</span>
-            <span className="flex items-center gap-1.5"><kbd className="bg-gray-200/60 rounded px-1 text-[10px] border border-gray-300">↵</kbd> Pilih</span>
+        <div className="px-6 py-4 border-t border-[#E8DCC8] bg-gradient-to-r from-gray-50 to-white text-xs text-[#7A4520] flex justify-between items-center hidden sm:flex font-bold">
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-2"><kbd className="bg-white rounded px-1.5 py-0.5 text-[11px] border border-[#E8DCC8] shadow-sm text-[#9C5A22]">↑</kbd><kbd className="bg-white rounded px-1.5 py-0.5 text-[11px] border border-[#E8DCC8] shadow-sm text-[#9C5A22]">↓</kbd> Navigasi</span>
+            <span className="flex items-center gap-2"><kbd className="bg-white rounded px-1.5 py-0.5 text-[11px] border border-[#E8DCC8] shadow-sm text-[#9C5A22]">↵</kbd> Pilih</span>
           </div>
-          <div className="flex items-center gap-1">
-            Pramuka CAT <Command size={10} className="ml-1" />
+          <div className="flex items-center gap-1.5 text-[#5C3010] uppercase tracking-widest font-black">
+            Pramuka CAT <Command size={12} className="ml-1 text-[#D4924A]" />
           </div>
         </div>
       </div>
