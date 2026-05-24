@@ -133,10 +133,10 @@ func (s *questionService) PreviewImportExcel(ctx context.Context, fileData []byt
 		return nil, fmt.Errorf("file Excel kosong")
 	}
 	if sheetList[0] != "Soal" {
-		return nil, fmt.Errorf("sheet pertama harus bernama 'Soal'")
+		return nil, fmt.Errorf("Anda melakukan perubahan template, sheet pertama harus bernama 'Soal'")
 	}
 	if len(sheetList) < 2 || sheetList[1] != "Kategori Soal" {
-		return nil, fmt.Errorf("sheet kedua harus bernama 'Kategori Soal'")
+		return nil, fmt.Errorf("Anda melakukan perubahan template, sheet kedua harus bernama 'Kategori Soal'")
 	}
 
 	rows, err := f.GetRows(sheetList[0])
@@ -162,7 +162,7 @@ func (s *questionService) PreviewImportExcel(ctx context.Context, fileData []byt
 			expectedHeaders := []string{"Kategori ID", "Teks Soal", "Opsi A", "Opsi B", "Opsi C", "Opsi D", "Kunci Jawaban", "Bobot Nilai"}
 			for j, header := range expectedHeaders {
 				if j >= len(row) || strings.TrimSpace(row[j]) != header {
-					return nil, fmt.Errorf("format header tidak valid. Kolom %s harus '%s'", string(rune('A'+j)), header)
+					return nil, fmt.Errorf("Anda melakukan perubahan template, format header tidak valid. Kolom %s harus '%s'", string(rune('A'+j)), header)
 				}
 			}
 			continue // Skip header
