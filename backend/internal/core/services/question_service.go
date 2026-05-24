@@ -128,9 +128,20 @@ func (s *questionService) PreviewImportExcel(ctx context.Context, fileData []byt
 	}
 	defer f.Close()
 
-	rows, err := f.GetRows("Sheet1")
+	sheetList := f.GetSheetList()
+	if len(sheetList) == 0 {
+		return nil, fmt.Errorf("file Excel kosong")
+	}
+	if sheetList[0] != "Soal" {
+		return nil, fmt.Errorf("sheet pertama harus bernama 'Soal'")
+	}
+	if len(sheetList) < 2 || sheetList[1] != "Kategori Soal" {
+		return nil, fmt.Errorf("sheet kedua harus bernama 'Kategori Soal'")
+	}
+
+	rows, err := f.GetRows(sheetList[0])
 	if err != nil {
-		return nil, fmt.Errorf("gagal membaca Sheet1: %w", err)
+		return nil, fmt.Errorf("gagal membaca sheet Soal: %w", err)
 	}
 
 	if len(rows) < 2 {
@@ -147,6 +158,13 @@ func (s *questionService) PreviewImportExcel(ctx context.Context, fileData []byt
 
 	for i, row := range rows {
 		if i == 0 {
+			// Validate headers
+			expectedHeaders := []string{"Kategori ID", "Teks Soal", "Opsi A", "Opsi B", "Opsi C", "Opsi D", "Kunci Jawaban", "Bobot Nilai"}
+			for j, header := range expectedHeaders {
+				if j >= len(row) || strings.TrimSpace(row[j]) != header {
+					return nil, fmt.Errorf("format header tidak valid. Kolom %s harus '%s'", string(rune('A'+j)), header)
+				}
+			}
 			continue // Skip header
 		}
 
@@ -208,10 +226,7 @@ func (s *questionService) PreviewImportExcel(ctx context.Context, fileData []byt
 
 		// Kolom H: Bobot
 		if row[7] == "" {
-			importRow.IsValid = false
-			if importRow.Error == "" {
-				importRow.Error = "Bobot Nilai tidak boleh kosong"
-			}
+			importRow.Weight = 10 // Default bobot 10
 		} else {
 			w, err := strconv.Atoi(strings.TrimSpace(row[7]))
 			if err != nil || w < 1 {
@@ -344,6 +359,25 @@ func (s *questionService) DownloadTemplateExcel(ctx context.Context) ([]byte, er
 	f.SetColWidth(sheetSoal, "C", "F", 25)
 	f.SetColWidth(sheetSoal, "G", "G", 15)
 	f.SetColWidth(sheetSoal, "H", "H", 15)
+
+	// Berikan catatan (comment) pada header Kategori ID
+	f.AddComment(sheetSoal, excelize.Comment{
+		Cell:   "A1",
+		Author: "Sistem",
+		Paragraph: []excelize.RichTextRun{
+			{Text: "Catatan:\nSilakan lihat nilai Kategori ID pada sheet 'Kategori Soal'"},
+		},
+	})
+
+	// Contoh Data Soal
+	f.SetCellValue(sheetSoal, "A2", 1)
+	f.SetCellValue(sheetSoal, "B2", "Siapakah Bapak Pandu Dunia?")
+	f.SetCellValue(sheetSoal, "C2", "Baden Powell")
+	f.SetCellValue(sheetSoal, "D2", "Ir. Soekarno")
+	f.SetCellValue(sheetSoal, "E2", "Sri Sultan Hamengkubuwono IX")
+	f.SetCellValue(sheetSoal, "F2", "Jenderal Sudirman")
+	f.SetCellValue(sheetSoal, "G2", "A")
+	f.SetCellValue(sheetSoal, "H2", 10)
 
 	// Berikan border kosong untuk beberapa baris (misal 50 baris untuk template)
 	for i := 2; i <= 51; i++ {
