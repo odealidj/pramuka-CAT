@@ -93,6 +93,14 @@ export const confirmImportExcelApi = async (
   await httpClient.post('/admin/questions/import/confirm', payload);
 };
 
+/** GET /admin/questions/import/template */
+export const exportQuestionTemplateApi = async (): Promise<Blob> => {
+  const res = await httpClient.get('/admin/questions/import/template', {
+    responseType: 'blob',
+  });
+  return res.data;
+};
+
 /** GET /admin/questions/export/excel */
 export const exportQuestionsExcelApi = async (
   search = '',

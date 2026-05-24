@@ -32,6 +32,7 @@ func (h *QuestionHandler) RegisterAdminRoutes(adminGroup *echo.Group) {
 	questionsGroup.DELETE("/:id", h.DeleteQuestion)
 	questionsGroup.POST("/import/preview", h.PreviewImport)
 	questionsGroup.POST("/import/confirm", h.ConfirmImport)
+	questionsGroup.GET("/import/template", h.ExportQuestionTemplate)
 }
 
 // CreateQuestion godoc
@@ -248,6 +249,25 @@ func (h *QuestionHandler) ConfirmImport(c echo.Context) error {
 
 	msg := fmt.Sprintf("%d soal berhasil di-import", count)
 	return response.Success(c, http.StatusCreated, msg, nil)
+}
+
+// ExportQuestionTemplate godoc
+// @Summary     Download Template Excel Import Soal
+// @Tags        Admin - Bank Soal
+// @Security    BearerAuth
+// @Produce     application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+// @Success     200  {file}    file
+// @Router      /admin/questions/import/template [get]
+func (h *QuestionHandler) ExportQuestionTemplate(c echo.Context) error {
+	buf, err := h.service.DownloadTemplateExcel(c.Request().Context())
+	if err != nil {
+		return response.Error(c, http.StatusInternalServerError, "Gagal membuat template", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
+	}
+
+	c.Response().Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.Response().Header().Set("Content-Disposition", "attachment; filename=\"template-soal-pramuka.xlsx\"")
+
+	return c.Blob(http.StatusOK, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", buf)
 }
 
 func (h *QuestionHandler) ExportQuestionsExcel(c echo.Context) error {

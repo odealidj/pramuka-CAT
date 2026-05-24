@@ -35,6 +35,7 @@ import {
   deleteQuestionApi,
   exportQuestionsExcelApi,
   exportQuestionsPdfApi,
+  exportQuestionTemplateApi,
 } from "@/services/question.service";
 import { listCategoriesApi } from "@/services/category.service";
 import type {
@@ -415,6 +416,22 @@ function QuestionsContent() {
     }
   };
 
+  const handleDownloadTemplate = async () => {
+    try {
+      const blob = await exportQuestionTemplateApi();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "template-soal-pramuka.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast("error", "Gagal mengunduh template.");
+    }
+  };
+
   // ============================================================
   // Render
   // ============================================================
@@ -449,15 +466,14 @@ function QuestionsContent() {
             <span className="hidden xl:inline">PDF</span>
           </button>
 
-          <a
-            href="/template-soal-pramuka.xlsx"
-            download
+          <button
+            onClick={handleDownloadTemplate}
             className="flex items-center gap-2 px-4 py-2.5 bg-blue-50 text-blue-700 border border-blue-200 text-sm font-bold rounded-2xl hover:bg-blue-100 transition-all"
             title="Download Template Excel"
           >
             <Download size={16} />
             <span className="hidden sm:inline">Template</span>
-          </a>
+          </button>
 
           <button
             onClick={() => setImportModal(true)}

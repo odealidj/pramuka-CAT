@@ -27,4 +27,5 @@ type QuestionService interface {
 	DeleteQuestion(ctx context.Context, id uuid.UUID) error
 	PreviewImportExcel(ctx context.Context, file []byte) (*domain.ImportQuestionsPreviewResponse, error)
 	ConfirmImportExcel(ctx context.Context, req domain.ConfirmImportRequest) (int, error)
+	DownloadTemplateExcel(ctx context.Context) ([]byte, error)
 }

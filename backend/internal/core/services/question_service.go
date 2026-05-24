@@ -292,3 +292,47 @@ func (s *questionService) ConfirmImportExcel(ctx context.Context, req domain.Con
 
 	return len(questionsToInsert), nil
 }
+
+func (s *questionService) DownloadTemplateExcel(ctx context.Context) ([]byte, error) {
+	f := excelize.NewFile()
+	
+	// Sheet 1: Soal
+	sheetSoal := "Soal"
+	f.SetSheetName("Sheet1", sheetSoal)
+	headersSoal := []string{"Kategori ID", "Teks Soal", "Opsi A", "Opsi B", "Opsi C", "Opsi D", "Kunci Jawaban", "Bobot Nilai"}
+	for i, header := range headersSoal {
+		col := string(rune('A'+i)) + "1"
+		f.SetCellValue(sheetSoal, col, header)
+	}
+
+	// Sheet 2: Kategori Soal
+	sheetKategori := "Kategori Soal"
+	_, err := f.NewSheet(sheetKategori)
+	if err != nil {
+		return nil, fmt.Errorf("gagal membuat sheet Kategori Soal: %w", err)
+	}
+
+	headersKategori := []string{"Kategori ID", "Nama Kategori"}
+	for i, header := range headersKategori {
+		col := string(rune('A'+i)) + "1"
+		f.SetCellValue(sheetKategori, col, header)
+	}
+
+	categories, _, err := s.categoryRepo.ListCategories(ctx, 1, 1000000, "")
+	if err != nil {
+		return nil, fmt.Errorf("gagal mengambil data kategori: %w", err)
+	}
+
+	for i, cat := range categories {
+		row := i + 2
+		f.SetCellValue(sheetKategori, fmt.Sprintf("A%d", row), cat.ID)
+		f.SetCellValue(sheetKategori, fmt.Sprintf("B%d", row), cat.Name)
+	}
+
+	var buf bytes.Buffer
+	if err := f.Write(&buf); err != nil {
+		return nil, fmt.Errorf("gagal menulis file excel: %w", err)
+	}
+
+	return buf.Bytes(), nil
+}
