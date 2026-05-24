@@ -220,38 +220,35 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
                       <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
                         <tr>
                           <th className="px-4 py-3 text-left font-semibold text-gray-600">Baris</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-600">Status</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-600">Soal</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-600">Opsi</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-600 whitespace-nowrap">Kategori ID</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-600">Teks Soal</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-600">Opsi A</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-600">Opsi B</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-600">Opsi C</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-600">Opsi D</th>
                           <th className="px-4 py-3 text-left font-semibold text-gray-600">Kunci</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-600">Bobot</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100">
                         {paginatedData.map((row) => (
-                          <tr key={row.row} className={row.is_valid ? "hover:bg-gray-50" : "bg-red-50/50 hover:bg-red-50"}>
-                            <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{row.row}</td>
-                            <td className="px-4 py-3">
-                              {row.is_valid ? (
-                                <span className="inline-flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 text-xs font-semibold whitespace-nowrap">
-                                  <CheckCircle2 size={12} /> Valid
-                                </span>
-                              ) : (
-                                <div className="flex flex-col gap-1">
-                                  <span className="inline-flex w-fit items-center gap-1 text-red-600 bg-red-50 px-2 py-1 rounded border border-red-100 text-xs font-semibold whitespace-nowrap">
-                                    <AlertCircle size={12} /> Error
-                                  </span>
-                                  <span className="text-xs text-red-600">{row.error}</span>
-                                </div>
-                              )}
-                            </td>
+                          <tr key={row.row} className={row.is_valid ? "hover:bg-gray-50 border-l-4 border-l-emerald-500" : "bg-red-50/50 hover:bg-red-50 border-l-4 border-l-red-500"}>
+                            <td className="px-4 py-3 text-gray-500 whitespace-nowrap font-medium">{row.row}</td>
+                            <td className="px-4 py-3 text-gray-900">{row.category_id || "-"}</td>
                             <td className="px-4 py-3 min-w-[200px]">
                               <p className="line-clamp-2 text-gray-900">{row.question_text || "-"}</p>
+                              {!row.is_valid && row.error && (
+                                <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                                  <AlertCircle size={12} /> {row.error}
+                                </p>
+                              )}
                             </td>
-                            <td className="px-4 py-3 text-gray-600 text-xs min-w-[150px]">
-                              A: {row.option_a}<br/>
-                              B: {row.option_b}
-                            </td>
+                            <td className="px-4 py-3 text-gray-600 text-xs min-w-[120px]"><p className="line-clamp-2">{row.option_a || "-"}</p></td>
+                            <td className="px-4 py-3 text-gray-600 text-xs min-w-[120px]"><p className="line-clamp-2">{row.option_b || "-"}</p></td>
+                            <td className="px-4 py-3 text-gray-600 text-xs min-w-[120px]"><p className="line-clamp-2">{row.option_c || "-"}</p></td>
+                            <td className="px-4 py-3 text-gray-600 text-xs min-w-[120px]"><p className="line-clamp-2">{row.option_d || "-"}</p></td>
                             <td className="px-4 py-3 font-semibold text-gray-900">{row.correct_answer || "-"}</td>
+                            <td className="px-4 py-3 text-gray-900">{row.weight || "-"}</td>
                           </tr>
                         ))}
                       </tbody>
