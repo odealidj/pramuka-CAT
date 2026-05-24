@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jung-kurt/gofpdf"
@@ -291,15 +292,66 @@ func (h *QuestionHandler) ExportQuestionsExcel(c echo.Context) error {
 	sheetName := "Bank Soal"
 	f.SetSheetName("Sheet1", sheetName)
 
+	f.SetCellValue(sheetName, "A1", "PramukaCAT - Daftar Bank Soal")
+	f.MergeCell(sheetName, "A1", "H1")
+	titleStyle, _ := f.NewStyle(&excelize.Style{
+		Font:      &excelize.Font{Bold: true, Size: 14, Color: "5C3410"},
+		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
+	})
+	f.SetCellStyle(sheetName, "A1", "H1", titleStyle)
+	f.SetRowHeight(sheetName, 1, 22)
+
+	f.MergeCell(sheetName, "A2", "H2")
+	f.SetCellValue(sheetName, "A2", fmt.Sprintf("Dicetak pada: %s", time.Now().In(time.Local).Format("02 January 2006 15:04")))
+	dateStyle, _ := f.NewStyle(&excelize.Style{
+		Font:      &excelize.Font{Size: 10, Italic: true, Color: "7A4520"},
+		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
+	})
+	f.SetCellStyle(sheetName, "A2", "H2", dateStyle)
+	f.SetRowHeight(sheetName, 2, 16)
+
+	headerStyle, _ := f.NewStyle(&excelize.Style{
+		Font: &excelize.Font{Bold: true, Color: "FFFFFF"},
+		Fill: excelize.Fill{Type: "pattern", Color: []string{"9C5A22"}, Pattern: 1},
+		Border: []excelize.Border{
+			{Type: "left", Color: "000000", Style: 1},
+			{Type: "right", Color: "000000", Style: 1},
+			{Type: "top", Color: "000000", Style: 1},
+			{Type: "bottom", Color: "000000", Style: 1},
+		},
+		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
+	})
+
+	dataStyle, _ := f.NewStyle(&excelize.Style{
+		Border: []excelize.Border{
+			{Type: "left", Color: "000000", Style: 1},
+			{Type: "right", Color: "000000", Style: 1},
+			{Type: "top", Color: "000000", Style: 1},
+			{Type: "bottom", Color: "000000", Style: 1},
+		},
+	})
+
 	headers := []string{"Kategori ID", "Teks Soal", "Opsi A", "Opsi B", "Opsi C", "Opsi D", "Kunci Jawaban", "Bobot Nilai"}
 	for i, header := range headers {
-		col := string(rune('A'+i)) + "1"
+		col := string(rune('A'+i)) + "3"
 		f.SetCellValue(sheetName, col, header)
 	}
+	f.SetCellStyle(sheetName, "A3", "H3", headerStyle)
+
+	// Set Lebar Kolom agar lebih rapi
+	f.SetColWidth(sheetName, "A", "A", 15)
+	f.SetColWidth(sheetName, "B", "B", 40)
+	f.SetColWidth(sheetName, "C", "F", 25)
+	f.SetColWidth(sheetName, "G", "G", 15)
+	f.SetColWidth(sheetName, "H", "H", 15)
 
 	for i, q := range questions {
-		row := i + 2
-		f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), q.CategoryID)
+		row := i + 4
+		catID := ""
+		if q.CategoryID != nil {
+			catID = fmt.Sprintf("%d", *q.CategoryID)
+		}
+		f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), catID)
 		f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), q.QuestionText)
 		f.SetCellValue(sheetName, fmt.Sprintf("C%d", row), q.OptionA)
 		f.SetCellValue(sheetName, fmt.Sprintf("D%d", row), q.OptionB)
@@ -307,10 +359,11 @@ func (h *QuestionHandler) ExportQuestionsExcel(c echo.Context) error {
 		f.SetCellValue(sheetName, fmt.Sprintf("F%d", row), q.OptionD)
 		f.SetCellValue(sheetName, fmt.Sprintf("G%d", row), q.CorrectAnswer)
 		f.SetCellValue(sheetName, fmt.Sprintf("H%d", row), q.Weight)
+		f.SetCellStyle(sheetName, fmt.Sprintf("A%d", row), fmt.Sprintf("H%d", row), dataStyle)
 	}
 
 	c.Response().Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-	c.Response().Header().Set("Content-Disposition", "attachment; filename=Bank_Soal.xlsx")
+	c.Response().Header().Set("Content-Disposition", "attachment; filename=\"PramukaCAT - Bank Soal.xlsx\"")
 
 	return f.Write(c.Response().Writer)
 }
@@ -333,20 +386,50 @@ func (h *QuestionHandler) ExportQuestionsPDF(c echo.Context) error {
 	}
 
 	pdf := gofpdf.New("P", "mm", "A4", "")
-	pdf.AddPage()
-	pdf.SetFont("Arial", "B", 16)
-	pdf.CellFormat(190, 10, "Daftar Bank Soal", "", 0, "C", false, 0, "")
-	pdf.Ln(15)
 
+	// Set Footer untuk menampilkan nomor halaman
+	pdf.SetFooterFunc(func() {
+		pdf.SetY(-15)
+		pdf.SetFont("Arial", "I", 9)
+		pdf.SetTextColor(128, 128, 128)
+		pdf.CellFormat(0, 10, fmt.Sprintf("Halaman %d", pdf.PageNo()), "", 0, "C", false, 0, "")
+	})
+
+	pdf.AddPage()
+
+	// Title
+	pdf.SetFont("Arial", "B", 16)
+	pdf.SetTextColor(92, 52, 16) // #5C3410
+	pdf.CellFormat(190, 10, "PramukaCAT - Daftar Bank Soal", "", 1, "C", false, 0, "")
+
+	// SubTitle
+	pdf.SetFont("Arial", "I", 11)
+	pdf.SetTextColor(122, 69, 32) // #7A4520
+	pdf.CellFormat(190, 7, fmt.Sprintf("Dicetak pada: %s", time.Now().In(time.Local).Format("02 January 2006 15:04")), "", 1, "C", false, 0, "")
+	pdf.Ln(8)
+
+	// Header Style
 	pdf.SetFont("Arial", "B", 10)
-	pdf.CellFormat(10, 10, "No", "1", 0, "C", false, 0, "")
-	pdf.CellFormat(20, 10, "Kat ID", "1", 0, "C", false, 0, "")
-	pdf.CellFormat(140, 10, "Teks Soal", "1", 0, "L", false, 0, "")
-	pdf.CellFormat(20, 10, "Kunci", "1", 0, "C", false, 0, "")
+	pdf.SetFillColor(156, 90, 34) // Dark Brown
+	pdf.SetTextColor(255, 255, 255)
+	pdf.CellFormat(10, 10, "No", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(20, 10, "Kat ID", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(140, 10, "Teks Soal", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(20, 10, "Kunci", "1", 0, "C", true, 0, "")
 	pdf.Ln(-1)
 
+	// Reset text color for data
+	pdf.SetTextColor(0, 0, 0)
 	pdf.SetFont("Arial", "", 10)
+
 	for i, q := range questions {
+		// Alternating row color
+		if i%2 == 0 {
+			pdf.SetFillColor(255, 255, 255) // White
+		} else {
+			pdf.SetFillColor(249, 244, 240) // Light Brown
+		}
+
 		// Calculate height for text wrapping
 		lines := pdf.SplitText(q.QuestionText, 140)
 		h := float64(len(lines)) * 6
@@ -361,21 +444,25 @@ func (h *QuestionHandler) ExportQuestionsPDF(c echo.Context) error {
 		
 		x, y := pdf.GetXY()
 		
-		pdf.Rect(x, y, 10, h, "D")
+		pdf.Rect(x, y, 10, h, "DF")
 		pdf.SetXY(x, y+(h-6)/2)
 		pdf.CellFormat(10, 6, fmt.Sprintf("%d", i+1), "", 0, "C", false, 0, "")
 		
 		pdf.SetXY(x+10, y)
-		pdf.Rect(x+10, y, 20, h, "D")
+		pdf.Rect(x+10, y, 20, h, "DF")
 		pdf.SetXY(x+10, y+(h-6)/2)
-		pdf.CellFormat(20, 6, fmt.Sprintf("%d", q.CategoryID), "", 0, "C", false, 0, "")
+		catID := ""
+		if q.CategoryID != nil {
+			catID = fmt.Sprintf("%d", *q.CategoryID)
+		}
+		pdf.CellFormat(20, 6, catID, "", 0, "C", false, 0, "")
 		
 		pdf.SetXY(x+30, y)
-		pdf.Rect(x+30, y, 140, h, "D")
+		pdf.Rect(x+30, y, 140, h, "DF")
 		pdf.MultiCell(140, 6, q.QuestionText, "", "L", false)
 		
 		pdf.SetXY(x+170, y)
-		pdf.Rect(x+170, y, 20, h, "D")
+		pdf.Rect(x+170, y, 20, h, "DF")
 		pdf.SetXY(x+170, y+(h-6)/2)
 		pdf.CellFormat(20, 6, q.CorrectAnswer, "", 0, "C", false, 0, "")
 		

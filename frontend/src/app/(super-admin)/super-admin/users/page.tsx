@@ -238,11 +238,11 @@ function UsersContent() {
       {/* ── Page Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-gray-900 text-xl font-bold flex items-center gap-2">
-            <Users size={22} className="text-amber-700" />
+          <h1 className="text-[#5C3010] text-xl font-bold flex items-center gap-2">
+            <Users size={22} className="text-[#9C5A22]" />
             Manajemen Admin
           </h1>
-          <p className="text-gray-500 text-sm mt-0.5">
+          <p className="text-[#7A4520] font-medium text-sm mt-0.5">
             Kelola akun admin (panitia ujian)
           </p>
         </div>
@@ -261,42 +261,42 @@ function UsersContent() {
 
       {/* ── Stats Cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <p className="text-gray-500 text-xs font-medium">Total Admin</p>
-          <p className="text-gray-900 text-2xl font-bold mt-1">
+        <div className="bg-white rounded-2xl p-4 border border-[#E8DCC8] shadow-sm">
+          <p className="text-[#9C5A22] font-bold tracking-wider uppercase text-xs">Total Admin</p>
+          <p className="text-[#5C3010] text-3xl font-black mt-1">
             {meta?.total_records ?? '—'}
           </p>
         </div>
         <div
-          className="text-left rounded-2xl p-4 border shadow-sm transition-all bg-amber-50 border-amber-300 ring-2 ring-amber-200"
+          className="text-left rounded-2xl p-4 border shadow-sm transition-all bg-[#FAF7F2] border-[#E8DCC8]"
         >
           <div className="flex items-center gap-2 mb-1">
-            <UserCheck size={14} className="text-amber-600" />
-            <p className="text-gray-500 text-xs font-medium">Admin Aktif</p>
+            <UserCheck size={14} className="text-[#9C5A22]" />
+            <p className="text-[#9C5A22] font-bold tracking-wider uppercase text-xs">Admin Aktif</p>
           </div>
-          <p className="text-gray-900 text-2xl font-bold">{adminCount}</p>
+          <p className="text-[#5C3010] text-3xl font-black">{adminCount}</p>
         </div>
       </div>
 
       {/* ── Table Card ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-[#E8DCC8] shadow-sm overflow-hidden">
 
         {/* Toolbar */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 border-b border-gray-100">
-          <div className="flex-1 flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100 focus-within:ring-2 focus-within:ring-amber-500/30 focus-within:border-amber-300 focus-within:bg-white transition-all relative">
-            <Search size={14} className="text-gray-400 flex-shrink-0" />
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 px-5 py-5 border-b border-[#E8DCC8] bg-white">
+          <div className="flex-1 flex items-center gap-2 bg-[#FAF7F2] rounded-xl px-3 py-2.5 border border-[#E8DCC8] focus-within:ring-2 focus-within:ring-[#D4924A]/30 focus-within:border-[#D4924A] transition-all relative shadow-sm">
+            <Search size={16} className="text-[#9C5A22] flex-shrink-0" />
             <input
               type="text"
               placeholder="Cari nama atau username..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none pr-6"
+              className="flex-1 bg-transparent text-sm text-[#5C3010] font-medium placeholder:text-gray-400 outline-none pr-6"
               id="search-users"
             />
             {searchInput && (
               <button
                 onClick={() => setSearchInput('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
                 title="Hapus filter"
               >
                 <XCircle size={14} />
@@ -309,10 +309,10 @@ function UsersContent() {
           <button
             onClick={fetchUsers}
             disabled={isLoading}
-            className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8DCC8] bg-white text-[#9C5A22] hover:bg-[#FAF7F2] hover:text-[#5C3010] text-sm font-bold shadow-sm transition-all disabled:opacity-50"
             title="Refresh"
           >
-            <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
+            <RefreshCw size={15} className={isLoading ? 'animate-spin' : ''} />
             <span className="hidden sm:inline">Refresh</span>
           </button>
         </div>
@@ -321,28 +321,28 @@ function UsersContent() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50/70 border-b border-gray-100">
-                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-10">
+              <tr className="table-header-premium">
+                <th className="table-header-cell-premium w-10">
                   No
                 </th>
-                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="table-header-cell-premium">
                   Admin
                 </th>
-                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">
+                <th className="table-header-cell-premium hidden md:table-cell">
                   Username
                 </th>
-                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="table-header-cell-premium">
                   Role
                 </th>
-                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">
+                <th className="table-header-cell-premium hidden lg:table-cell">
                   Terdaftar
                 </th>
-                <th className="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="table-header-cell-premium text-right">
                   Aksi
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-[#E8DCC8]">
               {isLoading ? (
                 <tr>
                   <td colSpan={6} className="py-16 text-center">
@@ -375,10 +375,10 @@ function UsersContent() {
                       className={`hover:bg-gray-50/60 transition-colors ${isDeleted ? 'opacity-50' : ''}`}
                     >
                       {/* No */}
-                      <td className="px-5 py-3.5 text-gray-400 text-xs">{rowNo}</td>
+                      <td className="table-cell-premium text-gray-500 text-xs font-bold">{rowNo}</td>
 
                       {/* Pengguna */}
-                      <td className="px-5 py-3.5">
+                      <td className="table-cell-premium">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-700 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-sm overflow-hidden">
                             {user.photo_url ? (
@@ -400,24 +400,24 @@ function UsersContent() {
                       </td>
 
                       {/* Username */}
-                      <td className="px-5 py-3.5 hidden md:table-cell">
+                      <td className="table-cell-premium hidden md:table-cell">
                         <span className="font-mono text-gray-600 text-xs bg-gray-100 px-2 py-1 rounded-lg">
                           {user.username}
                         </span>
                       </td>
 
                       {/* Role */}
-                      <td className="px-5 py-3.5">
+                      <td className="table-cell-premium">
                         <Badge variant={user.role} />
                       </td>
 
                       {/* Terdaftar */}
-                      <td className="px-5 py-3.5 text-gray-400 text-xs hidden lg:table-cell">
+                      <td className="table-cell-premium hidden lg:table-cell text-gray-500 font-medium text-xs">
                         {formatDate(user.created_at)}
                       </td>
 
                       {/* Aksi */}
-                      <td className="px-5 py-3.5">
+                      <td className="table-cell-premium">
                         <div className="flex items-center justify-end gap-1">
                           {/* Edit */}
                           <button
@@ -426,11 +426,11 @@ function UsersContent() {
                               setFormModal({ open: true, mode: 'edit', user });
                             }}
                             disabled={isDeleted}
-                            className="p-2 rounded-lg text-gray-400 hover:text-amber-700 hover:bg-amber-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                            title="Edit pengguna"
-                            aria-label="Edit pengguna"
+                            className="p-2 rounded-xl text-gray-400 hover:text-[#7C4318] hover:bg-[#FAF7F2] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                            title="Edit admin"
+                            aria-label="Edit admin"
                           >
-                            <Edit2 size={15} />
+                            <Edit2 size={16} />
                           </button>
 
                           {/* Ganti Password */}
@@ -440,11 +440,11 @@ function UsersContent() {
                               setPasswordModal({ open: true, user });
                             }}
                             disabled={isDeleted}
-                            className="p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                            className="p-2 rounded-xl text-gray-400 hover:text-[#7C4318] hover:bg-[#FAF7F2] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                             title="Ganti password"
                             aria-label="Ganti password"
                           >
-                            <KeyRound size={15} />
+                            <KeyRound size={16} />
                           </button>
 
                           {/* Hapus */}
@@ -453,11 +453,11 @@ function UsersContent() {
                               setDeleteDialog({ open: true, user, isLoading: false })
                             }
                             disabled={isDeleted}
-                            className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                            title="Hapus pengguna"
-                            aria-label="Hapus pengguna"
+                            className="p-2 rounded-xl text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                            title="Hapus admin"
+                            aria-label="Hapus admin"
                           >
-                            <Trash2 size={15} />
+                            <Trash2 size={16} />
                           </button>
                         </div>
                       </td>
@@ -471,8 +471,8 @@ function UsersContent() {
 
         {/* Pagination Footer */}
         {meta && meta.total_pages > 1 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-t border-gray-100">
-            <p className="text-gray-400 text-xs">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-t border-[#E8DCC8] bg-[#FAF7F2]/30">
+            <p className="text-[#7A4520] font-medium text-xs">
               Menampilkan {((page - 1) * 10) + 1}–
               {Math.min(page * 10, meta.total_records)} dari{' '}
               {meta.total_records} admin

@@ -33,6 +33,7 @@ func (h *EventHandler) RegisterAdminRoutes(adminGroup *echo.Group) {
 	eventsGroup.POST("/:id/questions", h.AddEventQuestion)
 	eventsGroup.POST("/:id/random-questions", h.AddRandomEventQuestions)
 	eventsGroup.GET("/:id/questions", h.ListEventQuestions)
+	eventsGroup.GET("/:id/questions/export", h.ExportEventQuestions)
 	eventsGroup.DELETE("/:id/questions/:question_id", h.RemoveEventQuestion)
 
 	// Event Participants (Persetujuan Peserta)
@@ -354,6 +355,11 @@ func (h *EventHandler) ExportParticipants(c echo.Context) error {
 		return response.Error(c, http.StatusBadRequest, "ID event tidak valid", nil)
 	}
 
+	e, err := h.service.GetEventById(c.Request().Context(), eventID)
+	if err != nil {
+		return response.Error(c, http.StatusNotFound, "Event tidak ditemukan", nil)
+	}
+
 	format := c.QueryParam("format")
 	if format == "" {
 		format = "excel" // default ke Excel
@@ -365,7 +371,7 @@ func (h *EventHandler) ExportParticipants(c echo.Context) error {
 		if err != nil {
 			return response.Error(c, http.StatusInternalServerError, "Gagal mengekspor Excel", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 		}
-		filename := fmt.Sprintf("laporan_event_%s.xlsx", eventID.String())
+		filename := fmt.Sprintf("PramukaCAT - Laporan %s.xlsx", e.Name)
 		c.Response().Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
 		return c.Blob(http.StatusOK, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", data)
 
@@ -374,7 +380,61 @@ func (h *EventHandler) ExportParticipants(c echo.Context) error {
 		if err != nil {
 			return response.Error(c, http.StatusInternalServerError, "Gagal mengekspor PDF", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 		}
-		filename := fmt.Sprintf("laporan_event_%s.pdf", eventID.String())
+		filename := fmt.Sprintf("PramukaCAT - Laporan %s.pdf", e.Name)
+		c.Response().Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+		return c.Blob(http.StatusOK, "application/pdf", data)
+
+	default:
+		return response.Error(c, http.StatusBadRequest, "Format tidak valid. Gunakan ?format=excel atau ?format=pdf", nil)
+	}
+}
+
+// ExportEventQuestions godoc
+// @Summary     Export Soal Event
+// @Description Download daftar soal event dalam format Excel (.xlsx) atau PDF
+// @Tags        Admin - Event
+// @Security    BearerAuth
+// @Produce     application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+// @Param       id      path      string  true   "UUID Event"
+// @Param       format  query     string  false  "Format file: excel (default) atau pdf"
+// @Param       show_key query    bool    false  "Sertakan kunci jawaban: true atau false"
+// @Success     200     {file}    binary
+// @Failure     400     {object}  response.ErrorResponse
+// @Router      /admin/events/{id}/questions/export [get]
+func (h *EventHandler) ExportEventQuestions(c echo.Context) error {
+	eventID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		return response.Error(c, http.StatusBadRequest, "ID event tidak valid", nil)
+	}
+
+	e, err := h.service.GetEventById(c.Request().Context(), eventID)
+	if err != nil {
+		return response.Error(c, http.StatusNotFound, "Event tidak ditemukan", nil)
+	}
+
+	format := c.QueryParam("format")
+	if format == "" {
+		format = "excel" // default ke Excel
+	}
+	
+	showKey := c.QueryParam("show_key") == "true"
+
+	switch format {
+	case "excel":
+		data, err := h.service.ExportEventQuestionsExcel(c.Request().Context(), eventID, showKey)
+		if err != nil {
+			return response.Error(c, http.StatusInternalServerError, "Gagal mengekspor Excel", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
+		}
+		filename := fmt.Sprintf("PramukaCAT - Soal Ujian %s.xlsx", e.Name)
+		c.Response().Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+		return c.Blob(http.StatusOK, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", data)
+
+	case "pdf":
+		data, err := h.service.ExportEventQuestionsPDF(c.Request().Context(), eventID, showKey)
+		if err != nil {
+			return response.Error(c, http.StatusInternalServerError, "Gagal mengekspor PDF", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
+		}
+		filename := fmt.Sprintf("PramukaCAT - Soal Ujian %s.pdf", e.Name)
 		c.Response().Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
 		return c.Blob(http.StatusOK, "application/pdf", data)
 

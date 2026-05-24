@@ -1,12 +1,14 @@
 package services
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"math/rand"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jung-kurt/gofpdf"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/domain"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/ports"
 	"github.com/odealidj/pramuka-CAT/backend/internal/worker"
@@ -157,4 +159,132 @@ func (s *examService) ReviewParticipantAnswersByEvent(ctx context.Context, userI
 		return nil, fmt.Errorf("ujian belum diselesaikan")
 	}
 	return s.repo.GetUserAnswersDetail(ctx, approval.ApprovalID)
+}
+
+func (s *examService) ExportReviewAnswersPDF(ctx context.Context, approvalID uuid.UUID, participantName, eventName string, score float64, passingGrade float64, isPassed bool) ([]byte, error) {
+	answers, err := s.repo.GetUserAnswersDetail(ctx, approvalID)
+	if err != nil {
+		return nil, fmt.Errorf("gagal mengambil data jawaban: %w", err)
+	}
+
+	return generateReviewAnswersPDF(answers, participantName, eventName, score, passingGrade, isPassed)
+}
+
+func (s *examService) ExportReviewAnswersByEventPDF(ctx context.Context, userID uuid.UUID, eventID uuid.UUID, participantName, eventName string, score float64, passingGrade float64, isPassed bool) ([]byte, error) {
+	approval, err := s.repo.GetApprovalStatus(ctx, userID, eventID)
+	if err != nil {
+		return nil, fmt.Errorf("peserta belum terdaftar pada ujian ini")
+	}
+	if !approval.IsCompleted {
+		return nil, fmt.Errorf("ujian belum diselesaikan")
+	}
+
+	event, err := s.repo.GetEventById(ctx, eventID)
+	if err == nil {
+		eventName = event.Name
+		passingGrade = event.PassingGrade
+	}
+
+	answers, err := s.repo.GetUserAnswersDetail(ctx, approval.ApprovalID)
+	if err != nil {
+		return nil, fmt.Errorf("gagal mengambil data jawaban: %w", err)
+	}
+
+	return generateReviewAnswersPDF(answers, participantName, eventName, approval.Score, passingGrade, approval.IsPassed)
+}
+
+func generateReviewAnswersPDF(answers []domain.UserAnswerDetail, participantName, eventName string, score float64, passingGrade float64, isPassed bool) ([]byte, error) {
+	pdf := gofpdf.New("P", "mm", "A4", "")
+
+	// Set Footer untuk menampilkan nomor halaman
+	pdf.SetFooterFunc(func() {
+		pdf.SetY(-15)
+		pdf.SetFont("Arial", "I", 9)
+		pdf.SetTextColor(128, 128, 128)
+		pdf.CellFormat(0, 10, fmt.Sprintf("Halaman %d", pdf.PageNo()), "", 0, "C", false, 0, "")
+	})
+
+	pdf.SetMargins(10, 15, 10)
+	pdf.AddPage()
+
+	// Title
+	pdf.SetFont("Arial", "B", 16)
+	pdf.SetTextColor(92, 52, 16) // #5C3410
+	pdf.CellFormat(0, 10, "PramukaCAT - Review Jawaban", "", 1, "C", false, 0, "")
+
+	// SubTitle
+	pdf.SetFont("Arial", "I", 11)
+	pdf.SetTextColor(122, 69, 32) // #7A4520
+	pdf.CellFormat(0, 7, fmt.Sprintf("Event: %s | Peserta: %s", eventName, participantName), "", 1, "C", false, 0, "")
+
+	statusStr := "Tidak Lulus"
+	if isPassed {
+		statusStr = "Lulus"
+	}
+	pdf.CellFormat(0, 7, fmt.Sprintf("Skor: %.1f | Passing Grade: %.0f | Status: %s | Dicetak: %s", score, passingGrade, statusStr, time.Now().In(time.Local).Format("02 January 2006 15:04")), "", 1, "C", false, 0, "")
+	pdf.Ln(8)
+
+	pdf.SetAutoPageBreak(true, 15)
+
+	// List Soal
+	for i, a := range answers {
+		pdf.SetTextColor(0, 0, 0)
+		pdf.SetFont("Arial", "B", 11)
+
+		// Header Soal (No, Bobot)
+		headerText := fmt.Sprintf("Soal No. %d  (Bobot: %d)", i+1, a.Weight)
+		pdf.CellFormat(0, 8, headerText, "", 1, "L", false, 0, "")
+
+		// Teks Soal
+		pdf.SetFont("Arial", "", 10)
+		pdf.MultiCell(0, 6, a.QuestionText, "", "L", false)
+		pdf.Ln(2)
+
+		// Opsi Jawaban
+		opts := []struct {
+			Key  string
+			Text string
+		}{
+			{"A", a.OptionA},
+			{"B", a.OptionB},
+			{"C", a.OptionC},
+			{"D", a.OptionD},
+		}
+
+		for _, opt := range opts {
+			pdf.SetFont("Arial", "", 10)
+			pdf.SetTextColor(100, 100, 100) // Default warna abu-abu untuk opsi yang tidak dipilih
+
+			marker := ""
+			if opt.Key == a.CorrectAnswer && opt.Key == a.SelectedAnswer {
+				marker = "  [JAWABAN ANDA BENAR]"
+				pdf.SetTextColor(16, 185, 129) // Emerald / Hijau
+				pdf.SetFont("Arial", "B", 10)
+			} else if opt.Key == a.CorrectAnswer {
+				marker = "  [KUNCI JAWABAN]"
+				pdf.SetTextColor(16, 185, 129) // Emerald / Hijau
+				pdf.SetFont("Arial", "B", 10)
+			} else if opt.Key == a.SelectedAnswer {
+				marker = "  [JAWABAN ANDA - SALAH]"
+				pdf.SetTextColor(239, 68, 68) // Merah
+				pdf.SetFont("Arial", "B", 10)
+			}
+
+			text := fmt.Sprintf("%s. %s%s", opt.Key, opt.Text, marker)
+			pdf.MultiCell(0, 6, text, "", "L", false)
+		}
+
+		// Garis pembatas antar soal
+		pdf.Ln(4)
+		pdf.SetDrawColor(220, 220, 220)
+		pdf.Line(10, pdf.GetY(), 200, pdf.GetY())
+		pdf.Ln(4)
+	}
+
+	var buf bytes.Buffer
+	if err := pdf.Output(&buf); err != nil {
+		return nil, fmt.Errorf("gagal membuat PDF: %w", err)
+	}
+
+	return buf.Bytes(), nil
 }

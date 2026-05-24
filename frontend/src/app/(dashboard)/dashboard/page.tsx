@@ -16,50 +16,7 @@ import {
 } from "lucide-react";
 import { getPhotoUrl } from "@/lib/constants";
 
-// --- Stat Card ---
-interface StatCardProps {
-  title: string;
-  value: string;
-  change: string;
-  changeType: "up" | "down" | "neutral";
-  icon: React.ReactNode;
-  color: string;
-}
-
-function StatCard({
-  title,
-  value,
-  change,
-  changeType,
-  icon,
-  color,
-}: StatCardProps) {
-  return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 card-lift">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-gray-500 text-sm font-medium">{title}</p>
-          <p className="text-gray-900 text-2xl font-bold mt-1">{value}</p>
-          <div className="flex items-center gap-1 mt-2">
-            <span
-              className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                changeType === "up"
-                  ? "bg-emerald-50 text-emerald-600"
-                  : changeType === "down"
-                    ? "bg-red-50 text-red-500"
-                    : "bg-gray-100 text-gray-500"
-              }`}
-            >
-              {change}
-            </span>
-            <span className="text-gray-400 text-xs">dari bulan lalu</span>
-          </div>
-        </div>
-        <div className={`p-3 rounded-2xl ${color} flex-shrink-0`}>{icon}</div>
-      </div>
-    </div>
-  );
-}
+import StatCard from "@/components/ui/StatCard";
 
 // --- Recent Activity Item ---
 function ActivityItem({
@@ -78,34 +35,34 @@ function ActivityItem({
   const statusConfig = {
     approved: {
       label: "Disetujui",
-      cls: "bg-emerald-50 text-emerald-600 border-emerald-100",
+      cls: "bg-[#FAF7F2] text-[#7A4520] border-[#E8DCC8]",
     },
     pending: {
       label: "Menunggu",
-      cls: "bg-amber-50 text-amber-600 border-amber-100",
+      cls: "bg-amber-50 text-amber-700 border-amber-200",
     },
     completed: {
       label: "Selesai",
-      cls: "bg-blue-50 text-blue-600 border-blue-100",
+      cls: "bg-blue-50 text-blue-700 border-blue-200",
     },
     expired: {
       label: "Waktu Habis",
-      cls: "bg-gray-50 text-gray-500 border-gray-200",
+      cls: "bg-gray-50 text-gray-600 border-gray-200",
     },
     revoked: {
       label: "Dibatalkan",
-      cls: "bg-red-50 text-red-600 border-red-100",
+      cls: "bg-red-50 text-red-700 border-red-200",
     },
   };
   const s = statusConfig[status];
 
   return (
-    <div className="flex items-center gap-4 py-3 border-b border-gray-50 last:border-0">
-      <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 overflow-hidden shadow-sm">
+    <div className="flex items-center gap-4 py-3 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 rounded-lg px-2 transition-colors">
+      <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 overflow-hidden shadow-sm border border-white/50">
         {photo_url ? (
           <img src={getPhotoUrl(photo_url) || ''} alt={name} className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
+          <div className="w-full h-full bg-gradient-to-br from-[#E8B478] to-[#9C5A22] flex items-center justify-center shadow-inner">
             {name.charAt(0).toUpperCase()}
           </div>
         )}
@@ -213,38 +170,38 @@ function AdminDashboard() {
     );
   }
 
-  const stats: StatCardProps[] = [
+  const stats = [
     {
       title: "Total Peserta",
       value: data?.stats.total_participants.toLocaleString() || "0",
-      change: "Live",
-      changeType: "up",
-      icon: <Users size={20} className="text-violet-600" />,
-      color: "bg-violet-50",
+      change: "LIVE",
+      changeType: "up" as const,
+      changeSuffix: "dari bulan lalu",
+      icon: <Users size={20} className="text-[#7A4520]" />,
     },
     {
       title: "Bank Soal",
       value: data?.stats.total_questions.toLocaleString() || "0",
-      change: "Live",
-      changeType: "up",
-      icon: <BookOpen size={20} className="text-amber-600" />,
-      color: "bg-amber-50",
+      change: "LIVE",
+      changeType: "up" as const,
+      changeSuffix: "dari bulan lalu",
+      icon: <BookOpen size={20} className="text-[#9C5A22]" />,
     },
     {
       title: "Event Aktif",
       value: data?.stats.active_events.toLocaleString() || "0",
-      change: "Live",
-      changeType: "up",
-      icon: <CalendarDays size={20} className="text-blue-600" />,
-      color: "bg-blue-50",
+      change: "LIVE",
+      changeType: "up" as const,
+      changeSuffix: "dari bulan lalu",
+      icon: <CalendarDays size={20} className="text-[#5C3010]" />,
     },
     {
       title: "Ujian Selesai",
       value: data?.stats.completed_exams.toLocaleString() || "0",
-      change: "Live",
-      changeType: "up",
-      icon: <ClipboardCheck size={20} className="text-emerald-600" />,
-      color: "bg-emerald-50",
+      change: "LIVE",
+      changeType: "up" as const,
+      changeSuffix: "dari bulan lalu",
+      icon: <ClipboardCheck size={20} className="text-[#D4924A]" />,
     },
   ];
 
@@ -357,25 +314,25 @@ function AdminDashboard() {
               {
                 label: "Tambah Soal Baru",
                 actionId: "question",
-                color: "bg-amber-50 text-amber-700 hover:bg-amber-100",
+                color: "bg-white border border-[#E8DCC8] shadow-sm hover:shadow-md hover:border-[#D4924A] text-[#5C3010]",
                 icon: "📝",
               },
               {
                 label: "Buat Event Ujian",
                 actionId: "event",
-                color: "bg-blue-50 text-blue-700 hover:bg-blue-100",
+                color: "bg-white border border-[#E8DCC8] shadow-sm hover:shadow-md hover:border-[#D4924A] text-[#5C3010]",
                 icon: "📅",
               },
               {
                 label: "Tambah Peserta",
                 actionId: "user",
-                color: "bg-violet-50 text-violet-700 hover:bg-violet-100",
+                color: "bg-white border border-[#E8DCC8] shadow-sm hover:shadow-md hover:border-[#D4924A] text-[#5C3010]",
                 icon: "👤",
               },
               {
                 label: "Approval Peserta",
                 href: "/dashboard/events",
-                color: "bg-emerald-50 text-emerald-700 hover:bg-emerald-100",
+                color: "bg-white border border-[#E8DCC8] shadow-sm hover:shadow-md hover:border-[#D4924A] text-[#5C3010]",
                 icon: "✅",
               },
             ].map((action) => (
@@ -417,23 +374,23 @@ function PesertaDashboard() {
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
-      <div className="relative bg-gradient-to-r from-[#0F52BA] via-[#1E3A8A] to-[#172554] rounded-2xl p-6 overflow-hidden shadow-lg">
+      <div className="relative bg-gradient-to-r from-[#4A2B18] via-[#7C4318] to-[#9C5A22] rounded-2xl p-6 overflow-hidden shadow-lg shadow-amber-900/10">
         <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
         <div className="absolute bottom-0 right-16 w-24 h-24 bg-white/5 rounded-full translate-y-1/2" />
 
         <div className="relative z-10">
-          <p className="text-blue-200 text-sm font-medium mb-1">
+          <p className="text-amber-200 text-sm font-medium mb-1">
             Selamat datang 👋
           </p>
           <h2 className="text-white text-2xl font-bold mb-1">{user?.full_name || user?.username}</h2>
-          <p className="text-blue-100/70 text-sm max-w-md">
+          <p className="text-amber-100/70 text-sm max-w-md">
             Pilih menu <b>Jadwal Ujian</b> untuk melihat daftar tryout yang tersedia dan status persetujuan ujian Anda.
           </p>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center">
-        <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+      <div className="bg-white rounded-2xl p-8 shadow-sm border border-[#E8DCC8] text-center">
+        <div className="w-16 h-16 bg-[#FAF7F2] border border-[#E8DCC8] text-[#7C4318] rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
           <CalendarDays size={28} />
         </div>
         <h3 className="text-gray-900 font-bold text-lg mb-2">Siap untuk Ujian?</h3>
@@ -442,7 +399,7 @@ function PesertaDashboard() {
         </p>
         <Link 
           href="/dashboard/events"
-          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-medium transition-colors"
+          className="inline-flex items-center gap-2 bg-gradient-to-r from-[#7C4318] to-[#9C5A22] hover:from-[#5C3010] hover:to-[#B45309] text-white px-6 py-2.5 rounded-xl font-medium transition-all shadow-md hover:scale-105"
         >
           Lihat Jadwal Ujian <ArrowUpRight size={18} />
         </Link>

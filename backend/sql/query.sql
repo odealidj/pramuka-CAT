@@ -103,6 +103,7 @@ SELECT EXISTS(
     JOIN categories c ON q.category_id = c.id
     WHERE c.deleted_at IS NULL AND q.deleted_at IS NULL
     AND LOWER(TRIM(q.question_text)) = LOWER(TRIM(sqlc.arg('question_text')::text))
+    AND (sqlc.narg('exclude_id')::uuid IS NULL OR q.id <> sqlc.narg('exclude_id')::uuid)
 );
 
 -- name: GetQuestionById :one
@@ -112,16 +113,16 @@ WHERE id = $1 AND deleted_at IS NULL LIMIT 1;
 -- name: ListQuestions :many
 SELECT q.* FROM questions q
 JOIN categories c ON q.category_id = c.id
-WHERE c.deleted_at IS NULL AND q.deleted_at IS NULL
+WHERE q.deleted_at IS NULL AND c.deleted_at IS NULL
   AND (sqlc.narg('category_id')::int IS NULL OR q.category_id = sqlc.narg('category_id')::int)
   AND (sqlc.arg('search')::text = '' OR to_tsvector('indonesian', q.question_text) @@ plainto_tsquery('indonesian', sqlc.arg('search')::text))
-ORDER BY q.created_at DESC
+ORDER BY q.category_id ASC, q.created_at DESC
 LIMIT $1 OFFSET $2;
 
 -- name: CountQuestions :one
 SELECT COUNT(*) FROM questions q
 JOIN categories c ON q.category_id = c.id
-WHERE c.deleted_at IS NULL AND q.deleted_at IS NULL
+WHERE q.deleted_at IS NULL AND c.deleted_at IS NULL
   AND (sqlc.narg('category_id')::int IS NULL OR q.category_id = sqlc.narg('category_id')::int)
   AND (sqlc.arg('search')::text = '' OR to_tsvector('indonesian', q.question_text) @@ plainto_tsquery('indonesian', sqlc.arg('search')::text));
 
@@ -385,8 +386,9 @@ SELECT COUNT(*) FROM users
 WHERE role = 'peserta' AND deleted_at IS NULL;
 
 -- name: GetTotalQuestionsDashboard :one
-SELECT COUNT(*) FROM questions
-WHERE deleted_at IS NULL;
+SELECT COUNT(*) FROM questions q
+JOIN categories c ON q.category_id = c.id
+WHERE q.deleted_at IS NULL AND c.deleted_at IS NULL;
 
 -- name: GetTotalActiveEventsDashboard :one
 SELECT COUNT(*) FROM events

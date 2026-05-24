@@ -162,7 +162,12 @@ func main() {
 	// Pasang Middleware dasar (Log, Recover dari panic, dan CORS)
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-	e.Use(middleware.CORS())
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins:  []string{"*"},
+		AllowHeaders:  []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
+		AllowMethods:  []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
+		ExposeHeaders: []string{"Content-Disposition"},
+	}))
 
 	// Distributed Tracing middleware — membuat span otomatis untuk setiap HTTP request
 	e.Use(otelecho.Middleware("pramuka-cat-api"))

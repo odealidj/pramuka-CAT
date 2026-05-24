@@ -17,8 +17,12 @@ import {
   CalendarDays,
   Filter,
   ClipboardList,
+  FileSpreadsheet,
+  FileText,
+  Play,
 } from 'lucide-react';
 import Spinner from '@/components/ui/Spinner';
+import StatCard from '@/components/ui/StatCard';
 import Pagination from '@/components/ui/Pagination';
 import { ToastContainer, useToast } from '@/components/ui/Toast';
 import AnswerReviewDrawer from '@/components/results/AnswerReviewDrawer';
@@ -69,19 +73,19 @@ function ParticipantRow({
   const isCompleted = participant.is_completed;
 
   return (
-    <tr className="hover:bg-gray-50/70 transition-colors">
+    <tr className="table-row-premium group">
       {/* Rank */}
-      <td className="px-4 py-3 text-center w-12">
+      <td className="table-cell-premium text-center w-12">
         {isCompleted && globalRank !== null ? (
           <span
-            className={`w-7 h-7 mx-auto rounded-full flex items-center justify-center text-xs font-bold ${
+            className={`w-7 h-7 mx-auto rounded-full flex items-center justify-center text-xs font-bold shadow-sm ${
               globalRank === 1
-                ? 'bg-amber-400 text-white'
+                ? 'bg-gradient-to-br from-[#D4924A] to-[#7C4318] text-white border border-[#9C5A22]'
                 : globalRank === 2
-                ? 'bg-gray-300 text-white'
+                ? 'bg-gradient-to-br from-gray-300 to-gray-500 text-white border border-gray-400'
                 : globalRank === 3
-                ? 'bg-orange-400 text-white'
-                : 'bg-gray-100 text-gray-500'
+                ? 'bg-gradient-to-br from-amber-600 to-orange-700 text-white border border-amber-700'
+                : 'bg-[#FAF7F2] text-[#9C5A22] border border-[#E8DCC8]'
             }`}
           >
             {globalRank}
@@ -92,7 +96,7 @@ function ParticipantRow({
       </td>
 
       {/* Peserta */}
-      <td className="px-4 py-3">
+      <td className="table-cell-premium">
         <div>
           <p className="font-semibold text-gray-800 text-sm">{participant.full_name}</p>
           <p className="text-gray-400 text-xs font-mono">@{participant.username}</p>
@@ -100,14 +104,14 @@ function ParticipantRow({
       </td>
 
       {/* Status */}
-      <td className="px-4 py-3">
+      <td className="table-cell-premium">
         <span
           className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs font-semibold ${
             participant.status.toLowerCase() === 'approved'
-              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm shadow-emerald-100'
               : participant.status.toLowerCase() === 'pending'
-              ? 'bg-amber-50 text-amber-700 border-amber-200'
-              : 'bg-gray-100 text-gray-500 border-gray-200'
+              ? 'bg-[#FAF7F2] text-[#9C5A22] border-[#E8DCC8] shadow-sm shadow-[#E8DCC8]/50'
+              : 'bg-gray-50 text-gray-500 border-gray-200'
           }`}
         >
           {participant.status}
@@ -115,7 +119,7 @@ function ParticipantRow({
       </td>
 
       {/* Skor */}
-      <td className="px-4 py-3 text-center">
+      <td className="table-cell-premium text-center">
         {isCompleted ? (
           <span
             className={`text-base font-bold ${
@@ -132,7 +136,7 @@ function ParticipantRow({
       </td>
 
       {/* Hasil */}
-      <td className="px-4 py-3 text-center hidden sm:table-cell">
+      <td className="table-cell-premium text-center hidden sm:table-cell">
         {isCompleted ? (
           participant.is_passed ? (
             <span className="flex items-center justify-center gap-1 text-emerald-600 text-xs font-semibold">
@@ -149,11 +153,11 @@ function ParticipantRow({
       </td>
 
       {/* Aksi */}
-      <td className="px-4 py-3 text-right">
+      <td className="table-cell-premium text-right">
         {isCompleted && (
           <button
             onClick={onReview}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 text-indigo-600 text-xs font-semibold hover:bg-indigo-100 transition-all ml-auto border border-indigo-200"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF7F2]/50 text-[#9C5A22] text-xs font-bold hover:bg-[#9C5A22] hover:text-white transition-all ml-auto border border-[#E8DCC8] hover:border-[#9C5A22] shadow-sm"
           >
             <Eye size={12} />
             Review
@@ -282,17 +286,17 @@ function EventResultCard({
   ];
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-2xl border border-[#E8DCC8] shadow-sm hover:shadow-md hover:border-[#D4924A] hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
 
       {/* ── Card Header ── */}
       <div
         onClick={toggle}
-        className="w-full flex items-center gap-4 p-5 text-left hover:bg-gray-50/60 transition-all cursor-pointer select-none"
+        className="w-full flex items-center gap-4 p-5 text-left hover:bg-[#FAF7F2]/50 transition-all cursor-pointer select-none group/header"
         role="button"
         tabIndex={0}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggle(); }}
       >
-        <div className="w-1 h-12 rounded-full bg-gradient-to-b from-amber-400 to-amber-700 flex-shrink-0" />
+        <div className="w-1.5 h-12 rounded-full bg-gradient-to-b from-[#E8DCC8] via-[#D4924A] to-[#7C4318] flex-shrink-0" />
 
         <div className="flex-1 min-w-0">
           <h3 className="text-gray-900 font-bold text-sm truncate">{event.name}</h3>
@@ -326,18 +330,18 @@ function EventResultCard({
           <button
             onClick={(e) => handleExport(e, 'excel')}
             disabled={!!exportingFormat}
-            className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-emerald-600 border border-emerald-200 text-xs font-medium hover:bg-emerald-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#FAF7F2]/50 border border-[#E8DCC8] rounded-full text-xs font-bold text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed group"
           >
-            {exportingFormat === 'excel' ? <Spinner size={11} /> : <Download size={11} />} Excel
+            {exportingFormat === 'excel' ? <Spinner size={12} /> : <FileSpreadsheet size={14} className="text-emerald-600 transition-colors" />} Excel
           </button>
           <button
             onClick={(e) => handleExport(e, 'pdf')}
             disabled={!!exportingFormat}
-            className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-red-500 border border-red-200 text-xs font-medium hover:bg-red-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#FAF7F2]/50 border border-[#E8DCC8] rounded-full text-xs font-bold text-gray-700 hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed group"
           >
-            {exportingFormat === 'pdf' ? <Spinner size={11} /> : <Download size={11} />} PDF
+            {exportingFormat === 'pdf' ? <Spinner size={12} /> : <FileText size={14} className="text-red-600 transition-colors" />} PDF
           </button>
-          {isExpanded ? <ChevronUp size={18} className="text-gray-400" /> : <ChevronDown size={18} className="text-gray-400" />}
+          {isExpanded ? <ChevronUp size={18} className="text-[#9C5A22]" /> : <ChevronDown size={18} className="text-gray-400 group-hover/header:text-[#9C5A22] transition-colors" />}
         </div>
       </div>
 
@@ -347,60 +351,59 @@ function EventResultCard({
 
           {/* Summary bar */}
           {summary && summary.completed > 0 && (
-            <div className="px-5 py-3 bg-gray-50/60 border-b border-gray-100 flex flex-wrap gap-4 text-sm">
-              <span className="text-gray-500">
-                Selesai: <strong className="text-gray-800">{summary.completed}</strong> / {summary.total}
+            <div className="px-5 py-3.5 bg-[#FAF7F2]/30 border-b border-[#E8DCC8] flex flex-wrap gap-5 text-sm">
+              <span className="text-[#9C5A22]">
+                Selesai: <strong className="text-[#5C3010] text-base">{summary.completed}</strong> <span className="opacity-60">/ {summary.total}</span>
               </span>
-              <span className="text-gray-500">
+              <span className="text-[#9C5A22]">
                 Kelulusan:{' '}
-                <strong className={summary.passRate >= 70 ? 'text-emerald-600' : 'text-red-500'}>
+                <strong className={`text-base ${summary.passRate >= 70 ? 'text-emerald-600' : 'text-red-500'}`}>
                   {summary.passRate.toFixed(1)}%
                 </strong>
               </span>
-              <span className="text-gray-500">
-                Rata-rata: <strong className="text-amber-700">{summary.avgScore.toFixed(1)}</strong>
+              <span className="text-[#9C5A22]">
+                Rata-rata: <strong className="text-[#D97706] text-base">{summary.avgScore.toFixed(1)}</strong>
               </span>
-              <span className="text-gray-500">
-                Batas Lulus: <strong className="text-gray-800">{event.passing_grade}%</strong>
+              <span className="text-[#9C5A22]">
+                Batas Lulus: <strong className="text-[#5C3010] text-base">{event.passing_grade}%</strong>
               </span>
             </div>
           )}
 
           {/* Filter toolbar */}
-          <div className="flex flex-col sm:flex-row gap-3 px-5 py-3 border-b border-gray-100 bg-white">
+          <div className="flex flex-col sm:flex-row gap-4 px-5 py-5 border-b border-[#E8DCC8] bg-white">
             {/* Search */}
-            <div className="flex-1 flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2 border border-gray-100 focus-within:ring-2 focus-within:ring-amber-400/30 focus-within:border-amber-300 transition-all relative">
-              <Search size={13} className="text-gray-400 flex-shrink-0" />
+            <div className="flex-1 flex items-center gap-2 bg-[#FAF7F2] rounded-xl px-4 py-2.5 border border-[#E8DCC8] focus-within:ring-2 focus-within:ring-[#D4924A]/30 focus-within:border-[#D4924A] transition-all relative shadow-sm">
+              <Search size={16} className="text-[#9C5A22] flex-shrink-0" />
               <input
                 type="text"
-                placeholder="Cari nama atau nomor peserta (contoh: Budi / P-001)..."
+                placeholder="Cari nama atau nomor peserta..."
                 value={searchInput}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                className="flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none pr-6"
+                className="flex-1 bg-transparent text-sm text-[#5C3010] font-medium placeholder:text-gray-400 outline-none pr-6"
               />
               {searchInput && (
                 <button
                   onClick={() => { handleSearchChange(''); }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  title="Hapus filter"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
+                  title="Hapus pencarian"
                 >
-                  <XCircle size={13} />
+                  <XCircle size={16} />
                 </button>
               )}
             </div>
 
             {/* Status filter */}
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              <Filter size={13} className="text-gray-400" />
+            <div className="flex items-center gap-2 flex-shrink-0 bg-[#FAF7F2] p-1.5 rounded-xl border border-[#E8DCC8] shadow-sm">
               <div className="flex gap-1 flex-wrap">
                 {statusOptions.map(opt => (
                   <button
                     key={opt.value}
                     onClick={() => { setPage(1); setStatusFilter(opt.value); }}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
                       statusFilter === opt.value
-                        ? 'bg-amber-600 text-white border-amber-600'
-                        : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        ? 'bg-gradient-to-r from-[#7C4318] to-[#5C3010] text-white shadow-md shadow-[#7C4318]/20'
+                        : `hover:bg-[#E8DCC8] ${opt.color.replace('text-gray-600', 'text-[#9C5A22]')}`
                     }`}
                   >
                     {opt.label}
@@ -437,13 +440,13 @@ function EventResultCard({
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-gray-50/50 border-b border-gray-100">
-                      <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase w-12">Rank</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Peserta</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Status</th>
-                      <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase">Skor</th>
-                      <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase hidden sm:table-cell">Hasil</th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase">Aksi</th>
+                    <tr className="table-header-premium">
+                      <th className="table-header-cell-premium text-center w-12">Rank</th>
+                      <th className="table-header-cell-premium">Peserta</th>
+                      <th className="table-header-cell-premium">Status</th>
+                      <th className="table-header-cell-premium text-center">Skor</th>
+                      <th className="table-header-cell-premium text-center hidden sm:table-cell">Hasil</th>
+                      <th className="table-header-cell-premium text-right">Aksi</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
@@ -540,63 +543,62 @@ export default function ResultsPage() {
             Rekap nilai, rangking, dan review jawaban peserta per ujian
           </p>
         </div>
-        <button
-          onClick={fetchEvents}
-          disabled={isLoading}
-          className="flex items-center gap-2 px-4 py-2.5 border border-gray-200 rounded-xl text-gray-600 text-sm font-medium hover:bg-gray-50 transition-all disabled:opacity-50"
-        >
-          <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
-          Refresh
-        </button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <p className="text-gray-400 text-xs font-medium">Total Ujian</p>
-          <p className="text-gray-900 text-2xl font-bold mt-1">
-            {isLoading ? '—' : totalEvents}
-          </p>
-        </div>
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <p className="text-gray-400 text-xs font-medium">Sedang Berlangsung</p>
-          <p className="text-gray-900 text-2xl font-bold mt-1">
-            {isLoading ? '—' : events.filter(e => {
-              const now = new Date();
-              return new Date(e.start_time) <= now && new Date(e.end_time) >= now;
-            }).length}
-          </p>
-        </div>
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm col-span-2 sm:col-span-1">
-          <p className="text-gray-400 text-xs font-medium">Sudah Selesai</p>
-          <p className="text-gray-900 text-2xl font-bold mt-1">
-            {isLoading ? '—' : events.filter(e => new Date(e.end_time) < new Date()).length}
-          </p>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard
+          title="Total Ujian"
+          value={isLoading ? '—' : totalEvents}
+          icon={<CalendarDays size={20} className="text-[#9C5A22]" />}
+        />
+        <StatCard
+          title="Sedang Berlangsung"
+          value={isLoading ? '—' : events.filter(e => {
+            const now = new Date();
+            return new Date(e.start_time) <= now && new Date(e.end_time) >= now;
+          }).length}
+          icon={<Play size={20} className="text-emerald-600" />}
+          color="bg-emerald-50 border-emerald-100"
+        />
+        <StatCard
+          title="Sudah Selesai"
+          value={isLoading ? '—' : events.filter(e => new Date(e.end_time) < new Date()).length}
+          icon={<CheckCircle2 size={20} className="text-blue-600" />}
+          color="bg-blue-50 border-blue-100"
+        />
       </div>
 
       {/* Search events */}
-      <div className="flex gap-3">
-        <div className="flex-1 flex items-center gap-2 bg-white rounded-xl px-3 py-2.5 border border-gray-100 shadow-sm focus-within:ring-2 focus-within:ring-amber-400/30 focus-within:border-amber-300 transition-all relative">
-          <Search size={14} className="text-gray-400 flex-shrink-0" />
+      <div className="flex gap-4 pt-4">
+        <div className="flex-1 flex items-center gap-2 bg-[#FAF7F2] rounded-xl px-3 py-2.5 border border-[#E8DCC8] focus-within:ring-2 focus-within:ring-[#D4924A]/30 focus-within:border-[#D4924A] transition-all relative shadow-sm">
+          <Search size={16} className="text-[#9C5A22] flex-shrink-0" />
           <input
             type="text"
             placeholder="Cari nama ujian..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="flex-1 text-sm text-gray-700 placeholder:text-gray-400 outline-none bg-transparent pr-6"
+            className="flex-1 text-sm text-[#5C3010] font-medium placeholder:text-gray-400 outline-none bg-transparent pr-6"
             id="search-results"
           />
           {searchInput && (
             <button
               onClick={() => setSearchInput('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
               title="Hapus filter"
             >
               <XCircle size={14} />
             </button>
           )}
         </div>
+        <button
+          onClick={fetchEvents}
+          disabled={isLoading}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8DCC8] bg-white text-[#9C5A22] hover:bg-[#FAF7F2] hover:text-[#5C3010] text-sm font-bold shadow-sm transition-all disabled:opacity-50"
+        >
+          <RefreshCw size={15} className={isLoading ? 'animate-spin' : ''} />
+          <span className="hidden sm:inline">Refresh</span>
+        </button>
       </div>
 
       {/* Events accordion list */}

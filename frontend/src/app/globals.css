@@ -74,3 +74,24 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(0,0,0,0.12);
 }
+
+/* Premium Table Styles */
+.table-header-premium {
+  @apply bg-gradient-to-r from-[#5C3010] to-[#7C4318] border-b border-[#4A2B18];
+}
+
+.table-header-cell-premium {
+  @apply px-5 py-4 text-left text-xs font-bold text-white uppercase tracking-wider;
+}
+
+.table-row-premium {
+  @apply hover:bg-[#FAF7F2] transition-colors border-b border-gray-50 last:border-0;
+}
+
+.table-cell-premium {
+  @apply px-5 py-4 align-top;
+}
+
+.table-badge-premium {
+  @apply text-[#7A4520] text-sm font-bold bg-[#FAF7F2] px-2.5 py-1 rounded-lg border border-[#E8DCC8];
+}

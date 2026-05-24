@@ -46,6 +46,8 @@ type EventService interface {
 	ListEventQuestions(ctx context.Context, eventID uuid.UUID, page int32, limit int32) ([]domain.Question, int64, error)
 	RemoveEventQuestion(ctx context.Context, eventID uuid.UUID, questionID uuid.UUID) error
 	AddRandomEventQuestions(ctx context.Context, eventID uuid.UUID, req domain.AddRandomEventQuestionsRequest) error
+	ExportEventQuestionsExcel(ctx context.Context, eventID uuid.UUID, showKey bool) ([]byte, error)
+	ExportEventQuestionsPDF(ctx context.Context, eventID uuid.UUID, showKey bool) ([]byte, error)
 
 	ListEventParticipants(ctx context.Context, eventID uuid.UUID, page int32, limit int32, search string) ([]domain.EventParticipant, int64, error)
 	ApproveUserEvent(ctx context.Context, approvalID uuid.UUID) error

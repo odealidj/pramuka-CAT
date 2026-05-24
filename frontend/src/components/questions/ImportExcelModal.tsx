@@ -112,8 +112,8 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-              <FileSpreadsheet size={20} className="text-emerald-700" />
+            <div className="w-10 h-10 rounded-xl bg-[#FAF7F2] border border-[#E8DCC8] shadow-sm flex items-center justify-center">
+              <FileSpreadsheet size={20} className="text-[#9C5A22]" />
             </div>
             <div>
               <h3 className="text-lg font-bold text-gray-900">Import Soal via Excel</h3>
@@ -144,11 +144,11 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
 
               {/* Upload Area */}
               <div 
-                className="border-2 border-dashed border-gray-200 rounded-2xl p-10 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer"
+                className="border-2 border-dashed border-gray-200 rounded-2xl p-10 flex flex-col items-center justify-center text-center hover:bg-[#FAF7F2]/50 hover:border-[#D4924A] transition-colors cursor-pointer group"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4">
-                  <UploadCloud size={32} className="text-emerald-500" />
+                <div className="w-16 h-16 bg-[#FAF7F2] border border-[#E8DCC8] shadow-sm rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <UploadCloud size={32} className="text-[#D4924A]" />
                 </div>
                 <h4 className="text-gray-900 font-semibold mb-1">Pilih atau letakkan file Excel di sini</h4>
                 <p className="text-gray-500 text-sm mb-6">Mendukung format .xlsx</p>
@@ -163,7 +163,7 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
                 
                 <button
                   disabled={isLoading}
-                  className="px-6 py-2.5 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 disabled:opacity-50 transition-colors flex items-center gap-2"
+                  className="px-6 py-2.5 bg-gradient-to-r from-[#7C4318] to-[#9C5A22] text-white shadow-sm font-semibold rounded-xl hover:from-[#5C3010] hover:to-[#7C4318] disabled:opacity-50 transition-all flex items-center gap-2"
                 >
                   {isLoading ? (
                     <>
@@ -180,18 +180,18 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
             <div className="space-y-6">
               {/* Preview Stats */}
               {previewData && (
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                    <p className="text-sm text-gray-500 mb-1">Total Baris</p>
-                    <p className="text-2xl font-bold text-gray-900">{previewData.total_rows}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="bg-[#FAF7F2] p-5 rounded-2xl border border-[#E8DCC8] shadow-sm">
+                    <p className="text-sm font-semibold text-[#9C5A22] mb-1">Total Baris</p>
+                    <p className="text-3xl font-bold text-[#7A4520]">{previewData.total_rows}</p>
                   </div>
-                  <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
-                    <p className="text-sm text-emerald-600 mb-1">Baris Valid</p>
-                    <p className="text-2xl font-bold text-emerald-700">{previewData.valid_rows}</p>
+                  <div className="bg-emerald-50 p-5 rounded-2xl border border-emerald-200 shadow-sm">
+                    <p className="text-sm font-semibold text-emerald-600 mb-1">Baris Valid</p>
+                    <p className="text-3xl font-bold text-emerald-700">{previewData.valid_rows}</p>
                   </div>
-                  <div className="bg-red-50 p-4 rounded-xl border border-red-100">
-                    <p className="text-sm text-red-600 mb-1">Baris Error</p>
-                    <p className="text-2xl font-bold text-red-700">{previewData.error_rows}</p>
+                  <div className="bg-red-50 p-5 rounded-2xl border border-red-200 shadow-sm">
+                    <p className="text-sm font-semibold text-red-600 mb-1">Baris Error</p>
+                    <p className="text-3xl font-bold text-red-700">{previewData.error_rows}</p>
                   </div>
                 </div>
               )}
@@ -205,17 +205,17 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
                       <p className="text-amber-700 text-sm mt-1">Harap perbaiki file Excel Anda dan unggah ulang, atau baris yang error tidak dapat disimpan.</p>
                     </div>
                   </div>
-                  <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-2 rounded-lg border border-amber-200 shadow-sm">
+                  <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-2.5 rounded-xl border border-amber-200 shadow-sm hover:bg-amber-50/50 transition-colors">
                     <input 
                       type="checkbox" 
-                      className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                      className="w-4 h-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
                       checked={showErrorsOnly}
                       onChange={(e) => {
                         setShowErrorsOnly(e.target.checked);
                         setCurrentPage(1); // Reset page on filter change
                       }}
                     />
-                    <span className="text-sm font-semibold text-amber-900 whitespace-nowrap">Hanya Tampilkan Error</span>
+                    <span className="text-sm font-bold text-amber-900 whitespace-nowrap">Hanya Tampilkan Error</span>
                   </label>
                 </div>
               )}
@@ -233,24 +233,21 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
                         setSearchQuery(e.target.value);
                         setCurrentPage(1);
                       }}
-                      className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-white"
+                      className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#E8DCC8] focus:border-[#D4924A] outline-none transition-all bg-white shadow-sm"
                     />
                   </div>
-                  {/* Pindahkan toggle ke sini jika tidak ada error rows agar user tetap bisa mem-filter error (misal 0 error, tapi toggle tetap ada jika butuh layout rapi). 
-                      Tapi karena di atas sudah ada kotak amber khusus error_rows > 0, kita biarkan saja.
-                      Namun, kita bisa juga tambahkan toggle di sini secara persisten. */}
                   {previewData.error_rows === 0 && (
-                    <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm">
+                    <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-2.5 rounded-xl border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors">
                       <input 
                         type="checkbox" 
-                        className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                        className="w-4 h-4 rounded border-gray-300 text-[#7C4318] focus:ring-[#9C5A22]"
                         checked={showErrorsOnly}
                         onChange={(e) => {
                           setShowErrorsOnly(e.target.checked);
                           setCurrentPage(1);
                         }}
                       />
-                      <span className="text-sm font-semibold text-gray-700 whitespace-nowrap">Hanya Tampilkan Error</span>
+                      <span className="text-sm font-bold text-gray-700 whitespace-nowrap">Hanya Tampilkan Error</span>
                     </label>
                   )}
                 </div>
@@ -258,41 +255,41 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
 
               {/* Data Table */}
               {previewData && previewData.data.length > 0 && (
-                <div className="border border-gray-200 rounded-xl overflow-hidden">
+                <div className="border border-[#E8DCC8] rounded-2xl overflow-hidden shadow-sm">
                   <div className="overflow-x-auto max-h-[400px]">
                     <table className="w-full text-sm">
-                      <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
-                        <tr>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-600">#</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-600 whitespace-nowrap">K.ID</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-600">Teks Soal</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-600">Opsi A</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-600">Opsi B</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-600">Opsi C</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-600">Opsi D</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-600">Kunci</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-600">Bobot</th>
+                      <thead className="sticky top-0 z-10 shadow-sm">
+                        <tr className="table-header-premium">
+                          <th className="table-header-cell-premium">#</th>
+                          <th className="table-header-cell-premium whitespace-nowrap">K.ID</th>
+                          <th className="table-header-cell-premium">Teks Soal</th>
+                          <th className="table-header-cell-premium">Opsi A</th>
+                          <th className="table-header-cell-premium">Opsi B</th>
+                          <th className="table-header-cell-premium">Opsi C</th>
+                          <th className="table-header-cell-premium">Opsi D</th>
+                          <th className="table-header-cell-premium">Kunci</th>
+                          <th className="table-header-cell-premium">Bobot</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100">
+                      <tbody className="divide-y divide-gray-50 bg-white">
                         {paginatedData.map((row) => (
-                          <tr key={row.row} className={row.is_valid ? "hover:bg-gray-50 border-l-4 border-l-emerald-500" : "bg-red-50/50 hover:bg-red-50 border-l-4 border-l-red-500"}>
-                            <td className="px-4 py-3 text-gray-500 whitespace-nowrap font-medium">{row.row}</td>
-                            <td className="px-4 py-3 text-gray-900">{row.category_id || "-"}</td>
-                            <td className="px-4 py-3 min-w-[200px]">
-                              <p className="line-clamp-2 text-gray-900">{row.question_text || "-"}</p>
+                          <tr key={row.row} className={row.is_valid ? "table-row-premium group border-l-4 border-l-emerald-500" : "bg-red-50/50 hover:bg-red-50 transition-colors border-b border-gray-50 border-l-4 border-l-red-500 group"}>
+                            <td className="table-cell-premium text-gray-500 font-medium whitespace-nowrap">{row.row}</td>
+                            <td className="table-cell-premium text-gray-900">{row.category_id || "-"}</td>
+                            <td className="table-cell-premium min-w-[200px]">
+                              <p className="line-clamp-2 text-gray-900 group-hover:text-[#7C4318] transition-colors">{row.question_text || "-"}</p>
                               {!row.is_valid && row.error && (
-                                <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                                <p className="text-xs text-red-600 mt-1 flex items-center gap-1 font-medium bg-red-100/50 px-2 py-1 rounded-md w-fit">
                                   <AlertCircle size={12} /> {row.error}
                                 </p>
                               )}
                             </td>
-                            <td className="px-4 py-3 text-gray-600 text-xs min-w-[120px]"><p className="line-clamp-2">{row.option_a || "-"}</p></td>
-                            <td className="px-4 py-3 text-gray-600 text-xs min-w-[120px]"><p className="line-clamp-2">{row.option_b || "-"}</p></td>
-                            <td className="px-4 py-3 text-gray-600 text-xs min-w-[120px]"><p className="line-clamp-2">{row.option_c || "-"}</p></td>
-                            <td className="px-4 py-3 text-gray-600 text-xs min-w-[120px]"><p className="line-clamp-2">{row.option_d || "-"}</p></td>
-                            <td className="px-4 py-3 font-semibold text-gray-900">{row.correct_answer || "-"}</td>
-                            <td className="px-4 py-3 text-gray-900">{row.weight || "-"}</td>
+                            <td className="table-cell-premium text-gray-600 text-xs min-w-[120px]"><p className="line-clamp-2">{row.option_a || "-"}</p></td>
+                            <td className="table-cell-premium text-gray-600 text-xs min-w-[120px]"><p className="line-clamp-2">{row.option_b || "-"}</p></td>
+                            <td className="table-cell-premium text-gray-600 text-xs min-w-[120px]"><p className="line-clamp-2">{row.option_c || "-"}</p></td>
+                            <td className="table-cell-premium text-gray-600 text-xs min-w-[120px]"><p className="line-clamp-2">{row.option_d || "-"}</p></td>
+                            <td className="table-cell-premium font-bold text-gray-900">{row.correct_answer || "-"}</td>
+                            <td className="table-cell-premium font-semibold text-gray-900">{row.weight || "-"}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -301,9 +298,9 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
                   
                   {/* Pagination Controls */}
                   {totalPages > 1 && (
-                    <div className="px-4 py-3 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
-                      <p className="text-sm text-gray-500">
-                        Menampilkan <span className="font-medium">{startIndex + 1}</span> - <span className="font-medium">{Math.min(startIndex + ITEMS_PER_PAGE, filteredData.length)}</span> dari <span className="font-medium">{filteredData.length}</span> baris
+                    <div className="px-5 py-4 border-t border-[#E8DCC8] bg-[#FAF7F2] flex flex-col sm:flex-row items-center justify-between gap-3">
+                      <p className="text-sm text-gray-500 font-medium">
+                        Menampilkan <span className="font-bold text-[#7A4520]">{startIndex + 1}</span> - <span className="font-bold text-[#7A4520]">{Math.min(startIndex + ITEMS_PER_PAGE, filteredData.length)}</span> dari <span className="font-bold text-[#7A4520]">{filteredData.length}</span> baris
                       </p>
                       <Pagination
                         page={currentPage}
@@ -343,7 +340,7 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
               <button
                 onClick={handleConfirm}
                 disabled={isLoading || !previewData || previewData.error_rows > 0}
-                className="px-6 py-2 text-sm font-semibold bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors shadow-sm"
+                className="px-6 py-2.5 text-sm font-semibold bg-gradient-to-r from-[#7C4318] to-[#9C5A22] text-white rounded-xl hover:from-[#5C3010] hover:to-[#7C4318] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all shadow-sm"
               >
                 {isLoading && <Loader2 size={16} className="animate-spin" />}
                 Simpan {previewData?.valid_rows || 0} Soal

@@ -49,7 +49,7 @@ export default function Pagination({
             disabled={isLoading}
             className={`w-9 h-9 rounded-lg text-sm font-medium transition-all ${
               p === page
-                ? 'bg-amber-700 text-white shadow-sm'
+                ? 'bg-gradient-to-r from-[#7C4318] to-[#9C5A22] text-white shadow-md border-transparent hover:shadow-lg'
                 : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
             } disabled:opacity-60`}
           >

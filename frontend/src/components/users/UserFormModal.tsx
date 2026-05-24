@@ -65,7 +65,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-gray-700 text-sm font-semibold mb-1.5">
+      <label className="block text-[#7C4318] text-sm font-bold mb-1.5">
         {label}
         {required && <span className="text-red-500 ml-0.5">*</span>}
       </label>
@@ -81,10 +81,10 @@ function Field({
 }
 
 const inputClass = (hasError?: boolean) =>
-  `w-full px-3.5 py-2.5 rounded-xl border text-gray-800 text-sm placeholder:text-gray-400 outline-none transition-all ${
+  `w-full px-3.5 py-2.5 rounded-xl border text-[#5C3010] font-medium text-sm placeholder:text-gray-400 outline-none transition-all shadow-sm ${
     hasError
       ? 'border-red-300 bg-red-50 focus:ring-2 focus:ring-red-200'
-      : 'border-gray-200 focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400'
+      : 'border-[#E8DCC8] bg-[#FAF7F2] focus:ring-2 focus:ring-[#D4924A]/30 focus:border-[#D4924A] hover:border-[#D4924A]/70'
   }`;
 
 // ============================================================
@@ -208,7 +208,7 @@ export default function UserFormModal({
 
       <form
         onSubmit={handleSubmit(handleFormSubmit)}
-        className="space-y-4"
+        className="space-y-6 pt-2"
         noValidate
       >
         {/* Full Name */}
@@ -266,13 +266,13 @@ export default function UserFormModal({
 
         {/* Photo Input Mode Toggle */}
         <div className="pt-2">
-          <label className="block text-gray-700 text-sm font-semibold mb-2">Foto Profil (Opsional)</label>
-          <div className="flex gap-2 mb-3 bg-gray-50 p-1 rounded-lg w-max">
+          <label className="block text-[#7C4318] text-sm font-bold mb-2">Foto Profil (Opsional)</label>
+          <div className="flex gap-2 mb-3 bg-[#FAF7F2] border border-[#E8DCC8] p-1.5 rounded-xl w-max">
             <button
               type="button"
               onClick={() => setPhotoMode('url')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                photoMode === 'url' ? 'bg-emerald-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+                photoMode === 'url' ? 'bg-gradient-to-r from-[#7C4318] to-[#5C3010] text-white shadow-md shadow-[#7C4318]/20' : 'text-[#9C5A22] hover:text-[#5C3010]'
               }`}
             >
               Gunakan URL
@@ -280,8 +280,8 @@ export default function UserFormModal({
             <button
               type="button"
               onClick={() => setPhotoMode('file')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                photoMode === 'file' ? 'bg-emerald-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+                photoMode === 'file' ? 'bg-gradient-to-r from-[#7C4318] to-[#5C3010] text-white shadow-md shadow-[#7C4318]/20' : 'text-[#9C5A22] hover:text-[#5C3010]'
               }`}
             >
               Unggah File
@@ -312,7 +312,7 @@ export default function UserFormModal({
                 disabled={isSubmitting}
                 ref={fileInputRef}
                 onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-all border border-gray-200 rounded-xl cursor-pointer bg-white"
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-[#FAF7F2] file:text-[#7C4318] hover:file:bg-[#E8DCC8] hover:file:text-[#5C3010] transition-all border border-[#E8DCC8] rounded-xl cursor-pointer bg-white shadow-sm"
               />
               <p className="text-xs text-gray-400 mt-2">
                 File akan otomatis dikompres ke WebP ({'< 50KB'}).
@@ -323,8 +323,8 @@ export default function UserFormModal({
           {/* Image Preview */}
           {finalPreview && (
             <div className="mt-3">
-              <p className="text-xs font-semibold text-gray-500 mb-1.5">Preview Foto:</p>
-              <div className="w-16 h-16 rounded-full border-2 border-emerald-200 overflow-hidden shadow-sm">
+              <p className="text-xs font-bold text-[#7C4318] mb-1.5">Preview Foto:</p>
+              <div className="w-16 h-16 rounded-full border-2 border-[#D4924A] overflow-hidden shadow-sm">
                 <img src={finalPreview} alt="Preview" className="w-full h-full object-cover" />
               </div>
             </div>
@@ -332,21 +332,21 @@ export default function UserFormModal({
         </div>
 
         {/* Footer Buttons */}
-        <div className="flex gap-3 pt-2">
+        <div className="flex gap-4 pt-6 border-t border-[#E8DCC8] mt-4">
           <button
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 transition-all disabled:opacity-50"
+            className="flex-1 px-4 py-3 rounded-xl border border-[#E8DCC8] bg-[#FAF7F2] text-[#9C5A22] text-sm font-bold hover:bg-[#E8DCC8] hover:text-[#5C3010] transition-all disabled:opacity-50 shadow-sm"
           >
             Batal
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#7C4318] to-[#9C5A22] text-white text-sm font-semibold hover:from-[#5C3010] hover:to-[#7C4318] transition-all disabled:opacity-70 shadow-sm shadow-amber-900/20"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-[#7C4318] to-[#5C3010] text-white text-sm font-bold hover:from-[#5C3010] hover:to-[#4A260D] transition-all disabled:opacity-70 shadow-md shadow-[#7C4318]/20"
           >
-            {isSubmitting && <Spinner size={14} className="text-white" />}
+            {isSubmitting && <Spinner size={16} className="text-white" />}
             {isSubmitting
               ? 'Menyimpan...'
               : isEdit

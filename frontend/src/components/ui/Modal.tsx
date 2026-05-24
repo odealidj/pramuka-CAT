@@ -56,11 +56,11 @@ export default function Modal({
         aria-modal="true"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
-          <h2 className="text-gray-900 font-semibold text-base">{title}</h2>
+        <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-[#FAF7F2] to-white border-b border-[#E8DCC8] flex-shrink-0">
+          <h2 className="text-[#5C3010] font-extrabold text-lg">{title}</h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
+            className="p-1.5 rounded-lg text-[#9C5A22] hover:text-[#5C3010] hover:bg-[#E8DCC8]/50 transition-all"
             aria-label="Tutup"
           >
             <X size={18} />

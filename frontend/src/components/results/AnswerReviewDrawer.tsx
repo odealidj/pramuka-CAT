@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { X, CheckCircle2, XCircle, BookOpen, Award } from 'lucide-react';
+import { X, CheckCircle2, XCircle, BookOpen, Award, FileText, Loader2 } from 'lucide-react';
 import Spinner from '@/components/ui/Spinner';
-import { reviewParticipantAnswersApi } from '@/services/exam.service';
+import { reviewParticipantAnswersApi, exportReviewParticipantAnswersApi } from '@/services/exam.service';
 import type { EventParticipant, UserAnswerDetail } from '@/types/auth';
 
 type AnswerKey = 'A' | 'B' | 'C' | 'D';
@@ -45,6 +45,26 @@ export default function AnswerReviewDrawer({
       .finally(() => setIsLoading(false));
   }, [participant]);
 
+  const [isExporting, setIsExporting] = useState(false);
+  const handleExportPDF = async () => {
+    if (!participant) return;
+    try {
+      setIsExporting(true);
+      await exportReviewParticipantAnswersApi(participant.approval_id, {
+        participant_name: participant.full_name,
+        event_name: eventName,
+        score: participant.score,
+        passing_grade: passingGrade,
+        is_passed: participant.is_passed,
+      });
+    } catch (err) {
+      console.error(err);
+      alert('Gagal mengunduh PDF');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   if (!participant) return null;
 
   const correctCount = answers.filter((a) => a.is_correct).length;
@@ -60,7 +80,7 @@ export default function AnswerReviewDrawer({
       <div className="w-full max-w-2xl bg-white shadow-2xl flex flex-col overflow-hidden">
 
         {/* Header */}
-        <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-indigo-50 to-white">
+        <div className="p-5 border-b border-[#E8DCC8] bg-gradient-to-r from-[#FAF7F2] to-white">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-gray-400 text-xs font-medium mb-1">{eventName}</p>
@@ -69,44 +89,54 @@ export default function AnswerReviewDrawer({
               </h2>
               <p className="text-gray-400 text-xs font-mono mt-0.5">@{participant.username}</p>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-xl hover:bg-gray-100 transition-all"
-            >
-              <X size={18} className="text-gray-500" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleExportPDF}
+                disabled={isExporting}
+                title="Download PDF"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#FAF7F2]/50 border border-[#E8DCC8] rounded-full text-xs font-bold text-gray-700 hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed group"
+              >
+                {isExporting ? <Loader2 size={12} className="animate-spin" /> : <FileText size={14} className="text-red-600 transition-colors" />} PDF
+              </button>
+              <button
+                onClick={onClose}
+                className="p-2 rounded-xl hover:bg-gray-100 transition-all"
+              >
+                <X size={18} className="text-gray-500" />
+              </button>
+            </div>
           </div>
 
           {/* Score summary */}
           {participant.is_completed && (
             <div className="mt-4 grid grid-cols-3 gap-3">
-              <div className="bg-white rounded-xl border border-gray-100 p-3 text-center shadow-sm">
-                <p className="text-gray-400 text-xs">Skor Akhir</p>
+              <div className="bg-[#FAF7F2]/40 rounded-xl border border-[#E8DCC8] p-3 text-center shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+                <p className="text-[#9C5A22] text-xs font-bold">Skor Akhir</p>
                 <p
-                  className={`text-xl font-bold mt-0.5 ${
+                  className={`text-xl font-black mt-1 ${
                     participant.is_passed ? 'text-emerald-600' : 'text-red-500'
                   }`}
                 >
                   {participant.score.toFixed(1)}
                 </p>
               </div>
-              <div className="bg-white rounded-xl border border-gray-100 p-3 text-center shadow-sm">
-                <p className="text-gray-400 text-xs">Benar / Total</p>
-                <p className="text-xl font-bold text-gray-800 mt-0.5">
-                  {correctCount} / {answers.length}
+              <div className="bg-[#FAF7F2]/40 rounded-xl border border-[#E8DCC8] p-3 text-center shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+                <p className="text-[#9C5A22] text-xs font-bold">Benar / Total</p>
+                <p className="text-xl font-black text-[#5C3010] mt-1">
+                  {correctCount} <span className="opacity-60 text-lg">/ {answers.length}</span>
                 </p>
               </div>
-              <div className="bg-white rounded-xl border border-gray-100 p-3 text-center shadow-sm">
-                <p className="text-gray-400 text-xs">Status</p>
+              <div className="bg-[#FAF7F2]/40 rounded-xl border border-[#E8DCC8] p-3 text-center shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+                <p className="text-[#9C5A22] text-xs font-bold">Status</p>
                 <p
-                  className={`text-sm font-bold mt-1 flex items-center justify-center gap-1 ${
+                  className={`text-sm font-black mt-1 flex items-center justify-center gap-1 ${
                     participant.is_passed ? 'text-emerald-600' : 'text-red-500'
                   }`}
                 >
                   {participant.is_passed ? (
-                    <><Award size={14} /> Lulus</>
+                    <><Award size={16} /> Lulus</>
                   ) : (
-                    <><XCircle size={14} /> Tidak Lulus</>
+                    <><XCircle size={16} /> Tidak Lulus</>
                   )}
                 </p>
               </div>
@@ -149,10 +179,10 @@ export default function AnswerReviewDrawer({
                   {/* Question header */}
                   <div className="flex items-start gap-3 mb-3">
                     <span
-                      className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                      className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0 shadow-sm ${
                         ans.is_correct
-                          ? 'bg-emerald-500 text-white'
-                          : 'bg-red-400 text-white'
+                          ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 text-white'
+                          : 'bg-gradient-to-br from-red-400 to-red-600 text-white'
                       }`}
                     >
                       {idx + 1}
@@ -217,15 +247,15 @@ export default function AnswerReviewDrawer({
               ))}
 
               {/* Summary footer */}
-              <div className="mt-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between text-sm">
-                <span className="text-gray-500">
-                  Total Bobot: <strong className="text-gray-800">{earnedWeight}</strong> / {totalWeight}
+              <div className="mt-4 p-4 bg-[#FAF7F2] rounded-2xl border border-[#E8DCC8] flex items-center justify-between text-sm shadow-sm">
+                <span className="text-[#9C5A22] font-medium">
+                  Total Bobot: <strong className="text-[#5C3010] text-base">{earnedWeight}</strong> / {totalWeight}
                 </span>
-                <span className="text-gray-500">
-                  Batas Lulus: <strong className="text-gray-800">{passingGrade}%</strong>
+                <span className="text-[#9C5A22] font-medium">
+                  Batas Lulus: <strong className="text-[#5C3010] text-base">{passingGrade}%</strong>
                 </span>
                 <span
-                  className={`font-bold ${
+                  className={`font-black text-base ${
                     participant.is_passed ? 'text-emerald-600' : 'text-red-500'
                   }`}
                 >

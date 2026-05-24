@@ -181,11 +181,17 @@ SELECT EXISTS(
     JOIN categories c ON q.category_id = c.id
     WHERE c.deleted_at IS NULL AND q.deleted_at IS NULL
     AND LOWER(TRIM(q.question_text)) = LOWER(TRIM($1::text))
+    AND ($2::uuid IS NULL OR q.id <> $2::uuid)
 )
 `
 
-func (q *Queries) CheckQuestionDuplicate(ctx context.Context, questionText string) (bool, error) {
-	row := q.db.QueryRowContext(ctx, checkQuestionDuplicate, questionText)
+type CheckQuestionDuplicateParams struct {
+	QuestionText string        `json:"question_text"`
+	ExcludeID    uuid.NullUUID `json:"exclude_id"`
+}
+
+func (q *Queries) CheckQuestionDuplicate(ctx context.Context, arg CheckQuestionDuplicateParams) (bool, error) {
+	row := q.db.QueryRowContext(ctx, checkQuestionDuplicate, arg.QuestionText, arg.ExcludeID)
 	var exists bool
 	err := row.Scan(&exists)
 	return exists, err
@@ -307,7 +313,7 @@ func (q *Queries) CountEvents(ctx context.Context, search string) (int64, error)
 const countQuestions = `-- name: CountQuestions :one
 SELECT COUNT(*) FROM questions q
 JOIN categories c ON q.category_id = c.id
-WHERE c.deleted_at IS NULL AND q.deleted_at IS NULL
+WHERE q.deleted_at IS NULL AND c.deleted_at IS NULL
   AND ($1::int IS NULL OR q.category_id = $1::int)
   AND ($2::text = '' OR to_tsvector('indonesian', q.question_text) @@ plainto_tsquery('indonesian', $2::text))
 `
@@ -1195,8 +1201,9 @@ func (q *Queries) GetTotalParticipantsDashboard(ctx context.Context) (int64, err
 }
 
 const getTotalQuestionsDashboard = `-- name: GetTotalQuestionsDashboard :one
-SELECT COUNT(*) FROM questions
-WHERE deleted_at IS NULL
+SELECT COUNT(*) FROM questions q
+JOIN categories c ON q.category_id = c.id
+WHERE q.deleted_at IS NULL AND c.deleted_at IS NULL
 `
 
 func (q *Queries) GetTotalQuestionsDashboard(ctx context.Context) (int64, error) {
@@ -1686,10 +1693,10 @@ func (q *Queries) ListEvents(ctx context.Context, arg ListEventsParams) ([]ListE
 const listQuestions = `-- name: ListQuestions :many
 SELECT q.id, q.category_id, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_answer, q.weight, q.created_at, q.deleted_at FROM questions q
 JOIN categories c ON q.category_id = c.id
-WHERE c.deleted_at IS NULL AND q.deleted_at IS NULL
+WHERE q.deleted_at IS NULL AND c.deleted_at IS NULL
   AND ($3::int IS NULL OR q.category_id = $3::int)
   AND ($4::text = '' OR to_tsvector('indonesian', q.question_text) @@ plainto_tsquery('indonesian', $4::text))
-ORDER BY q.created_at DESC
+ORDER BY q.category_id ASC, q.created_at DESC
 LIMIT $1 OFFSET $2
 `
 

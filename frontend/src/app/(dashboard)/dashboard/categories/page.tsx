@@ -24,6 +24,7 @@ import Spinner from '@/components/ui/Spinner';
 import Pagination from '@/components/ui/Pagination';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Modal from '@/components/ui/Modal';
+import StatCard from '@/components/ui/StatCard';
 import { ToastContainer, useToast } from '@/components/ui/Toast';
 
 import {
@@ -215,28 +216,31 @@ export default function CategoriesPage() {
 
       {/* ── Page Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
-            <Tag size={18} className="text-amber-700" />
+        <div>
+          <h1 className="text-2xl font-black text-[#5C3010] tracking-tight mb-1">Kategori Soal</h1>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-[#FAF7F2] flex items-center justify-center flex-shrink-0 border border-[#E8DCC8]">
+              <Tag size={16} className="text-[#9C5A22]" />
+            </div>
+            <p className="text-[#7C4318] text-sm font-medium">
+              Kelola rumpun/kategori materi untuk pengelompokan bank soal
+            </p>
           </div>
-          <p className="text-gray-500 text-sm">
-            Kelola rumpun/kategori materi untuk pengelompokan bank soal
-          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-2 mr-2">
             <button
               onClick={() => handleExport('excel')}
-              className="flex items-center gap-2 px-3 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm font-semibold rounded-xl hover:bg-emerald-100 transition-all"
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-[#E8DCC8] rounded-full text-sm font-bold text-[#7C4318] hover:bg-[#FAF7F2] hover:border-[#D4924A] transition-all shadow-sm group"
             >
-              <FileSpreadsheet size={15} className="text-emerald-600" />
+              <FileSpreadsheet size={16} className="text-emerald-600 group-hover:text-[#9C5A22] transition-colors" />
               Excel
             </button>
             <button
               onClick={() => handleExport('pdf')}
-              className="flex items-center gap-2 px-3 py-2.5 bg-red-50 text-red-700 border border-red-200 text-sm font-semibold rounded-xl hover:bg-red-100 transition-all"
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-[#E8DCC8] rounded-full text-sm font-bold text-[#7C4318] hover:bg-[#FAF7F2] hover:border-[#D4924A] transition-all shadow-sm group"
             >
-              <FileText size={15} className="text-red-600" />
+              <FileText size={16} className="text-red-600 group-hover:text-[#9C5A22] transition-colors" />
               PDF
             </button>
           </div>
@@ -246,7 +250,7 @@ export default function CategoriesPage() {
               setFormModal({ open: true, mode: 'create', category: null });
             }}
             id="btn-add-category"
-            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#7C4318] to-[#9C5A22] text-white text-sm font-semibold rounded-xl shadow-sm shadow-amber-900/20 hover:from-[#5C3010] hover:to-[#7C4318] transition-all"
+            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#7C4318] to-[#5C3010] text-white text-sm font-bold rounded-xl shadow-md shadow-[#7C4318]/20 hover:from-[#5C3010] hover:to-[#4A260D] transition-all"
           >
             <Plus size={16} />
             Tambah Kategori
@@ -256,33 +260,32 @@ export default function CategoriesPage() {
 
       {/* ── Stats Card ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <p className="text-gray-500 text-xs font-medium">Total Kategori</p>
-          <p className="text-gray-900 text-2xl font-bold mt-1">
-            {meta?.total_records ?? '—'}
-          </p>
-        </div>
+        <StatCard
+          title="Total Kategori"
+          value={meta?.total_records ?? '—'}
+          icon={<Tag size={20} className="text-[#9C5A22]" />}
+        />
       </div>
 
       {/* ── Table Card ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-[#E8DCC8] shadow-sm overflow-hidden">
 
         {/* Toolbar */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 border-b border-gray-100">
-          <div className="flex-1 flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100 focus-within:ring-2 focus-within:ring-amber-500/30 focus-within:border-amber-300 focus-within:bg-white transition-all relative">
-            <Search size={14} className="text-gray-400 flex-shrink-0" />
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 px-5 py-5 border-b border-[#E8DCC8] bg-white">
+          <div className="flex-1 flex items-center gap-2 bg-[#FAF7F2] rounded-xl px-3 py-2.5 border border-[#E8DCC8] focus-within:ring-2 focus-within:ring-[#D4924A]/30 focus-within:border-[#D4924A] transition-all relative shadow-sm">
+            <Search size={16} className="text-[#9C5A22] flex-shrink-0" />
             <input
               type="text"
               placeholder="Cari kategori..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none pr-6"
+              className="flex-1 bg-transparent text-sm text-[#5C3010] font-medium placeholder:text-gray-400 outline-none pr-6"
               id="search-categories"
             />
             {searchInput && (
               <button
                 onClick={() => setSearchInput('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
                 title="Hapus filter"
               >
                 <XCircle size={14} />
@@ -292,10 +295,10 @@ export default function CategoriesPage() {
           <button
             onClick={fetchCategories}
             disabled={isLoading}
-            className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8DCC8] bg-white text-[#9C5A22] hover:bg-[#FAF7F2] hover:text-[#5C3010] text-sm font-bold shadow-sm transition-all disabled:opacity-50"
             title="Refresh"
           >
-            <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
+            <RefreshCw size={15} className={isLoading ? 'animate-spin' : ''} />
             <span className="hidden sm:inline">Refresh</span>
           </button>
         </div>
@@ -304,17 +307,17 @@ export default function CategoriesPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50/70 border-b border-gray-100">
-                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-16">
+              <tr className="table-header-premium">
+                <th className="table-header-cell-premium w-16">
                   No
                 </th>
-                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="table-header-cell-premium">
                   Nama Kategori
                 </th>
-                <th className="px-5 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide w-36">
+                <th className="table-header-cell-premium text-center w-36">
                   Jumlah Soal
                 </th>
-                <th className="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="table-header-cell-premium text-right">
                   Aksi
                 </th>
               </tr>
@@ -346,19 +349,19 @@ export default function CategoriesPage() {
                   return (
                     <tr
                       key={category.id}
-                      className="hover:bg-gray-50/60 transition-colors"
+                      className="table-row-premium group"
                     >
                       {/* No */}
-                      <td className="px-5 py-3.5 text-gray-400 text-xs">{rowNo}</td>
+                      <td className="px-5 py-4 text-gray-500 text-xs font-medium">{rowNo}</td>
 
                       {/* Nama Kategori */}
-                      <td className="px-5 py-3.5">
+                      <td className="table-cell-premium">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-700 flex-shrink-0">
                             <Tag size={14} />
                           </div>
                           <div>
-                            <p className="text-gray-900 font-semibold text-sm">
+                            <p className="text-gray-900 font-semibold text-sm group-hover:text-[#7C4318] transition-colors">
                               {category.name}
                             </p>
                           </div>
@@ -366,7 +369,7 @@ export default function CategoriesPage() {
                       </td>
 
                       {/* Jumlah Soal Badge */}
-                      <td className="px-5 py-3.5 text-center">
+                      <td className="table-cell-premium text-center">
                         <button
                           onClick={() =>
                             router.push(`/dashboard/questions?category_id=${category.id}&category_name=${encodeURIComponent(category.name)}`)
@@ -383,7 +386,7 @@ export default function CategoriesPage() {
                       </td>
 
                       {/* Aksi */}
-                      <td className="px-5 py-3.5">
+                      <td className="table-cell-premium">
                         <div className="flex items-center justify-end gap-1">
                           {/* Edit */}
                           <button
@@ -391,7 +394,7 @@ export default function CategoriesPage() {
                               setFormApiError(null);
                               setFormModal({ open: true, mode: 'edit', category });
                             }}
-                            className="p-2 rounded-lg text-gray-400 hover:text-amber-700 hover:bg-amber-50 transition-all"
+                            className="p-2 rounded-xl text-[#9C5A22] hover:text-[#5C3010] hover:bg-[#FAF7F2] border border-transparent hover:border-[#E8DCC8] transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
                             title="Edit kategori"
                             aria-label="Edit kategori"
                           >
@@ -403,7 +406,7 @@ export default function CategoriesPage() {
                             onClick={() =>
                               setDeleteDialog({ open: true, category, isLoading: false })
                             }
-                            className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all"
+                            className="p-2 rounded-xl text-gray-400 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
                             title="Hapus kategori"
                             aria-label="Hapus kategori"
                           >
@@ -446,14 +449,14 @@ export default function CategoriesPage() {
       >
         <form onSubmit={handleSubmit(handleSave)} className="space-y-4" noValidate>
           <div>
-            <label className="block text-gray-600 text-xs font-semibold uppercase tracking-wider mb-2">
+            <label className="block text-[#7C4318] text-sm font-bold mb-1.5">
               Nama Kategori Soal
             </label>
             <input
               type="text"
               placeholder="Contoh: PUPK, Sandi, Tali-temali..."
               {...register('name')}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-gray-800 text-sm outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400 transition-all"
+              className="w-full px-3.5 py-2.5 rounded-xl border text-[#5C3010] font-medium text-sm placeholder:text-gray-400 outline-none transition-all shadow-sm border-[#E8DCC8] bg-[#FAF7F2] focus:ring-2 focus:ring-[#D4924A]/30 focus:border-[#D4924A] hover:border-[#D4924A]/70"
               autoFocus
             />
             {errors.name && (
@@ -464,20 +467,20 @@ export default function CategoriesPage() {
             )}
           </div>
 
-          <div className="flex justify-end gap-2.5 pt-2 border-t border-gray-100">
+          <div className="flex gap-4 pt-6 border-t border-[#E8DCC8] mt-4">
             <button
               type="button"
               onClick={() => setFormModal((s) => ({ ...s, open: false }))}
-              className="px-4 py-2.5 border border-gray-200 rounded-xl text-gray-600 text-sm font-semibold hover:bg-gray-50 transition-all"
+              className="flex-1 px-4 py-3 rounded-xl border border-[#E8DCC8] bg-[#FAF7F2] text-[#9C5A22] text-sm font-bold hover:bg-[#E8DCC8] hover:text-[#5C3010] transition-all disabled:opacity-50 shadow-sm"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-[#7C4318] to-[#9C5A22] text-white text-sm font-semibold rounded-xl hover:from-[#5C3010] hover:to-[#7C4318] transition-all disabled:opacity-60"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-[#7C4318] to-[#5C3010] text-white text-sm font-bold hover:from-[#5C3010] hover:to-[#4A260D] transition-all disabled:opacity-70 shadow-md shadow-[#7C4318]/20"
             >
-              {isSubmitting ? <Spinner size={14} className="text-white" /> : null}
+              {isSubmitting ? <Spinner size={16} className="text-white" /> : null}
               Simpan Kategori
             </button>
           </div>

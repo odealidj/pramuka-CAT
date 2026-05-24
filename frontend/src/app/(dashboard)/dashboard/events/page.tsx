@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { isAxiosError } from 'axios';
 import Spinner from '@/components/ui/Spinner';
+import StatCard from '@/components/ui/StatCard';
 import Pagination from '@/components/ui/Pagination';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { ToastContainer, useToast } from '@/components/ui/Toast';
@@ -163,9 +164,9 @@ function EventCard({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group overflow-hidden">
+    <div className="bg-white rounded-2xl border border-[#E8DCC8] shadow-sm hover:shadow-lg hover:border-[#D4924A] hover:-translate-y-1 transition-all duration-300 group overflow-hidden flex flex-col h-full">
       {/* Top accent */}
-      <div className="h-1 bg-gradient-to-r from-amber-400 to-amber-700" />
+      <div className="h-1.5 bg-gradient-to-r from-[#E8DCC8] via-[#D4924A] to-[#7C4318]" />
 
       <div className="p-5">
         <div className="flex items-start justify-between gap-3 mb-3">
@@ -225,13 +226,19 @@ function EventCard({
         </div>
 
         {/* Detail button */}
-        <Link
-          href={`/dashboard/events/${event.id}`}
-          className="mt-4 w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-gray-200 text-gray-600 text-xs font-semibold hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700 transition-all"
-        >
-          Kelola Soal & Peserta
-          <ChevronRight size={13} />
-        </Link>
+        <div className="mt-auto pt-4">
+          <Link
+            href={`/dashboard/events/${event.id}`}
+            className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border text-xs font-bold transition-all shadow-sm group-hover:shadow ${
+              countdown.status === 'ongoing'
+                ? 'bg-emerald-600 border-emerald-600 text-white hover:bg-emerald-700 hover:border-emerald-700 shadow-emerald-600/20'
+                : 'bg-[#FAF7F2]/50 border-[#E8DCC8] text-[#9C5A22] hover:bg-[#9C5A22] hover:text-white hover:border-[#9C5A22]'
+            }`}
+          >
+            Kelola Soal & Peserta
+            <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
       </div>
     </div>
   );
@@ -376,37 +383,42 @@ function AdminEventsContent() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <p className="text-gray-400 text-xs font-medium">Total Jadwal</p>
-          <p className="text-gray-900 text-2xl font-bold mt-1">{meta?.total_records ?? '—'}</p>
-        </div>
-        <div className="bg-white rounded-2xl p-4 border border-emerald-100 shadow-sm">
-          <p className="text-emerald-600 text-xs font-medium">Sedang Berlangsung</p>
-          <p className="text-gray-900 text-2xl font-bold mt-1">{activeCount}</p>
-        </div>
-        <div className="bg-white rounded-2xl p-4 border border-blue-100 shadow-sm">
-          <p className="text-blue-600 text-xs font-medium">Akan Datang</p>
-          <p className="text-gray-900 text-2xl font-bold mt-1">{upcomingCount}</p>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard
+          title="Total Jadwal"
+          value={meta?.total_records ?? '—'}
+          icon={<CalendarDays size={20} className="text-[#9C5A22]" />}
+        />
+        <StatCard
+          title="Sedang Berlangsung"
+          value={activeCount}
+          icon={<Play size={20} className="text-emerald-600" />}
+          color="bg-emerald-50 border-emerald-100"
+        />
+        <StatCard
+          title="Akan Datang"
+          value={upcomingCount}
+          icon={<Clock size={20} className="text-blue-600" />}
+          color="bg-blue-50 border-blue-100"
+        />
       </div>
 
       {/* Toolbar */}
-      <div className="flex gap-3">
-        <div className="flex-1 flex items-center gap-2 bg-white rounded-xl px-3 py-2.5 border border-gray-100 shadow-sm focus-within:ring-2 focus-within:ring-amber-500/30 focus-within:border-amber-300 transition-all relative">
-          <Search size={14} className="text-gray-400 flex-shrink-0" />
+      <div className="flex gap-4 pt-4">
+        <div className="flex-1 flex items-center gap-2 bg-[#FAF7F2] rounded-xl px-3 py-2.5 border border-[#E8DCC8] focus-within:ring-2 focus-within:ring-[#D4924A]/30 focus-within:border-[#D4924A] transition-all relative shadow-sm">
+          <Search size={16} className="text-[#9C5A22] flex-shrink-0" />
           <input
             type="text"
             placeholder="Cari nama ujian..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="flex-1 text-sm text-gray-700 placeholder:text-gray-400 outline-none bg-transparent pr-6"
+            className="flex-1 text-sm text-[#5C3010] font-medium placeholder:text-gray-400 outline-none bg-transparent pr-6"
             id="search-events"
           />
           {searchInput && (
             <button
               onClick={() => setSearchInput('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
               title="Hapus filter"
             >
               <XCircle size={14} />
@@ -416,9 +428,10 @@ function AdminEventsContent() {
         <button
           onClick={fetchEvents}
           disabled={isLoading}
-          className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 text-sm transition-all disabled:opacity-50 shadow-sm"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8DCC8] bg-white text-[#9C5A22] hover:bg-[#FAF7F2] hover:text-[#5C3010] text-sm font-bold shadow-sm transition-all disabled:opacity-50"
         >
-          <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
+          <RefreshCw size={15} className={isLoading ? 'animate-spin' : ''} />
+          <span className="hidden sm:inline">Refresh</span>
         </button>
       </div>
 
@@ -505,25 +518,34 @@ function MyExamCard({ exam }: { exam: UserApproval }) {
     countdownColor = 'text-blue-600';
   } else if (countdown.status === 'ongoing') {
     countdownText = `${fmtDurationFull(countdown.minutesLeft)} akan berakhir`;
-    countdownColor = 'text-emerald-600 font-medium';
+    countdownColor = 'text-[#D97706] font-medium';
   } else {
     countdownText = '0 menit (Selesai)';
     countdownColor = 'text-gray-400';
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group overflow-hidden flex flex-col">
-      <div className={`h-2 w-full ${isEventFinished || exam.is_completed ? 'bg-gray-300' : exam.status === 'approved' ? 'bg-emerald-500' : exam.status === 'revoked' ? 'bg-red-400' : 'bg-amber-400'}`} />
-      <div className="p-5 flex flex-col flex-1">
+    <div className="bg-white rounded-2xl border border-[#E8DCC8] shadow-sm hover:shadow-lg hover:border-[#D4924A] hover:-translate-y-1 transition-all duration-300 group flex flex-col relative overflow-hidden">
+      {/* Decorative top accent */}
+      <div className={`absolute top-0 left-0 right-0 h-1.5 ${
+        exam.is_completed ? 'bg-gradient-to-r from-[#7C4318] to-[#9C5A22]' : 
+        isEventFinished ? 'bg-gray-300' : 
+        exam.status === 'approved' ? 'bg-gradient-to-r from-[#7C4318] to-[#D97706]' : 
+        exam.status === 'revoked' ? 'bg-red-400' : 
+        'bg-amber-400'
+      }`} />
+      
+      <div className="p-5 pt-6 flex flex-col flex-1">
         <div className="flex justify-between items-start mb-4 gap-4">
-          <h3 className="font-bold text-gray-900 text-lg line-clamp-2">{exam.name}</h3>
-          <span className={`flex-shrink-0 px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider ${
-            isEventFinished || exam.is_completed ? 'bg-gray-100 text-gray-500 border-gray-200' :
-            exam.status === 'approved' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
+          <h3 className="font-bold text-gray-900 text-lg leading-snug line-clamp-2 group-hover:text-[#7C4318] transition-colors">{exam.name}</h3>
+          <span className={`flex-shrink-0 px-2.5 py-1 rounded-full border text-[10px] font-extrabold uppercase tracking-widest shadow-sm ${
+            exam.is_completed ? 'bg-[#FAF7F2] text-[#7A4520] border-[#E8DCC8]' :
+            isEventFinished ? 'bg-gray-50 text-gray-500 border-gray-200' :
+            exam.status === 'approved' ? 'bg-[#FAF7F2] text-[#7A4520] border-[#E8DCC8]' :
             exam.status === 'revoked' ? 'bg-red-50 text-red-600 border-red-200' :
             'bg-amber-50 text-amber-600 border-amber-200'
           }`}>
-            {isEventFinished || exam.is_completed ? 'Selesai' : exam.status}
+            {exam.is_completed ? 'SELESAI' : isEventFinished ? 'WAKTU HABIS' : exam.status === 'approved' ? 'SIAP UJIAN' : exam.status}
           </span>
         </div>
         
@@ -540,44 +562,45 @@ function MyExamCard({ exam }: { exam: UserApproval }) {
             </div>
             
             <div className={`flex items-center gap-1.5 ${isEventFinished || exam.is_completed ? 'opacity-70' : ''}`}>
-              <HelpCircle size={14} className={isEventFinished || exam.is_completed ? 'text-gray-400' : 'text-blue-500'} />
-              <span className={`font-medium ${isEventFinished || exam.is_completed ? 'text-gray-400' : 'text-gray-700'}`}>{exam.question_count || 0} soal</span>
+              <HelpCircle size={14} className={isEventFinished || exam.is_completed ? 'text-gray-400' : 'text-[#9C5A22]'} />
+              <span className={`font-medium ${isEventFinished || exam.is_completed ? 'text-gray-400' : 'text-[#5C3010]'}`}>{exam.question_count || 0} soal</span>
             </div>
 
             <div className={`flex items-center gap-1.5 ${isEventFinished || exam.is_completed ? 'opacity-70' : ''}`}>
-              <Trophy size={14} className={isEventFinished || exam.is_completed ? 'text-gray-400' : 'text-emerald-500'} />
-              <span className={`font-medium ${isEventFinished || exam.is_completed ? 'text-gray-400' : 'text-gray-700'}`}>
-                Batas Lulus <span className={`font-bold ${isEventFinished || exam.is_completed ? 'text-gray-500' : 'text-gray-900'}`}>{exam.passing_grade || 0}%</span>
+              <Trophy size={14} className={isEventFinished || exam.is_completed ? 'text-gray-400' : 'text-[#7A4520]'} />
+              <span className={`font-medium ${isEventFinished || exam.is_completed ? 'text-gray-400' : 'text-[#5C3010]'}`}>
+                Batas Lulus <span className={`font-bold ${isEventFinished || exam.is_completed ? 'text-gray-500' : 'text-[#3B1F0A]'}`}>{exam.passing_grade || 0}%</span>
               </span>
             </div>
           </div>
         </div>
         
         {exam.is_completed ? (
-          <div className="space-y-3">
-            <div className={`p-3 rounded-xl border flex flex-col items-center justify-center ${exam.is_passed ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
-              <span className={`text-xs font-bold uppercase tracking-wider mb-1 ${exam.is_passed ? 'text-emerald-600' : 'text-red-600'}`}>
-                {exam.is_passed ? 'Lulus' : 'Tidak Lulus'}
+          <div className="space-y-4 mt-2">
+            <div className="relative overflow-hidden p-4 rounded-xl border bg-[#FAF7F2] border-[#E8DCC8] shadow-inner flex flex-col items-center justify-center">
+              <Trophy size={60} className="absolute -right-4 -bottom-4 text-[#7A4520] opacity-5 pointer-events-none" />
+              <span className={`text-[10px] font-extrabold uppercase tracking-widest mb-1 ${exam.is_passed ? 'text-emerald-600' : 'text-red-600'}`}>
+                {exam.is_passed ? 'Lulus Ujian' : 'Tidak Lulus'}
               </span>
-              <span className={`text-2xl font-black ${exam.is_passed ? 'text-emerald-700' : 'text-red-700'}`}>
+              <span className="text-3xl font-black text-[#5C3410] tracking-tighter">
                 {exam.score.toFixed(2)}
               </span>
             </div>
-            <Link href={`/dashboard/exams/${exam.event_id}/result`} className="w-full flex items-center justify-center gap-2 bg-white text-indigo-600 hover:bg-indigo-50 border border-indigo-200 py-2.5 rounded-xl text-sm font-semibold transition-colors">
+            <Link href={`/dashboard/exams/${exam.event_id}/result`} className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#7C4318] to-[#9C5A22] text-white hover:from-[#5C3010] hover:to-[#7C4318] shadow-sm shadow-amber-900/20 py-2.5 rounded-xl text-sm font-semibold transition-all hover:scale-[1.02]">
               Lihat Hasil & Pembahasan
             </Link>
           </div>
         ) : isEventFinished ? (
-          <button disabled className="w-full flex items-center justify-center gap-2 bg-gray-100 text-gray-500 py-2.5 rounded-xl text-sm font-semibold transition-colors border border-gray-200">
-            <CheckCircle2 size={16} /> Waktu Habis
+          <button disabled className="w-full flex items-center justify-center gap-2 bg-gray-50 text-gray-400 py-2.5 rounded-xl text-sm font-semibold transition-colors border border-gray-200">
+            <CheckCircle2 size={16} /> Ujian Berakhir
           </button>
         ) : exam.status === 'approved' ? (
-          <Link href={`/dashboard/exams/${exam.event_id}`} className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors">
+          <Link href={`/dashboard/exams/${exam.event_id}`} className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#7C4318] to-[#D97706] hover:from-[#5C3010] hover:to-[#B45309] shadow-sm shadow-amber-900/20 text-white py-2.5 rounded-xl text-sm font-semibold transition-all hover:scale-[1.02]">
             <Play size={16} fill="currentColor" /> Mulai Ujian
           </Link>
         ) : exam.status === 'pending' ? (
-          <button disabled className="w-full flex items-center justify-center gap-2 bg-amber-50 text-amber-600 border border-amber-200 py-2.5 rounded-xl text-sm font-semibold transition-colors">
-            Menunggu Admin
+          <button disabled className="w-full flex items-center justify-center gap-2 bg-[#FAF7F2] text-[#9C5A22] border border-[#E8DCC8] py-2.5 rounded-xl text-sm font-semibold transition-colors">
+            <Clock size={16} /> Menunggu Admin
           </button>
         ) : (
           <button disabled className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 border border-red-200 py-2.5 rounded-xl text-sm font-semibold transition-colors">
@@ -610,7 +633,7 @@ function UpcomingExamCard({ event, onEnroll, enrolling }: { event: Event, onEnro
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex flex-col group overflow-hidden">
+    <div className="bg-white rounded-2xl border border-[#E8DCC8] shadow-sm hover:shadow-lg hover:border-[#D4924A] hover:-translate-y-1 transition-all flex flex-col group overflow-hidden">
       <div className={`h-2 w-full ${statusInfo.dot}`} />
       <div className="p-5 flex flex-col flex-1">
         <div className="flex justify-between items-start mb-4 gap-4">
@@ -719,8 +742,8 @@ function PesertaEventsContent() {
       {/* Ujian Saya (My Exams) Section */}
       <section className="space-y-4">
         <div className="flex items-center gap-2.5 mb-2">
-          <div className="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
-            <Trophy size={18} className="text-indigo-700" />
+          <div className="w-9 h-9 rounded-xl bg-[#FAF7F2] border border-[#E8DCC8] shadow-sm flex items-center justify-center flex-shrink-0">
+            <Trophy size={18} className="text-[#7A4520]" />
           </div>
           <div>
             <h2 className="text-gray-900 font-bold text-lg">Ujian Saya</h2>
@@ -758,8 +781,8 @@ function PesertaEventsContent() {
       {/* Jadwal Ujian Tersedia (Upcoming Events) Section */}
       <section className="space-y-4">
         <div className="flex items-center gap-2.5 mb-2">
-          <div className="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
-            <CalendarDays size={18} className="text-blue-700" />
+          <div className="w-9 h-9 rounded-xl bg-[#FAF7F2] border border-[#E8DCC8] shadow-sm flex items-center justify-center flex-shrink-0">
+            <CalendarDays size={18} className="text-[#7A4520]" />
           </div>
           <div>
             <h2 className="text-gray-900 font-bold text-lg">Jadwal Ujian Tersedia</h2>

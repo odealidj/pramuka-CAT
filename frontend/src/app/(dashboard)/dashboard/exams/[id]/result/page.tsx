@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { getExamResultParticipantApi } from '@/services/exam.service';
 import type { UserAnswerDetail } from '@/types/auth';
-import { ChevronLeft, CheckCircle2, XCircle, Award, Frown, Clock, Trophy } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, XCircle, Trophy, Download, Loader2 } from 'lucide-react';
 import Spinner from '@/components/ui/Spinner';
+import { exportReviewAnswersParticipantApi } from '@/services/exam.service';
 
 export default function ExamResultPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -16,6 +17,7 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
   const [results, setResults] = useState<UserAnswerDetail[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -83,40 +85,70 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
 
   const rawScore = totalWeight > 0 ? (achievedWeight / totalWeight) * 100 : 0;
 
+  const handleExportPDF = async () => {
+    if (!user) return;
+    try {
+      setIsExporting(true);
+      await exportReviewAnswersParticipantApi(resolvedParams.id, {
+        participant_name: user.full_name,
+        event_name: "", // handled by backend
+        score: rawScore, // handled by backend
+        passing_grade: 0, // handled by backend
+        is_passed: false // handled by backend
+      });
+    } catch (err) {
+      console.error(err);
+      alert('Gagal mengunduh PDF');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-20">
+    <div className="max-w-4xl mx-auto space-y-6 pt-6 pb-20">
       {/* Header & Back Navigation */}
-      <div className="flex items-center gap-4">
-        <button
-          onClick={() => router.push('/dashboard/events')}
-          className="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all shadow-sm"
-        >
-          <ChevronLeft size={20} />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Hasil & Pembahasan</h1>
-          <p className="text-gray-500 text-sm">Review kembali hasil pekerjaan ujian Anda</p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => router.push('/dashboard/events')}
+            className="group flex items-center justify-center w-10 h-10 bg-white rounded-full border border-gray-200 shadow-sm hover:shadow-md hover:border-[#D4924A] transition-all flex-shrink-0"
+            title="Kembali ke Daftar Ujian"
+          >
+            <ArrowLeft size={20} className="text-gray-500 group-hover:text-[#9C5A22] transition-colors" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Hasil & Pembahasan</h1>
+            <p className="text-gray-500 text-sm">Review kembali hasil pekerjaan ujian Anda</p>
+          </div>
         </div>
+        <button
+          onClick={handleExportPDF}
+          disabled={isExporting}
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium disabled:opacity-50 shadow-sm"
+        >
+          {isExporting ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
+          Download PDF
+        </button>
       </div>
 
       {/* Summary Score Card */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 overflow-hidden relative">
-        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+      <div className="bg-[#FAF7F2] rounded-2xl border border-[#E8DCC8] shadow-sm p-6 overflow-hidden relative">
+        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none text-[#7A4520]">
           <Trophy size={120} />
         </div>
         
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
           <div className="flex-1 space-y-2 text-center md:text-left">
-            <h2 className="text-gray-500 font-medium">Skor Akhir Anda</h2>
-            <div className="text-5xl font-black text-gray-900 tracking-tighter">
+            <h2 className="text-[#7A4520] font-medium">Skor Akhir Anda</h2>
+            <div className="text-5xl font-black text-[#5C3410] tracking-tighter">
               {rawScore.toFixed(2)}
             </div>
             <div className="flex flex-wrap gap-3 mt-4 justify-center md:justify-start">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-sm font-semibold text-gray-700">
-                <CheckCircle2 size={16} className="text-emerald-500" />
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#E8DCC8] text-sm font-semibold text-[#5C3410]">
+                <CheckCircle2 size={16} className="text-emerald-600" />
                 {correctCount} Benar
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-sm font-semibold text-gray-700">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#E8DCC8] text-sm font-semibold text-[#5C3410]">
                 <XCircle size={16} className="text-red-500" />
                 {totalQuestions - correctCount} Salah
               </div>
@@ -211,7 +243,6 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
                 
                 {!hasAnswered && (
                   <div className="mt-4 p-3 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl text-sm font-medium flex items-center gap-2">
-                    <Clock size={16} />
                     Anda tidak menjawab soal ini.
                   </div>
                 )}

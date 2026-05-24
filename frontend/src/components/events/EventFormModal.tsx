@@ -73,14 +73,14 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-gray-700 text-sm font-semibold mb-1.5">
+      <label className="block text-[#7C4318] text-sm font-bold mb-1.5">
         {label}
         {required && <span className="text-red-500 ml-0.5">*</span>}
       </label>
       {children}
-      {hint && !error && <p className="text-gray-400 text-xs mt-1">{hint}</p>}
+      {hint && !error && <p className="text-[#9C5A22]/80 font-medium text-xs mt-1.5">{hint}</p>}
       {error && (
-        <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+        <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1 font-medium">
           <AlertCircle size={11} />
           {error}
         </p>
@@ -90,10 +90,10 @@ function Field({
 }
 
 const inputCls = (hasErr?: boolean) =>
-  `w-full px-3.5 py-2.5 rounded-xl border text-gray-800 text-sm outline-none transition-all ${
+  `w-full px-3.5 py-2.5 rounded-xl border text-[#5C3010] font-medium text-sm placeholder:text-gray-400 outline-none transition-all shadow-sm ${
     hasErr
       ? 'border-red-300 bg-red-50 focus:ring-2 focus:ring-red-200'
-      : 'border-gray-200 focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400'
+      : 'border-[#E8DCC8] bg-[#FAF7F2] focus:ring-2 focus:ring-[#D4924A]/30 focus:border-[#D4924A] hover:border-[#D4924A]/70'
   }`;
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -179,7 +179,7 @@ export default function EventFormModal({
         </div>
       )}
 
-      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4" noValidate>
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6 pt-2" noValidate>
         {/* Name */}
         <Field label="Nama Ujian" error={errors.name?.message} required>
           <input
@@ -192,7 +192,7 @@ export default function EventFormModal({
         </Field>
 
         {/* Start & End Time */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-6">
           <Field label="Waktu Mulai" error={errors.start_time?.message} required>
             <input
               type="datetime-local"
@@ -212,7 +212,7 @@ export default function EventFormModal({
         </div>
 
         {/* Duration & Passing Grade */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-6">
           <Field
             label="Durasi Pengerjaan (menit)"
             error={errors.duration_minutes?.message}
@@ -248,21 +248,21 @@ export default function EventFormModal({
         </div>
 
         {/* Buttons */}
-        <div className="flex gap-3 pt-2">
+        <div className="flex gap-4 pt-6 border-t border-[#E8DCC8] mt-4">
           <button
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 transition-all disabled:opacity-50"
+            className="flex-1 px-4 py-3 rounded-xl border border-[#E8DCC8] bg-[#FAF7F2] text-[#9C5A22] text-sm font-bold hover:bg-[#E8DCC8] hover:text-[#5C3010] transition-all disabled:opacity-50 shadow-sm"
           >
             Batal
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#7C4318] to-[#9C5A22] text-white text-sm font-semibold hover:from-[#5C3010] hover:to-[#7C4318] transition-all disabled:opacity-70 shadow-sm shadow-amber-900/20"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-[#7C4318] to-[#5C3010] text-white text-sm font-bold hover:from-[#5C3010] hover:to-[#4A260D] transition-all disabled:opacity-70 shadow-md shadow-[#7C4318]/20"
           >
-            {isSubmitting && <Spinner size={14} className="text-white" />}
+            {isSubmitting && <Spinner size={16} className="text-white" />}
             {isSubmitting ? 'Menyimpan...' : isEdit ? 'Simpan Perubahan' : 'Buat Ujian'}
           </button>
         </div>

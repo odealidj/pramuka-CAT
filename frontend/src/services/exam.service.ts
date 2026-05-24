@@ -113,3 +113,89 @@ export const getExamResultParticipantApi = async (eventId: string): Promise<User
   );
   return res.data.data;
 };
+
+export const exportReviewParticipantAnswersApi = async (
+  approvalId: string,
+  params: {
+    participant_name: string;
+    event_name: string;
+    score: number;
+    passing_grade: number;
+    is_passed: boolean;
+  }
+): Promise<void> => {
+  const searchParams = new URLSearchParams({
+    participant_name: params.participant_name,
+    event_name: params.event_name,
+    score: params.score.toString(),
+    passing_grade: params.passing_grade.toString(),
+    is_passed: params.is_passed.toString(),
+  });
+
+  const res = await httpClient.get(
+    `/admin/exams/approvals/${approvalId}/answers/export-pdf?${searchParams.toString()}`,
+    { responseType: 'blob' }
+  );
+
+  let filename = `PramukaCAT - Review Jawaban ${params.participant_name}.pdf`;
+  const disposition = res.headers['content-disposition'];
+  if (disposition) {
+    const match = disposition.match(/filename\*?=(?:UTF-8'')?["']?([^"';\r\n]+)["']?/i);
+    if (match && match[1]) {
+      filename = decodeURIComponent(match[1].trim());
+    }
+  }
+
+  const blob = new Blob([res.data], { type: 'application/pdf' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+};
+
+export const exportReviewAnswersParticipantApi = async (
+  eventId: string,
+  params: {
+    participant_name: string;
+    event_name: string;
+    score: number;
+    passing_grade: number;
+    is_passed: boolean;
+  }
+): Promise<void> => {
+  const searchParams = new URLSearchParams({
+    participant_name: params.participant_name,
+    event_name: params.event_name,
+    score: params.score.toString(),
+    passing_grade: params.passing_grade.toString(),
+    is_passed: params.is_passed.toString(),
+  });
+
+  const res = await httpClient.get(
+    `/protected/exams/my-results/${eventId}/export-pdf?${searchParams.toString()}`,
+    { responseType: 'blob' }
+  );
+
+  let filename = `PramukaCAT - Hasil Ujian ${params.participant_name}.pdf`;
+  const disposition = res.headers['content-disposition'];
+  if (disposition) {
+    const match = disposition.match(/filename\*?=(?:UTF-8'')?["']?([^"';\r\n]+)["']?/i);
+    if (match && match[1]) {
+      filename = decodeURIComponent(match[1].trim());
+    }
+  }
+
+  const blob = new Blob([res.data], { type: 'application/pdf' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+};

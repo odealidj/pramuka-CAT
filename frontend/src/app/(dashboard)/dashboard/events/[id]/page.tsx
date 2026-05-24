@@ -14,6 +14,8 @@ import {
   AlertCircle,
   Plus,
   XCircle,
+  FileSpreadsheet,
+  FileText,
   Trophy,
   Search,
   ChevronLeft,
@@ -32,6 +34,7 @@ import {
   revokeParticipantApi,
   removeEventParticipantApi,
   exportEventParticipantsApi,
+  exportEventQuestionsApi,
 } from '@/services/event.service';
 import { listQuestionsApi } from '@/services/question.service';
 import { listCategoriesApi } from '@/services/category.service';
@@ -82,6 +85,8 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
   const [eventQuestions, setEventQuestions] = useState<Question[]>([]);
   const [loadingQ, setLoadingQ] = useState(false);
   const [eventQuestionSearch, setEventQuestionSearch] = useState('');
+  const [exportingQFormat, setExportingQFormat] = useState<'excel' | 'pdf' | null>(null);
+  const [showKey, setShowKey] = useState(false);
 
   // Bank questions picker state
   const [bankQuestions, setBankQuestions] = useState<Question[]>([]);
@@ -293,6 +298,17 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
   };
 
   // ─── Export ──────────────────────────────────────────────────────────────────
+  const handleExportQuestions = async (format: 'excel' | 'pdf') => {
+    try {
+      setExportingQFormat(format);
+      await exportEventQuestionsApi(eventId, format, showKey);
+    } catch (err) {
+      onToast('error', 'Gagal mengekspor soal.');
+    } finally {
+      setExportingQFormat(null);
+    }
+  };
+
   const handleExport = async (format: 'excel' | 'pdf') => {
     try {
       setExportingFormat(format);
@@ -332,16 +348,16 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
     <div className="flex flex-col h-[calc(100vh-theme(spacing.16))] bg-gray-50 -m-6 rounded-tl-xl overflow-hidden">
       {/* ─── Header ─── */}
       <div className="bg-white border-b border-gray-200 px-6 py-4 flex-shrink-0 z-10 shadow-sm relative">
-        <button
-          onClick={() => router.push('/dashboard/events')}
-          className="flex items-center gap-2 text-sm text-gray-500 hover:text-amber-600 transition-colors font-medium mb-3 group"
-        >
-          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-          Kembali ke Daftar Ujian
-        </button>
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => router.push('/dashboard/events')}
+                className="group flex items-center justify-center w-10 h-10 bg-white rounded-full border border-gray-200 shadow-sm hover:shadow-md hover:border-[#D4924A] transition-all flex-shrink-0 mr-1"
+                title="Kembali ke Daftar Ujian"
+              >
+                <ArrowLeft size={20} className="text-gray-500 group-hover:text-[#9C5A22] transition-colors" />
+              </button>
               <h1 className="text-2xl font-black text-gray-900 tracking-tight">{event.name}</h1>
               {Date.now() > new Date(event.end_time).getTime() ? (
                 <span className="inline-flex px-2.5 py-1 rounded-full border text-xs font-bold uppercase tracking-wider bg-gray-100 text-gray-600 border-gray-200">
@@ -400,7 +416,7 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
       </div>
 
       {/* ─── Main Workspace ─── */}
-      <div className={`flex-1 overflow-hidden flex flex-col relative transition-all duration-300 ${isFinished ? 'opacity-60 grayscale-[0.3]' : ''}`}>
+      <div className={`flex-1 overflow-hidden flex flex-col relative transition-all duration-300 ${isFinished ? 'opacity-60 grayscale-[0.3]' : ''} bg-[#FAF7F2]/40`}>
         {/* Tab: Questions (Split Pane) */}
         <div className={`flex-1 flex overflow-hidden transition-all duration-300 ${tab === 'questions' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8 hidden'}`}>
           {/* Left Pane: Current Questions */}
@@ -412,23 +428,53 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
                   <span className="text-xs font-semibold bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">{eventQuestions.length}</span>
                 </h2>
                 
-                <div className="relative w-64">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <div className="relative w-72 flex items-center gap-2 bg-[#FAF7F2] rounded-xl px-3 py-2 border border-[#E8DCC8] focus-within:ring-2 focus-within:ring-[#D4924A]/30 focus-within:border-[#D4924A] transition-all shadow-sm">
+                  <Search size={14} className="text-[#9C5A22] flex-shrink-0" />
                   <input
                     type="text"
                     placeholder="Cari soal yang ditambahkan..."
                     value={eventQuestionSearch}
                     onChange={(e) => setEventQuestionSearch(e.target.value)}
-                    className="w-full pl-8 pr-8 py-2 rounded-xl border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-amber-400/30 bg-gray-50 focus:bg-white transition-all font-medium"
+                    className="flex-1 bg-transparent text-sm text-[#5C3010] font-medium placeholder:text-gray-400 outline-none pr-6"
                   />
                   {eventQuestionSearch && (
                     <button
                       onClick={() => setEventQuestionSearch('')}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-gray-50/80 rounded-full"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
                     >
                       <XCircle size={14} />
                     </button>
                   )}
+                </div>
+              </div>
+              
+              {/* EXPORT SECTION */}
+              <div className="flex flex-col sm:flex-row items-center justify-between bg-white border border-gray-100 p-3 rounded-xl mb-4 shadow-sm gap-3">
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <div className="relative">
+                      <input type="checkbox" className="sr-only" checked={showKey} onChange={(e) => setShowKey(e.target.checked)} />
+                      <div className={`block w-10 h-6 rounded-full transition-colors ${showKey ? 'bg-amber-500' : 'bg-gray-200'}`}></div>
+                      <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${showKey ? 'translate-x-4' : ''}`}></div>
+                    </div>
+                    <span className="text-sm font-semibold text-gray-700">Sertakan Kunci Jawaban</span>
+                  </label>
+                </div>
+                <div className="flex gap-2 w-full sm:w-auto justify-end">
+                  <button
+                    onClick={() => handleExportQuestions('excel')}
+                    disabled={!!exportingQFormat || eventQuestions.length === 0}
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white border border-[#E8DCC8] rounded-full text-xs font-bold text-[#7C4318] hover:bg-[#FAF7F2] hover:border-[#D4924A] transition-all shadow-sm disabled:opacity-50 group"
+                  >
+                    {exportingQFormat === 'excel' ? <Spinner size={14} /> : <FileSpreadsheet size={14} className="text-emerald-600 group-hover:text-[#9C5A22] transition-colors" />} Excel
+                  </button>
+                  <button
+                    onClick={() => handleExportQuestions('pdf')}
+                    disabled={!!exportingQFormat || eventQuestions.length === 0}
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white border border-[#E8DCC8] rounded-full text-xs font-bold text-[#7C4318] hover:bg-[#FAF7F2] hover:border-[#D4924A] transition-all shadow-sm disabled:opacity-50 group"
+                  >
+                    {exportingQFormat === 'pdf' ? <Spinner size={14} /> : <FileText size={14} className="text-red-600 group-hover:text-[#9C5A22] transition-colors" />} PDF
+                  </button>
                 </div>
               </div>
               
@@ -463,18 +509,18 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
                   {filteredEventQuestions.map((q, i) => (
                     <li
                       key={q.id}
-                      className="flex items-start gap-4 p-4 bg-white shadow-sm rounded-2xl border border-gray-100 group transition-all hover:shadow-md hover:border-amber-200"
+                      className="flex items-start gap-4 p-4 bg-white shadow-sm rounded-2xl border border-[#E8DCC8] group transition-all hover:shadow-md hover:border-[#D4924A] hover:bg-[#FAF7F2]/30"
                     >
-                      <span className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 text-sm font-black flex items-center justify-center flex-shrink-0">
+                      <span className="w-8 h-8 rounded-xl bg-[#FAF7F2] border border-[#E8DCC8] text-[#9C5A22] text-sm font-black flex items-center justify-center flex-shrink-0 shadow-sm">
                         {i + 1}
                       </span>
                       <div className="flex-1">
-                        <p className="text-gray-800 text-sm font-medium leading-relaxed mb-2">{q.question_text}</p>
+                        <p className="text-gray-800 text-sm font-medium leading-relaxed mb-2 group-hover:text-[#7C4318] transition-colors">{q.question_text}</p>
                         <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-600 border border-indigo-100">
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200">
                             Bobot: {q.weight || 1}
                           </span>
-                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-100 line-clamp-1" title={getAnswerText(q)}>
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 line-clamp-1" title={getAnswerText(q)}>
                             Jawaban: {q.correct_answer || 'N/A'} - {getAnswerText(q)}
                           </span>
                         </div>
@@ -496,20 +542,20 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
 
           {/* Right Pane: Sticky Bank Picker */}
           {!isFinished && (
-            <div className="w-[400px] flex-shrink-0 border-l border-gray-200 bg-white flex flex-col shadow-[-4px_0_24px_rgba(0,0,0,0.02)] z-10">
-            <div className="p-5 border-b border-gray-100 bg-gradient-to-br from-indigo-50/50 to-white">
-              <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
-                <Search size={16} className="text-indigo-500" /> Bank Soal
+            <div className="w-[400px] flex-shrink-0 border-l border-[#E8DCC8] bg-white flex flex-col shadow-[-4px_0_24px_rgba(0,0,0,0.02)] z-10">
+            <div className="p-5 border-b border-[#E8DCC8] bg-gradient-to-br from-[#FAF7F2] to-white">
+              <h3 className="font-bold text-[#7C4318] flex items-center gap-2 mb-4">
+                <Search size={16} className="text-[#9C5A22]" /> Bank Soal
               </h3>
               
               {/* Random Pull Accordion */}
-              <div className="bg-white border border-indigo-100 rounded-xl p-4 mb-5 shadow-sm">
-                <p className="text-xs text-indigo-800 font-bold mb-3 uppercase tracking-wider">Tarik Soal Acak</p>
+              <div className="bg-white border border-[#E8DCC8] rounded-xl p-4 mb-5 shadow-sm">
+                <p className="text-xs text-[#9C5A22] font-bold mb-3 uppercase tracking-wider">Tarik Soal Acak</p>
                 <div className="flex flex-col gap-3">
                   <select
                     value={randomForm.category_id}
                     onChange={(e) => setRandomForm((s) => ({ ...s, category_id: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-gray-50 outline-none focus:ring-2 focus:ring-indigo-300 focus:bg-white transition-all font-medium"
+                    className="w-full px-3 py-2 rounded-lg border border-[#E8DCC8] text-sm bg-[#FAF7F2]/50 outline-none focus:ring-2 focus:ring-[#D4924A]/30 focus:bg-white transition-all font-medium"
                   >
                     <option value="">Semua Kategori</option>
                     {categories.map((c) => (
@@ -523,12 +569,12 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
                       placeholder="Jumlah"
                       value={randomForm.amount}
                       onChange={(e) => setRandomForm((s) => ({ ...s, amount: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-gray-50 outline-none focus:ring-2 focus:ring-indigo-300 focus:bg-white font-medium"
+                      className="w-full px-3 py-2 rounded-lg border border-[#E8DCC8] text-sm bg-[#FAF7F2]/50 outline-none focus:ring-2 focus:ring-[#D4924A]/30 focus:bg-white font-medium"
                     />
                     <button
                       onClick={handleRandomAdd}
                       disabled={randomLoading}
-                      className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 flex-shrink-0"
+                      className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-[#9C5A22] text-white text-sm font-bold hover:bg-[#7A4520] transition-all disabled:opacity-50 flex-shrink-0 shadow-sm"
                     >
                       {randomLoading ? <Spinner size={14} className="text-white" /> : <Shuffle size={14} />} Tarik
                     </button>
@@ -537,19 +583,19 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
               </div>
 
               {/* Search Bar */}
-              <div className="relative">
-                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <div className="flex items-center gap-2 bg-[#FAF7F2] rounded-xl px-3 py-2.5 border border-[#E8DCC8] focus-within:ring-2 focus-within:ring-[#D4924A]/30 focus-within:border-[#D4924A] transition-all relative shadow-sm">
+                <Search size={16} className="text-[#9C5A22] flex-shrink-0" />
                 <input
                   type="text"
                   placeholder="Cari soal spesifik..."
                   value={pickerSearch}
                   onChange={(e) => setPickerSearch(e.target.value)}
-                  className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-amber-400/30 bg-gray-50 focus:bg-white transition-all font-medium"
+                  className="flex-1 bg-transparent text-sm text-[#5C3010] font-medium placeholder:text-gray-400 outline-none pr-6"
                 />
                 {pickerSearch && (
                   <button
                     onClick={() => setPickerSearch('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
                   >
                     <XCircle size={16} />
                   </button>
@@ -557,9 +603,9 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-3 bg-gray-50/50">
+            <div className="flex-1 overflow-y-auto p-3 bg-white">
               {pickerLoading ? (
-                <div className="flex justify-center py-8"><Spinner size={22} className="text-amber-600" /></div>
+                <div className="flex justify-center py-8"><Spinner size={22} className="text-[#9C5A22]" /></div>
               ) : bankQuestions.length === 0 ? (
                 <p className="text-gray-400 text-sm text-center py-10">Tidak ada soal tersisa di Bank Soal.</p>
               ) : (
@@ -567,15 +613,15 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
                   {bankQuestions.map((q) => (
                     <li
                       key={q.id}
-                      className="flex flex-col gap-3 p-3.5 bg-white rounded-xl border border-gray-100 hover:border-amber-300 hover:shadow-md transition-all group cursor-pointer"
+                      className="flex flex-col gap-3 p-3.5 bg-white rounded-xl border border-[#E8DCC8] hover:border-[#D4924A] hover:bg-[#FAF7F2]/30 hover:shadow-md transition-all group cursor-pointer"
                       onClick={() => handleAddQuestion(q.id)}
                     >
-                      <p className="text-gray-700 text-sm leading-snug line-clamp-3">
+                      <p className="text-gray-700 text-sm leading-snug line-clamp-3 group-hover:text-[#7C4318]">
                         {q.question_text}
                       </p>
                       <button
                         disabled={addingQId === q.id}
-                        className="self-end flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 text-xs font-bold group-hover:bg-amber-600 group-hover:text-white transition-all disabled:opacity-50"
+                        className="self-end flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FAF7F2] border border-[#E8DCC8] text-[#9C5A22] text-xs font-bold group-hover:bg-[#9C5A22] group-hover:text-white transition-all disabled:opacity-50 shadow-sm"
                       >
                         {addingQId === q.id ? <Spinner size={12} /> : <Plus size={12} />} Tambah
                       </button>
@@ -592,19 +638,19 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
         <div className={`flex-1 overflow-y-auto p-6 transition-all duration-300 ${tab === 'participants' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8 hidden'}`}>
           <div className="max-w-7xl mx-auto space-y-6">
             <div className="flex flex-col sm:flex-row justify-between gap-3">
-              <div className="relative w-full sm:w-80">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <div className="w-full sm:w-80 flex items-center gap-2 bg-[#FAF7F2] rounded-xl px-3 py-2.5 border border-[#E8DCC8] focus-within:ring-2 focus-within:ring-[#D4924A]/30 focus-within:border-[#D4924A] transition-all relative shadow-sm">
+                <Search size={16} className="text-[#9C5A22] flex-shrink-0" />
                 <input
                   type="text"
                   placeholder="Cari nama atau nomor peserta..."
                   value={pSearchInput}
                   onChange={(e) => setPSearchInput(e.target.value)}
-                  className="w-full pl-8 pr-8 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-amber-400/30 bg-white transition-all font-medium shadow-sm"
+                  className="flex-1 bg-transparent text-sm text-[#5C3010] font-medium placeholder:text-gray-400 outline-none pr-6"
                 />
                 {pSearchInput && (
                   <button
                     onClick={() => setPSearchInput('')}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
                   >
                     <XCircle size={14} />
                   </button>
@@ -614,16 +660,16 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
                 <button
                   onClick={() => handleExport('excel')}
                   disabled={!!exportingFormat}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-emerald-100 bg-emerald-50 text-emerald-700 text-sm font-bold hover:bg-emerald-100 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-[#E8DCC8] rounded-full text-sm font-bold text-[#7C4318] hover:bg-[#FAF7F2] hover:border-[#D4924A] transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed group"
                 >
-                  {exportingFormat === 'excel' ? <Spinner size={16} /> : <Download size={16} />} Export Excel
+                  {exportingFormat === 'excel' ? <Spinner size={16} /> : <FileSpreadsheet size={16} className="text-emerald-600 group-hover:text-[#9C5A22] transition-colors" />} Export Excel
                 </button>
                 <button
                   onClick={() => handleExport('pdf')}
                   disabled={!!exportingFormat}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-red-100 bg-red-50 text-red-600 text-sm font-bold hover:bg-red-100 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-[#E8DCC8] rounded-full text-sm font-bold text-[#7C4318] hover:bg-[#FAF7F2] hover:border-[#D4924A] transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed group"
                 >
-                  {exportingFormat === 'pdf' ? <Spinner size={16} /> : <Download size={16} />} Export PDF
+                  {exportingFormat === 'pdf' ? <Spinner size={16} /> : <FileText size={16} className="text-red-600 group-hover:text-[#9C5A22] transition-colors" />} Export PDF
                 </button>
               </div>
             </div>
@@ -643,31 +689,31 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-gray-50 border-b border-gray-100">
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-12">No</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Nomor Peserta</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Nama Peserta</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Nilai</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Hasil</th>
-                        <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Aksi</th>
+                      <tr className="table-header-premium">
+                        <th className="table-header-cell-premium w-12">No</th>
+                        <th className="table-header-cell-premium">Nomor Peserta</th>
+                        <th className="table-header-cell-premium">Nama Peserta</th>
+                        <th className="table-header-cell-premium">Status</th>
+                        <th className="table-header-cell-premium">Nilai</th>
+                        <th className="table-header-cell-premium">Hasil</th>
+                        <th className="table-header-cell-premium text-right">Aksi</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                       {participants.map((p, idx) => (
-                        <tr key={p.user_id} className="hover:bg-gray-50/50 transition-colors">
-                          <td className="px-6 py-4 text-gray-500 text-xs">{(pPage - 1) * 10 + idx + 1}</td>
-                          <td className="px-6 py-4 font-mono text-gray-600 text-sm">{p.username}</td>
-                          <td className="px-6 py-4 font-bold text-gray-900 text-sm">{p.full_name}</td>
-                          <td className="px-6 py-4">
+                        <tr key={p.user_id} className="table-row-premium">
+                          <td className="table-cell-premium font-medium">{(pPage - 1) * 10 + idx + 1}</td>
+                          <td className="table-cell-premium font-mono text-gray-500">{p.username}</td>
+                          <td className="table-cell-premium font-bold text-gray-800">{p.full_name}</td>
+                          <td className="table-cell-premium">
                             <StatusBadge status={p.status} />
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="table-cell-premium">
                             <span className="font-black text-gray-900 text-base">
                               {p.is_completed ? p.score.toFixed(1) : '—'}
                             </span>
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="table-cell-premium">
                             {p.is_completed ? (
                               p.is_passed ? (
                                 <span className="inline-flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg text-xs font-bold">
@@ -682,7 +728,7 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
                               <span className="text-gray-400 text-xs font-medium italic">Belum selesai</span>
                             )}
                           </td>
-                          <td className="px-6 py-4 text-right">
+                          <td className="table-cell-premium">
                             <div className="flex items-center justify-end gap-2">
                               {(p.status.toLowerCase() === 'pending' || p.status.toLowerCase() === 'revoked') && (
                                 <button

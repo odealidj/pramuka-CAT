@@ -72,14 +72,14 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
         )}
 
         {/* Page Content */}
-        <main className={`flex-1 overflow-auto bg-gray-50/50 ${isExamMode ? 'p-0' : 'p-4 lg:p-6'}`}>
+        <main className={`flex-1 overflow-auto bg-[#FAF7F2] ${isExamMode ? 'p-0' : 'p-4 lg:p-6'}`}>
           {children}
         </main>
 
         {/* Footer - Hidden in Exam Mode */}
         {!isExamMode && (
-          <footer className="border-t border-gray-200 px-6 py-3 bg-white">
-            <p className="text-gray-400 text-xs text-center">
+          <footer className="border-t border-[#E8DCC8] px-6 py-4 bg-transparent">
+            <p className="text-[#7A4520]/70 font-medium text-xs text-center tracking-wide">
               © {new Date().getFullYear()} Pramuka CAT — Sistem Ujian Digital. All rights reserved.
             </p>
           </footer>

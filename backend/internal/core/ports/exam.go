@@ -37,4 +37,6 @@ type ExamService interface {
 
 	ReviewParticipantAnswers(ctx context.Context, approvalID uuid.UUID) ([]domain.UserAnswerDetail, error)
 	ReviewParticipantAnswersByEvent(ctx context.Context, userID uuid.UUID, eventID uuid.UUID) ([]domain.UserAnswerDetail, error)
+	ExportReviewAnswersPDF(ctx context.Context, approvalID uuid.UUID, participantName, eventName string, score float64, passingGrade float64, isPassed bool) ([]byte, error)
+	ExportReviewAnswersByEventPDF(ctx context.Context, userID uuid.UUID, eventID uuid.UUID, participantName, eventName string, score float64, passingGrade float64, isPassed bool) ([]byte, error)
 }

@@ -177,7 +177,7 @@ export default function ProfilePage() {
     <div className="max-w-6xl mx-auto space-y-6">
       
       {/* Banner / Header Card */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sm:p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 relative overflow-hidden">
+      <div className="bg-white rounded-3xl border border-[#E8DCC8] shadow-sm hover:shadow-md hover:border-[#D4924A] transition-all duration-300 p-6 sm:p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 relative overflow-hidden">
         {/* Abstract Background Element */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-amber-50 rounded-full blur-3xl -mr-20 -mt-20 opacity-60"></div>
         
@@ -204,13 +204,13 @@ export default function ProfilePage() {
         <div className="flex-1 text-center sm:text-left z-10 pt-2 sm:pt-4">
           <h1 className="text-gray-900 text-2xl sm:text-3xl font-extrabold">{user.full_name}</h1>
           <p className="text-gray-500 font-medium mb-3">@{user.username}</p>
-          <div className="inline-flex px-3 py-1 bg-amber-100 text-amber-800 rounded-lg text-xs font-bold uppercase tracking-wider">
+          <div className="inline-flex px-3 py-1 bg-gradient-to-r from-[#D4924A] to-[#7C4318] text-white rounded-lg text-xs font-bold uppercase tracking-wider shadow-sm">
             {user.role}
           </div>
 
           {selectedFile && (
             <div className="mt-4 flex items-center justify-center sm:justify-start gap-3">
-              <button onClick={handleUpload} disabled={isUploading} className="flex items-center gap-2 bg-emerald-600 text-white text-sm font-semibold py-2 px-5 rounded-xl hover:bg-emerald-700 transition-all shadow-md shadow-emerald-900/10">
+              <button onClick={handleUpload} disabled={isUploading} className="flex items-center gap-2 bg-[#7C4318] text-white text-sm font-semibold py-2 px-5 rounded-xl hover:bg-[#5C3010] transition-all shadow-md shadow-[#7C4318]/20">
                 {isUploading ? <Spinner size={16} className="text-white/80" /> : <Upload size={16} />} Simpan Foto
               </button>
               <button onClick={() => { setSelectedFile(null); setPreviewUrl(null); }} className="text-gray-400 hover:text-gray-600">
@@ -228,17 +228,17 @@ export default function ProfilePage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Left Column: Personal Info */}
-        <div className="lg:col-span-7 bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sm:p-8">
+        <div className="lg:col-span-7 bg-white rounded-3xl border border-[#E8DCC8] shadow-sm hover:shadow-md hover:border-[#D4924A] transition-all duration-300 p-6 sm:p-8">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-gray-800 text-lg font-bold flex items-center gap-2">
-              <UserIcon size={20} className="text-amber-600" /> Informasi Pribadi
+              <UserIcon size={20} className="text-[#9C5A22]" /> Informasi Pribadi
             </h3>
             {!isEditing ? (
-              <button onClick={() => setIsEditing(true)} className="flex items-center gap-1.5 text-amber-600 text-sm font-semibold hover:text-amber-700 bg-amber-50 px-3 py-1.5 rounded-lg transition-colors">
+              <button onClick={() => setIsEditing(true)} className="flex items-center gap-1.5 text-[#9C5A22] text-sm font-bold hover:bg-[#E8DCC8]/50 bg-[#FAF7F2] px-3 py-1.5 rounded-lg transition-colors border border-[#E8DCC8]">
                 <Edit2 size={14} /> Edit
               </button>
             ) : (
-              <button onClick={() => { setIsEditing(false); setFormData({ ...formData, full_name: user.full_name, username: user.username, email: user.email || '' }); }} className="flex items-center gap-1.5 text-gray-500 hover:text-gray-700 text-sm font-medium bg-gray-50 px-3 py-1.5 rounded-lg transition-colors">
+              <button onClick={() => { setIsEditing(false); setFormData({ ...formData, full_name: user.full_name, username: user.username, email: user.email || '' }); }} className="flex items-center gap-1.5 text-gray-500 hover:text-gray-700 text-sm font-bold bg-gray-50 px-3 py-1.5 rounded-lg transition-colors border border-gray-200">
                 <X size={14} /> Batal
               </button>
             )}
@@ -246,29 +246,29 @@ export default function ProfilePage() {
 
           <div className="space-y-5">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Nama Lengkap</label>
+              <label className="block text-sm font-bold text-[#7C4318] mb-1.5">Nama Lengkap</label>
               {isEditing ? (
-                <input type="text" value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 outline-none transition-all" />
+                <input type="text" value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})} className="w-full px-4 py-2.5 bg-[#FAF7F2] border border-[#E8DCC8] rounded-xl text-sm focus:ring-2 focus:ring-[#D4924A]/30 focus:border-[#D4924A] outline-none transition-all text-[#5C3010] font-medium" />
               ) : (
-                <div className="w-full px-4 py-2.5 bg-gray-50/50 border border-transparent rounded-xl text-gray-800 text-sm font-medium">{user.full_name}</div>
+                <div className="w-full px-4 py-2.5 bg-[#FAF7F2]/50 border border-transparent rounded-xl text-[#5C3010] text-sm font-bold">{user.full_name}</div>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Username</label>
+              <label className="block text-sm font-bold text-[#7C4318] mb-1.5">Username</label>
               {isEditing ? (
-                <input type="text" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 outline-none transition-all" />
+                <input type="text" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} className="w-full px-4 py-2.5 bg-[#FAF7F2] border border-[#E8DCC8] rounded-xl text-sm focus:ring-2 focus:ring-[#D4924A]/30 focus:border-[#D4924A] outline-none transition-all text-[#5C3010] font-medium" />
               ) : (
-                <div className="w-full px-4 py-2.5 bg-gray-50/50 border border-transparent rounded-xl text-gray-800 text-sm font-medium">{user.username}</div>
+                <div className="w-full px-4 py-2.5 bg-[#FAF7F2]/50 border border-transparent rounded-xl text-[#5C3010] text-sm font-bold">{user.username}</div>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email</label>
+              <label className="block text-sm font-bold text-[#7C4318] mb-1.5">Email</label>
               {isEditing ? (
-                <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 outline-none transition-all" />
+                <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full px-4 py-2.5 bg-[#FAF7F2] border border-[#E8DCC8] rounded-xl text-sm focus:ring-2 focus:ring-[#D4924A]/30 focus:border-[#D4924A] outline-none transition-all text-[#5C3010] font-medium" />
               ) : (
-                <div className="w-full px-4 py-2.5 bg-gray-50/50 border border-transparent rounded-xl text-gray-800 text-sm font-medium">{user.email || <span className="text-gray-400 italic">Belum diatur</span>}</div>
+                <div className="w-full px-4 py-2.5 bg-[#FAF7F2]/50 border border-transparent rounded-xl text-[#5C3010] text-sm font-bold">{user.email || <span className="text-gray-400 italic font-normal">Belum diatur</span>}</div>
               )}
             </div>
 
@@ -285,7 +285,7 @@ export default function ProfilePage() {
 
             {isEditing && (
               <div className="pt-2">
-                <button onClick={handleProfileSave} disabled={isSaving || !formData.full_name || !formData.username || !formData.email} className="w-full flex justify-center items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-xl font-semibold transition-all shadow-md disabled:opacity-50">
+                <button onClick={handleProfileSave} disabled={isSaving || !formData.full_name || !formData.username || !formData.email} className="w-full flex justify-center items-center gap-2 bg-[#7C4318] hover:bg-[#5C3010] text-white py-3 rounded-xl font-bold transition-all shadow-sm disabled:opacity-50">
                   {isSaving ? <Spinner size={18} className="text-white" /> : <Save size={18} />} Simpan Profil Pribadi
                 </button>
               </div>
@@ -297,23 +297,23 @@ export default function ProfilePage() {
         <div className="lg:col-span-5 space-y-6">
           
           {/* Security Card */}
-          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sm:p-8">
+          <div className="bg-white rounded-3xl border border-[#E8DCC8] shadow-sm hover:shadow-md hover:border-[#D4924A] transition-all duration-300 p-6 sm:p-8">
             <div className="mb-6">
               <h3 className="text-gray-800 text-lg font-bold flex items-center gap-2">
-                <KeyRound size={20} className="text-amber-600" /> Keamanan Akun
+                <KeyRound size={20} className="text-[#9C5A22]" /> Keamanan Akun
               </h3>
-              <p className="text-sm text-gray-500 mt-1">Perbarui kata sandi Anda secara berkala.</p>
+              <p className="text-sm text-gray-500 mt-1 font-medium">Perbarui kata sandi Anda secara berkala.</p>
             </div>
 
             <div className="space-y-4">
               <div>
-                <input type="password" value={passwordData.old_password} onChange={e => setPasswordData({...passwordData, old_password: e.target.value})} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 outline-none" placeholder="Kata Sandi Saat Ini" />
+                <input type="password" value={passwordData.old_password} onChange={e => setPasswordData({...passwordData, old_password: e.target.value})} className="w-full px-4 py-2.5 bg-[#FAF7F2] border border-[#E8DCC8] rounded-xl text-sm focus:ring-2 focus:ring-[#D4924A]/30 focus:border-[#D4924A] outline-none transition-all placeholder:text-gray-400 text-[#5C3010] font-medium" placeholder="Kata Sandi Saat Ini" />
               </div>
               <div>
-                <input type="password" value={passwordData.new_password} onChange={e => setPasswordData({...passwordData, new_password: e.target.value})} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 outline-none" placeholder="Kata Sandi Baru" />
+                <input type="password" value={passwordData.new_password} onChange={e => setPasswordData({...passwordData, new_password: e.target.value})} className="w-full px-4 py-2.5 bg-[#FAF7F2] border border-[#E8DCC8] rounded-xl text-sm focus:ring-2 focus:ring-[#D4924A]/30 focus:border-[#D4924A] outline-none transition-all placeholder:text-gray-400 text-[#5C3010] font-medium" placeholder="Kata Sandi Baru" />
               </div>
               <div>
-                <input type="password" value={passwordData.confirm_password} onChange={e => setPasswordData({...passwordData, confirm_password: e.target.value})} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 outline-none" placeholder="Konfirmasi Kata Sandi Baru" />
+                <input type="password" value={passwordData.confirm_password} onChange={e => setPasswordData({...passwordData, confirm_password: e.target.value})} className="w-full px-4 py-2.5 bg-[#FAF7F2] border border-[#E8DCC8] rounded-xl text-sm focus:ring-2 focus:ring-[#D4924A]/30 focus:border-[#D4924A] outline-none transition-all placeholder:text-gray-400 text-[#5C3010] font-medium" placeholder="Konfirmasi Kata Sandi Baru" />
               </div>
 
               {errorMsg?.type === 'password' && (
@@ -327,14 +327,14 @@ export default function ProfilePage() {
                 </div>
               )}
 
-              <button onClick={handlePasswordSave} disabled={isSavingPassword || !passwordData.old_password || !passwordData.new_password || !passwordData.confirm_password} className="w-full flex justify-center items-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-800 py-2.5 rounded-xl font-semibold transition-all disabled:opacity-50">
-                {isSavingPassword ? <Spinner size={16} className="text-gray-600" /> : <Lock size={16} />} Perbarui Kata Sandi
+              <button onClick={handlePasswordSave} disabled={isSavingPassword || !passwordData.old_password || !passwordData.new_password || !passwordData.confirm_password} className="w-full flex justify-center items-center gap-2 bg-[#FAF7F2] border border-[#E8DCC8] text-[#9C5A22] hover:bg-[#7C4318] hover:text-white hover:border-[#7C4318] py-2.5 rounded-xl font-bold transition-all disabled:opacity-50 shadow-sm">
+                {isSavingPassword ? <Spinner size={16} className="text-current" /> : <Lock size={16} />} Perbarui Kata Sandi
               </button>
             </div>
           </div>
 
           {/* Notifications Card */}
-          <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-3xl border border-amber-400 shadow-md p-6 sm:p-8 text-white relative overflow-hidden">
+          <div className="bg-gradient-to-br from-[#D4924A] to-[#7C4318] rounded-3xl border border-[#9C5A22] shadow-sm p-6 sm:p-8 text-white relative overflow-hidden hover:shadow-md transition-all duration-300">
             <div className="absolute right-0 bottom-0 opacity-10 translate-x-4 translate-y-4">
               <Bell size={120} />
             </div>
@@ -343,23 +343,23 @@ export default function ProfilePage() {
               <h3 className="text-white text-lg font-bold flex items-center gap-2 mb-2">
                 <Bell size={20} /> Notifikasi Email
               </h3>
-              <p className="text-amber-100 text-sm mb-6 max-w-[90%]">
+              <p className="text-[#FAF7F2]/80 text-sm mb-6 max-w-[90%] font-medium">
                 Terima pemberitahuan penting seperti jadwal ujian baru atau hasil kelulusan langsung ke email Anda.
               </p>
 
-              <div className="flex items-center justify-between bg-white/10 p-4 rounded-2xl backdrop-blur-sm border border-white/20">
-                <span className="font-semibold text-sm">Status Notifikasi</span>
+              <div className="flex items-center justify-between bg-white/10 p-4 rounded-2xl backdrop-blur-sm border border-white/20 shadow-inner">
+                <span className="font-bold text-sm">Status Notifikasi</span>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input type="checkbox" className="sr-only peer" checked={emailNotifications} onChange={(e) => setEmailNotifications(e.target.checked)} />
-                  <div className="w-11 h-6 bg-amber-700/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-400 shadow-inner"></div>
+                  <div className="w-11 h-6 bg-black/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[#E8DCC8] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#5C3010] shadow-inner"></div>
                 </label>
               </div>
 
               {errorMsg?.type === 'notifications' && <p className="text-red-200 text-sm font-medium mt-3">{errorMsg.msg}</p>}
               {successMsg?.type === 'notifications' && <p className="text-emerald-100 text-sm font-medium mt-3">{successMsg.msg}</p>}
 
-              <button onClick={handleNotificationsSave} disabled={isSavingNotifications} className="w-full mt-4 flex justify-center items-center gap-2 bg-white text-amber-700 hover:bg-gray-50 py-2.5 rounded-xl font-bold transition-all disabled:opacity-50">
-                {isSavingNotifications ? <Spinner size={16} className="text-amber-700" /> : <Save size={16} />} Simpan Preferensi
+              <button onClick={handleNotificationsSave} disabled={isSavingNotifications} className="w-full mt-4 flex justify-center items-center gap-2 bg-[#FAF7F2] text-[#9C5A22] hover:bg-white hover:text-[#7C4318] py-2.5 rounded-xl font-bold transition-all disabled:opacity-50 shadow-sm">
+                {isSavingNotifications ? <Spinner size={16} className="text-[#7C4318]" /> : <Save size={16} />} Simpan Preferensi
               </button>
             </div>
           </div>

@@ -22,8 +22,10 @@ import {
 } from "lucide-react";
 import { isAxiosError } from "axios";
 import Spinner from "@/components/ui/Spinner";
-import Pagination from "@/components/ui/Pagination";
-import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import Pagination from '@/components/ui/Pagination';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import Modal from '@/components/ui/Modal';
+import StatCard from '@/components/ui/StatCard';
 import { ToastContainer, useToast } from "@/components/ui/Toast";
 import QuestionFormModal from "@/components/questions/QuestionFormModal";
 import CategoryManagerModal from "@/components/questions/CategoryManagerModal";
@@ -94,19 +96,19 @@ function QuestionRow({
   return (
     <>
       {/* Main row */}
-      <tr className="hover:bg-gray-50/60 transition-colors group">
-        <td className="px-5 py-3.5 text-gray-400 text-xs align-top">{index}</td>
-        <td className="px-5 py-3.5 align-top">
+      <tr className="table-row-premium group">
+        <td className="px-5 py-4 text-gray-500 font-medium text-xs align-top">{index}</td>
+        <td className="table-cell-premium">
           <div className="flex flex-col gap-1.5">
-            <p className="text-gray-900 text-sm font-medium leading-snug line-clamp-2">
+            <p className="text-gray-900 text-sm font-medium leading-snug line-clamp-2 group-hover:text-[#7C4318] transition-colors">
               {question.question_text}
             </p>
           </div>
         </td>
-        <td className="px-5 py-3.5 align-top hidden md:table-cell">
+        <td className="table-cell-premium hidden md:table-cell">
           <div className="flex items-center gap-2">
             <span
-              className={`inline-flex items-center px-2.5 py-1 rounded-lg border text-xs font-bold flex-shrink-0 ${
+              className={`inline-flex items-center justify-center w-7 h-7 rounded-lg border text-xs font-bold flex-shrink-0 shadow-sm ${
                 optionBadgeColor[question.correct_answer]
               }`}
             >
@@ -120,23 +122,23 @@ function QuestionRow({
             </span>
           </div>
         </td>
-        <td className="px-5 py-3.5 align-top hidden sm:table-cell">
-          <span className="text-gray-700 text-sm font-semibold">
+        <td className="table-cell-premium hidden sm:table-cell">
+          <span className="table-badge-premium">
             {question.weight}
           </span>
         </td>
-        <td className="px-5 py-3.5 align-top">
+        <td className="table-cell-premium">
           <div className="flex items-center justify-end gap-1">
             <button
               onClick={() => setExpanded((v) => !v)}
-              className="p-2 rounded-lg text-gray-300 hover:text-gray-500 hover:bg-gray-100 transition-all"
+              className="p-2 rounded-lg text-gray-400 hover:text-[#9C5A22] hover:bg-[#FAF7F2] transition-all"
               title={expanded ? "Tutup preview" : "Lihat pilihan jawaban"}
             >
               {expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
             </button>
             <button
               onClick={onEdit}
-              className="p-2 rounded-lg text-gray-400 hover:text-amber-700 hover:bg-amber-50 transition-all"
+              className="p-2 rounded-lg text-gray-400 hover:text-[#9C5A22] hover:bg-[#FAF7F2] transition-all"
               title="Edit soal"
             >
               <Edit2 size={15} />
@@ -397,10 +399,10 @@ function QuestionsContent() {
       
       if (type === "excel") {
         blob = await exportQuestionsExcelApi(search, catId);
-        filename = "Bank_Soal.xlsx";
+        filename = "PramukaCAT - Bank Soal.xlsx";
       } else {
         blob = await exportQuestionsPdfApi(search, catId);
-        filename = "Bank_Soal.pdf";
+        filename = "PramukaCAT - Bank Soal.pdf";
       }
       
       const url = window.URL.createObjectURL(blob);
@@ -422,7 +424,7 @@ function QuestionsContent() {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "template-soal-pramuka.xlsx");
+      link.setAttribute("download", "PramukaCAT - Template Soal.xlsx");
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -440,8 +442,8 @@ function QuestionsContent() {
       {/* ── Page Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
-            <BookOpen size={18} className="text-amber-700" />
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#E8B478] to-[#9C5A22] flex items-center justify-center flex-shrink-0 shadow-sm border border-white/50">
+            <BookOpen size={18} className="text-white" />
           </div>
           <p className="text-gray-500 text-sm">
             Kelola daftar soal ujian beserta kategorinya
@@ -450,37 +452,37 @@ function QuestionsContent() {
         <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={() => handleExport('excel')}
-            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm font-bold rounded-2xl hover:bg-emerald-100 transition-all"
+            className="group flex items-center gap-2 px-4 py-2.5 bg-white text-gray-600 border border-[#E8DCC8] text-sm font-bold rounded-2xl hover:bg-[#FAF7F2] hover:text-[#9C5A22] hover:border-[#D4924A] hover:shadow-md transition-all"
             title="Export ke Excel"
           >
-            <FileSpreadsheet size={16} />
+            <FileSpreadsheet size={16} className="text-emerald-600 group-hover:text-[#9C5A22] transition-colors" />
             <span className="hidden xl:inline">Excel</span>
           </button>
           
           <button
             onClick={() => handleExport('pdf')}
-            className="flex items-center gap-2 px-4 py-2.5 bg-red-50 text-red-700 border border-red-200 text-sm font-bold rounded-2xl hover:bg-red-100 transition-all"
+            className="group flex items-center gap-2 px-4 py-2.5 bg-white text-gray-600 border border-[#E8DCC8] text-sm font-bold rounded-2xl hover:bg-[#FAF7F2] hover:text-[#9C5A22] hover:border-[#D4924A] hover:shadow-md transition-all"
             title="Export ke PDF"
           >
-            <FileText size={16} />
+            <FileText size={16} className="text-red-600 group-hover:text-[#9C5A22] transition-colors" />
             <span className="hidden xl:inline">PDF</span>
           </button>
 
           <button
             onClick={handleDownloadTemplate}
-            className="flex items-center gap-2 px-4 py-2.5 bg-blue-50 text-blue-700 border border-blue-200 text-sm font-bold rounded-2xl hover:bg-blue-100 transition-all"
+            className="group flex items-center gap-2 px-4 py-2.5 bg-white text-gray-600 border border-[#E8DCC8] text-sm font-bold rounded-2xl hover:bg-[#FAF7F2] hover:text-[#9C5A22] hover:border-[#D4924A] hover:shadow-md transition-all"
             title="Download Template Excel"
           >
-            <Download size={16} />
+            <Download size={16} className="text-blue-600 group-hover:text-[#9C5A22] transition-colors" />
             <span className="hidden sm:inline">Template</span>
           </button>
 
           <button
             onClick={() => setImportModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-indigo-50 text-indigo-700 border border-indigo-200 text-sm font-bold rounded-2xl hover:bg-indigo-100 transition-all"
+            className="group flex items-center gap-2 px-4 py-2.5 bg-white text-gray-600 border border-[#E8DCC8] text-sm font-bold rounded-2xl hover:bg-[#FAF7F2] hover:text-[#9C5A22] hover:border-[#D4924A] hover:shadow-md transition-all"
             title="Import dari Excel"
           >
-            <UploadCloud size={16} />
+            <UploadCloud size={16} className="text-indigo-600 group-hover:text-[#9C5A22] transition-colors" />
             <span className="hidden sm:inline">Import</span>
           </button>
 
@@ -500,45 +502,44 @@ function QuestionsContent() {
 
       {/* ── Stats ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <p className="text-gray-400 text-xs font-medium">Total Soal</p>
-          <p className="text-gray-900 text-2xl font-bold mt-1">
-            {meta?.total_records ?? "—"}
-          </p>
-        </div>
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <p className="text-gray-400 text-xs font-medium">Kategori</p>
-          <p className="text-gray-900 text-2xl font-bold mt-1">
-            {categories.length}
-          </p>
-        </div>
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm col-span-2 sm:col-span-1">
-          <p className="text-gray-400 text-xs font-medium">Halaman</p>
-          <p className="text-gray-900 text-2xl font-bold mt-1">
-            {meta ? `${page} / ${meta.total_pages}` : "—"}
-          </p>
+        <StatCard
+          title="Total Soal"
+          value={meta?.total_records ?? "—"}
+          icon={<BookOpen size={20} className="text-[#9C5A22]" />}
+        />
+        <StatCard
+          title="Kategori"
+          value={categories.length}
+          icon={<Tag size={20} className="text-[#9C5A22]" />}
+        />
+        <div className="col-span-2 sm:col-span-1">
+          <StatCard
+            title="Halaman"
+            value={meta ? `${page} / ${meta.total_pages}` : "—"}
+            icon={<FileText size={20} className="text-[#9C5A22]" />}
+          />
         </div>
       </div>
 
       {/* ── Table Card ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-[#E8DCC8] shadow-sm overflow-hidden">
         {/* Toolbar */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 border-b border-gray-100">
+        <div className="flex flex-col sm:flex-row gap-4 px-5 py-5 border-b border-[#E8DCC8] bg-white">
           <div className="flex-1 flex flex-col sm:flex-row gap-3">
-            <div className="flex-1 flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100 focus-within:ring-2 focus-within:ring-amber-500/30 focus-within:border-amber-300 focus-within:bg-white transition-all relative">
-              <Search size={14} className="text-gray-400 flex-shrink-0" />
+            <div className="flex-1 flex items-center gap-2 bg-[#FAF7F2] rounded-xl px-3 py-2.5 border border-[#E8DCC8] focus-within:ring-2 focus-within:ring-[#D4924A]/30 focus-within:border-[#D4924A] transition-all relative shadow-sm">
+              <Search size={16} className="text-[#9C5A22] flex-shrink-0" />
               <input
                 type="text"
                 placeholder="Cari teks soal..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none pr-6"
+                className="flex-1 bg-transparent text-sm text-[#5C3010] font-medium placeholder:text-gray-400 outline-none pr-6"
                 id="search-questions"
               />
               {searchInput && (
                 <button
                   onClick={() => setSearchInput("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
                   title="Hapus filter"
                 >
                   <XCircle size={14} />
@@ -553,7 +554,7 @@ function QuestionsContent() {
                   setPage(1);
                   setCategoryIdFilter(e.target.value === "" ? undefined : Number(e.target.value));
                 }}
-                className="w-full bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-300 transition-all appearance-none cursor-pointer"
+                className="w-full bg-[#FAF7F2] rounded-xl px-3 py-2.5 border border-[#E8DCC8] text-sm text-[#5C3010] font-bold outline-none focus:ring-2 focus:ring-[#D4924A]/30 focus:border-[#D4924A] transition-all appearance-none cursor-pointer shadow-sm"
               >
                 <option value="">Semua Kategori</option>
                 {categories.map((c) => (
@@ -567,18 +568,6 @@ function QuestionsContent() {
 
           {/* Stale / last-updated indicator + manual refresh */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            {lastFetchedAt && (
-              <span
-                className={`hidden sm:flex items-center gap-1.5 text-xs ${
-                  isStale ? "text-amber-600" : "text-gray-400"
-                }`}
-              >
-                <Clock size={11} />
-                {isStale
-                  ? "Data mungkin sudah berubah"
-                  : `Diperbarui ${lastFetchedAt.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`}
-              </span>
-            )}
             <button
               onClick={() => {
                 setJustAddedQuestion(null);
@@ -586,10 +575,10 @@ function QuestionsContent() {
               }}
               disabled={isLoading}
               title="Muat ulang dengan filter yang aktif"
-              className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl border text-sm transition-all disabled:opacity-50 ${
+              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl border text-sm font-bold shadow-sm transition-all disabled:opacity-50 ${
                 isStale
-                  ? "border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100"
-                  : "border-gray-200 text-gray-500 hover:bg-gray-50"
+                  ? "border-[#D4924A] text-white bg-gradient-to-r from-[#D4924A] to-[#9C5A22] hover:from-[#9C5A22] hover:to-[#7C4318] shadow-md shadow-[#9C5A22]/20"
+                  : "border-[#E8DCC8] bg-white text-[#9C5A22] hover:bg-[#FAF7F2] hover:text-[#5C3010]"
               }`}
             >
               <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
@@ -661,20 +650,20 @@ function QuestionsContent() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50/70 border-b border-gray-100">
-                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide w-10">
+              <tr className="table-header-premium">
+                <th className="table-header-cell-premium w-10">
                   No
                 </th>
-                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                <th className="table-header-cell-premium">
                   Soal
                 </th>
-                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide hidden md:table-cell">
+                <th className="table-header-cell-premium hidden md:table-cell">
                   Jawaban
                 </th>
-                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:table-cell">
+                <th className="table-header-cell-premium hidden sm:table-cell">
                   Bobot
                 </th>
-                <th className="px-5 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                <th className="table-header-cell-premium text-right">
                   Aksi
                 </th>
               </tr>

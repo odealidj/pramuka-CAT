@@ -6,6 +6,7 @@ import { dashboardApi, DashboardActivity } from "@/lib/api/dashboard";
 import { ChevronLeft, ChevronRight, Activity, ArrowLeft, X, Eye } from "lucide-react";
 import Link from "next/link";
 import Spinner from "@/components/ui/Spinner";
+import Pagination from "@/components/ui/Pagination";
 import { getPhotoUrl } from "@/lib/constants";
 
 export default function ActivitiesPage() {
@@ -93,23 +94,23 @@ export default function ActivitiesPage() {
     const sConfig = {
       approved: {
         label: "Disetujui",
-        cls: "bg-emerald-50 text-emerald-600 border-emerald-100",
+        cls: "bg-[#FAF7F2] text-[#7A4520] border-[#E8DCC8]",
       },
       pending: {
         label: "Menunggu",
-        cls: "bg-amber-50 text-amber-600 border-amber-100",
+        cls: "bg-amber-50 text-amber-700 border-amber-200",
       },
       completed: {
         label: "Selesai",
-        cls: "bg-blue-50 text-blue-600 border-blue-100",
+        cls: "bg-blue-50 text-blue-700 border-blue-200",
       },
       expired: {
         label: "Waktu Habis",
-        cls: "bg-gray-50 text-gray-500 border-gray-200",
+        cls: "bg-gray-50 text-gray-600 border-gray-200",
       },
       revoked: {
         label: "Dibatalkan",
-        cls: "bg-red-50 text-red-600 border-red-100",
+        cls: "bg-red-50 text-red-700 border-red-200",
       },
     };
     const s = sConfig[statusConfig];
@@ -118,19 +119,19 @@ export default function ActivitiesPage() {
       <div 
         key={index} 
         onClick={() => setSelectedActivity(a)}
-        className="flex items-center gap-4 py-4 border-b border-gray-50 last:border-0 hover:bg-amber-50/30 transition-colors px-4 rounded-xl cursor-pointer group"
+        className="flex items-center gap-4 py-4 border-b border-gray-50 last:border-0 hover:bg-[#FAF7F2] transition-colors px-4 rounded-xl cursor-pointer group"
       >
-        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 overflow-hidden shadow-sm group-hover:scale-105 transition-transform">
+        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 overflow-hidden shadow-sm border border-white/50 group-hover:scale-105 transition-transform">
           {a.photo_url ? (
             <img src={getPhotoUrl(a.photo_url) || ''} alt={a.name} className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
+            <div className="w-full h-full bg-gradient-to-br from-[#E8B478] to-[#9C5A22] flex items-center justify-center shadow-inner">
               {a.name.charAt(0).toUpperCase()}
             </div>
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-gray-800 text-sm font-semibold truncate group-hover:text-amber-700 transition-colors">{a.name}</p>
+          <p className="text-gray-800 text-sm font-semibold truncate group-hover:text-[#7A4520] transition-colors">{a.name}</p>
           <p className="text-gray-500 text-sm truncate mt-0.5">{a.action}</p>
         </div>
         <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
@@ -141,7 +142,7 @@ export default function ActivitiesPage() {
           </span>
           <span className="text-gray-400 text-xs flex items-center gap-1">
             {timeStr}
-            <Eye size={12} className="opacity-0 group-hover:opacity-100 text-amber-500 transition-opacity" />
+            <Eye size={12} className="opacity-0 group-hover:opacity-100 text-[#9C5A22] transition-opacity" />
           </span>
         </div>
       </div>
@@ -151,8 +152,11 @@ export default function ActivitiesPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4 mb-6">
-        <Link href="/dashboard" className="p-2 bg-white text-gray-500 hover:text-amber-600 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
-          <ArrowLeft size={20} />
+        <Link 
+          href="/dashboard"
+          className="group flex items-center justify-center w-10 h-10 bg-white rounded-full border border-gray-200 shadow-sm hover:shadow-md hover:border-[#D4924A] transition-all"
+        >
+          <ArrowLeft size={20} className="text-gray-500 group-hover:text-[#9C5A22] transition-colors" />
         </Link>
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Log Aktivitas</h1>
@@ -163,7 +167,7 @@ export default function ActivitiesPage() {
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 min-h-[400px] flex flex-col">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 flex-1">
-            <Spinner size={32} className="text-amber-500 mb-4" />
+            <Spinner size={32} className="text-[#9C5A22] mb-4" />
             <p className="text-gray-500 text-sm">Memuat log aktivitas...</p>
           </div>
         ) : error ? (
@@ -178,32 +182,17 @@ export default function ActivitiesPage() {
             </div>
 
             {/* Pagination Controls */}
-            <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-6">
+            <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between border-t border-gray-100 pt-6 gap-4">
               <span className="text-sm text-gray-500">
-                Menampilkan <span className="font-medium text-gray-900">{activities.length}</span> dari <span className="font-medium text-gray-900">{totalItems}</span> aktivitas
+                Menampilkan <span className="font-semibold text-[#7C4318]">{activities.length}</span> dari <span className="font-semibold text-gray-900">{totalItems}</span> aktivitas
               </span>
               
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <ChevronLeft size={16} />
-                  Prev
-                </button>
-                <div className="flex items-center justify-center min-w-[2.5rem] text-sm font-medium text-gray-700 bg-gray-50 rounded-lg border border-gray-100">
-                  {page} / {totalPages}
-                </div>
-                <button
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                  disabled={page >= totalPages}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  Next
-                  <ChevronRight size={16} />
-                </button>
-              </div>
+              <Pagination 
+                page={page} 
+                totalPages={totalPages} 
+                onPageChange={setPage} 
+                isLoading={loading} 
+              />
             </div>
           </>
         ) : (
@@ -220,14 +209,14 @@ export default function ActivitiesPage() {
       {selectedActivity && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-amber-50/50">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-[#FAF7F2]">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#E8B478] to-[#9C5A22] border-2 border-white/50 flex items-center justify-center text-white font-bold text-lg shadow-md">
                   {selectedActivity.name.charAt(0).toUpperCase()}
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-900 text-lg">{selectedActivity.name}</h3>
-                  <p className="text-xs text-amber-700 font-medium mt-0.5">Detail Aktivitas</p>
+                  <p className="text-xs text-[#9C5A22] font-medium mt-0.5">Detail Aktivitas</p>
                 </div>
               </div>
               <button 

@@ -94,7 +94,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-gray-700 text-sm font-semibold mb-1.5">
+      <label className="block text-[#7C4318] text-sm font-bold mb-1.5">
         {label}
         {required && <span className="text-red-500 ml-0.5">*</span>}
       </label>
@@ -110,10 +110,10 @@ function Field({
 }
 
 const inputCls = (hasErr?: boolean) =>
-  `w-full px-3.5 py-2.5 rounded-xl border text-gray-800 text-sm placeholder:text-gray-400 outline-none transition-all ${
+  `w-full px-3.5 py-2.5 rounded-xl border text-[#5C3010] font-medium text-sm placeholder:text-gray-400 outline-none transition-all ${
     hasErr
       ? 'border-red-300 bg-red-50 focus:ring-2 focus:ring-red-200'
-      : 'border-gray-200 focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400'
+      : 'border-[#E8DCC8] bg-[#FAF7F2] focus:ring-2 focus:ring-[#D4924A]/30 focus:border-[#D4924A] hover:border-[#D4924A]/70'
   }`;
 
 // ============================================================
@@ -260,7 +260,7 @@ export default function QuestionFormModal({
 
         {/* Answer Options — with correct answer selector */}
         <div>
-          <p className="text-gray-700 text-sm font-semibold mb-2">
+          <p className="text-[#7C4318] text-sm font-bold mb-2">
             Pilihan Jawaban <span className="text-red-500">*</span>
             <span className="ml-2 text-gray-400 font-normal text-xs">
               (klik ikon ✓ untuk menandai jawaban benar)
@@ -274,18 +274,20 @@ export default function QuestionFormModal({
               return (
                 <div
                   key={key}
-                  className={`flex flex-col p-2 rounded-xl border transition-all ${
+                  className={`flex flex-col p-2.5 rounded-2xl border transition-all shadow-sm ${
                     hasError
                       ? 'border-red-300 bg-red-50/60 focus-within:ring-2 focus-within:ring-red-200'
                       : isCorrect
-                      ? 'border-emerald-300 bg-emerald-50/60'
-                      : 'border-gray-200 bg-white focus-within:ring-2 focus-within:ring-amber-500/30 focus-within:border-amber-400'
+                      ? 'border-emerald-400 bg-emerald-50/80 shadow-emerald-900/5'
+                      : 'border-[#E8DCC8] bg-white focus-within:ring-2 focus-within:ring-[#D4924A]/30 focus-within:border-[#D4924A] hover:border-[#E8DCC8]/80'
                   }`}
                 >
                   <div className="flex items-center gap-3 w-full">
                     {/* Letter badge */}
                     <div
-                      className={`w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ${optCfg.color}`}
+                      className={`w-8 h-8 rounded-xl flex items-center justify-center text-white text-xs font-black flex-shrink-0 shadow-sm ${
+                        isCorrect ? 'bg-gradient-to-br from-emerald-400 to-emerald-600' : 'bg-gradient-to-br from-[#D4924A] to-[#7C4318]'
+                      }`}
                     >
                       {key}
                     </div>
@@ -295,7 +297,7 @@ export default function QuestionFormModal({
                       placeholder={`Pilihan ${key}...`}
                       disabled={isSubmitting}
                       {...register(field)}
-                      className="flex-1 text-sm text-gray-800 outline-none bg-transparent placeholder:text-gray-400"
+                      className="flex-1 text-sm text-[#5C3010] font-medium outline-none bg-transparent placeholder:text-gray-400"
                     />
                     {/* Correct answer toggle */}
                     <button
@@ -303,8 +305,8 @@ export default function QuestionFormModal({
                       onClick={() => setValue('correct_answer', key)}
                       className={`flex-shrink-0 p-1.5 rounded-lg transition-all ${
                         isCorrect
-                          ? 'text-emerald-600 bg-emerald-100'
-                          : 'text-gray-300 hover:text-emerald-500 hover:bg-emerald-50'
+                          ? 'text-emerald-600 bg-emerald-100/80 shadow-inner'
+                          : 'text-gray-300 hover:text-emerald-500 hover:bg-emerald-50 border border-transparent hover:border-emerald-200'
                       }`}
                       title={`Jadikan pilihan ${key} sebagai jawaban benar`}
                     >
@@ -330,31 +332,30 @@ export default function QuestionFormModal({
           {/* Hidden input for correct_answer registration */}
           <input type="hidden" {...register('correct_answer')} />
           {/* Jawaban benar indicator */}
-          <div className="mt-2 flex items-center gap-2 text-xs text-emerald-700 font-medium">
-            <CheckCircle2 size={13} className="text-emerald-500" />
-            Jawaban benar:{' '}
-            <span className="font-bold">
-              Pilihan {correctAnswer}
+          <div className="mt-3 inline-flex items-center gap-2 text-xs text-emerald-800 font-semibold bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 shadow-sm">
+            <CheckCircle2 size={15} className="text-emerald-600" />
+            <span>
+              Jawaban benar yang terpilih adalah: <span className="font-extrabold ml-1">Pilihan {correctAnswer}</span>
             </span>
           </div>
         </div>
 
         {/* Footer Buttons */}
-        <div className="flex gap-3 pt-2 border-t border-gray-100">
+        <div className="flex gap-3 pt-4 border-t border-[#E8DCC8] mt-2">
           <button
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 transition-all disabled:opacity-50"
+            className="flex-1 px-4 py-3 rounded-xl border border-[#E8DCC8] bg-[#FAF7F2] text-[#9C5A22] text-sm font-bold hover:bg-[#E8DCC8] hover:text-[#5C3010] transition-all disabled:opacity-50 shadow-sm"
           >
             Batal
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#7C4318] to-[#9C5A22] text-white text-sm font-semibold hover:from-[#5C3010] hover:to-[#7C4318] transition-all disabled:opacity-70 shadow-sm shadow-amber-900/20"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-[#7C4318] to-[#5C3010] text-white text-sm font-bold hover:from-[#5C3010] hover:to-[#4A260D] transition-all disabled:opacity-70 shadow-md shadow-[#7C4318]/20"
           >
-            {isSubmitting && <Spinner size={14} className="text-white" />}
+            {isSubmitting && <Spinner size={16} className="text-white" />}
             {isSubmitting ? 'Menyimpan...' : isEdit ? 'Simpan Perubahan' : 'Tambah Soal'}
           </button>
         </div>

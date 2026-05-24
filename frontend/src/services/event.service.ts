@@ -142,13 +142,13 @@ export const exportEventParticipantsApi = async (
     { responseType: 'blob' }
   );
 
-  let filename = `laporan_event_${eventId}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+  const ext = format === 'excel' ? 'xlsx' : 'pdf';
+  let filename = `PramukaCAT - Laporan Peserta.${ext}`;
   const disposition = res.headers['content-disposition'];
-  if (disposition && disposition.indexOf('filename=') !== -1) {
-    const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-    const matches = filenameRegex.exec(disposition);
-    if (matches != null && matches[1]) {
-      filename = matches[1].replace(/['"]/g, '');
+  if (disposition) {
+    const match = disposition.match(/filename\*?=(?:UTF-8'')?["']?([^"';\r\n]+)["']?/i);
+    if (match && match[1]) {
+      filename = decodeURIComponent(match[1].trim());
     }
   }
 
@@ -159,7 +159,6 @@ export const exportEventParticipantsApi = async (
   a.download = filename;
   document.body.appendChild(a);
   a.click();
-  
   document.body.removeChild(a);
   window.URL.revokeObjectURL(url);
 };
@@ -169,4 +168,36 @@ export const removeEventParticipantApi = async (
   approvalId: string
 ): Promise<void> => {
   await httpClient.delete(`/admin/events/${eventId}/participants/${approvalId}`);
+};
+
+export const exportEventQuestionsApi = async (
+  eventId: string,
+  format: 'excel' | 'pdf',
+  showKey: boolean
+): Promise<void> => {
+  const res = await httpClient.get(
+    `/admin/events/${eventId}/questions/export?format=${format}&show_key=${showKey}`,
+    { responseType: 'blob' }
+  );
+
+  const ext = format === 'excel' ? 'xlsx' : 'pdf';
+  let filename = `PramukaCAT - Soal Ujian.${ext}`;
+  const disposition = res.headers['content-disposition'];
+  if (disposition) {
+    // Match: filename="some name.ext" or filename=some name.ext
+    const match = disposition.match(/filename\*?=(?:UTF-8'')?["']?([^"';\r\n]+)["']?/i);
+    if (match && match[1]) {
+      filename = decodeURIComponent(match[1].trim());
+    }
+  }
+
+  const blob = new Blob([res.data]);
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
 };

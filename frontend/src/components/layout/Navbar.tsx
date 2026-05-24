@@ -81,15 +81,15 @@ export default function Navbar({ onMenuToggle, pageTitle = 'Dashboard', isCollap
           {/* Search — Desktop */}
           <button 
             onClick={() => document.dispatchEvent(new CustomEvent('openCommandPalette'))}
-            className="hidden md:flex items-center justify-between gap-2 bg-gray-100 hover:bg-gray-200 transition-colors rounded-xl px-3 py-2 w-56 text-sm text-gray-500 border border-transparent"
+            className="hidden md:flex items-center justify-between gap-2 bg-[#FAF7F2] hover:bg-[#E8DCC8]/50 transition-colors rounded-xl px-3 py-2 w-56 text-sm text-[#9C5A22] border border-[#E8DCC8] shadow-sm"
           >
             <div className="flex items-center gap-2">
-              <Search size={14} className="text-gray-400" />
-              <span>Cari sesuatu...</span>
+              <Search size={14} className="text-[#9C5A22]" />
+              <span className="font-medium">Cari sesuatu...</span>
             </div>
             <div className="flex items-center gap-0.5">
-              <kbd className="bg-white px-1.5 py-0.5 rounded text-[10px] font-bold text-gray-400 shadow-sm border border-gray-200">Ctrl</kbd>
-              <kbd className="bg-white px-1.5 py-0.5 rounded text-[10px] font-bold text-gray-400 shadow-sm border border-gray-200">K</kbd>
+              <kbd className="bg-white px-1.5 py-0.5 rounded text-[10px] font-bold text-[#7C4318] shadow-sm border border-[#E8DCC8]">Ctrl</kbd>
+              <kbd className="bg-white px-1.5 py-0.5 rounded text-[10px] font-bold text-[#7C4318] shadow-sm border border-[#E8DCC8]">K</kbd>
             </div>
           </button>
 
@@ -112,11 +112,11 @@ export default function Navbar({ onMenuToggle, pageTitle = 'Dashboard', isCollap
           <div className="relative" ref={profileRef}>
             <button
               onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className="flex items-center gap-2.5 p-1.5 pr-3 rounded-xl hover:bg-gray-100 transition-all"
+              className="flex items-center gap-2.5 p-1.5 pr-3 rounded-xl hover:bg-[#FAF7F2] transition-all border border-transparent hover:border-[#E8DCC8]"
               aria-label="Profile menu"
             >
               {/* Avatar with Initials or Photo */}
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center text-white text-xs font-bold shadow-sm flex-shrink-0 overflow-hidden">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#D4924A] to-[#7C4318] flex items-center justify-center text-white text-xs font-bold shadow-sm flex-shrink-0 overflow-hidden border border-[#9C5A22]">
                 {user?.photo_url ? (
                   <img src={getPhotoUrl(user.photo_url) || ''} alt="User Avatar" className="w-full h-full object-cover" />
                 ) : (
@@ -124,14 +124,14 @@ export default function Navbar({ onMenuToggle, pageTitle = 'Dashboard', isCollap
                 )}
               </div>
               <div className="hidden sm:block text-left">
-                <p className="text-gray-800 text-sm font-semibold leading-tight truncate max-w-[120px]">
+                <p className="text-[#5C3010] text-sm font-bold leading-tight truncate max-w-[120px]">
                   {displayName}
                 </p>
-                <p className="text-gray-400 text-xs">{roleLabel}</p>
+                <p className="text-[#9C5A22] text-xs font-medium">{roleLabel}</p>
               </div>
               <ChevronDown
                 size={14}
-                className={`text-gray-400 transition-transform hidden sm:block ${
+                className={`text-[#9C5A22] transition-transform hidden sm:block ${
                   isProfileOpen ? 'rotate-180' : ''
                 }`}
               />
@@ -139,14 +139,14 @@ export default function Navbar({ onMenuToggle, pageTitle = 'Dashboard', isCollap
 
             {/* Dropdown Menu */}
             {isProfileOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50">
+              <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-[#E8DCC8] overflow-hidden z-50">
                 {/* User Info */}
-                <div className="px-4 py-3 bg-gradient-to-r from-amber-50 to-amber-100/50 border-b border-amber-100">
-                  <p className="text-gray-800 text-sm font-semibold truncate">
+                <div className="px-4 py-3 bg-gradient-to-br from-[#FAF7F2] to-white border-b border-[#E8DCC8]">
+                  <p className="text-[#5C3010] text-sm font-extrabold truncate">
                     {displayName}
                   </p>
-                  <p className="text-gray-500 text-xs">{user?.username}</p>
-                  <span className="inline-block mt-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                  <p className="text-[#9C5A22] text-xs font-medium">{user?.username}</p>
+                  <span className="inline-block mt-1.5 text-xs font-bold px-2.5 py-0.5 rounded-full bg-gradient-to-r from-[#D4924A] to-[#7C4318] text-white shadow-sm">
                     {roleLabel}
                   </span>
                 </div>
@@ -154,10 +154,10 @@ export default function Navbar({ onMenuToggle, pageTitle = 'Dashboard', isCollap
                 <div className="p-2">
                   <Link
                     href={user?.role === 'super_admin' ? '/super-admin/profile' : '/dashboard/profile'}
-                    className="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 text-sm"
+                    className="flex items-center gap-3 px-3 py-2 rounded-xl text-[#7C4318] hover:bg-[#FAF7F2] hover:text-[#5C3010] font-bold text-sm transition-colors"
                     onClick={() => setIsProfileOpen(false)}
                   >
-                    <User size={15} className="text-gray-400" />
+                    <User size={15} className="text-[#9C5A22]" />
                     Pengaturan Akun
                   </Link>
                 </div>

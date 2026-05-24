@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -34,11 +35,13 @@ func (h *ExamHandler) RegisterParticipantRoutes(protectedGroup *echo.Group) {
 	examsGroup.POST("/:id/submit-answer", h.SubmitAnswer)
 	examsGroup.POST("/:id/finish", h.FinishExam)
 	protectedGroup.GET("/exams/my-results/:event_id", h.ReviewAnswersParticipant)
+	protectedGroup.GET("/exams/my-results/:event_id/export-pdf", h.ExportReviewAnswersParticipantPDF)
 }
 
 func (h *ExamHandler) RegisterAdminRoutes(adminGroup *echo.Group) {
 	// Review detail jawaban peserta berdasarkan approval_id
 	adminGroup.GET("/exams/approvals/:approval_id/answers", h.ReviewAnswers)
+	adminGroup.GET("/exams/approvals/:approval_id/answers/export-pdf", h.ExportReviewAnswersPDF)
 }
 
 func getUserIDFromContext(c echo.Context) (uuid.UUID, error) {
@@ -219,6 +222,33 @@ func (h *ExamHandler) ReviewAnswers(c echo.Context) error {
 	return response.Success(c, http.StatusOK, "Detail jawaban peserta berhasil diambil", answers)
 }
 
+func (h *ExamHandler) ExportReviewAnswersPDF(c echo.Context) error {
+	approvalID, err := uuid.Parse(c.Param("approval_id"))
+	if err != nil {
+		return response.Error(c, http.StatusBadRequest, "ID approval tidak valid", nil)
+	}
+
+	participantName := c.QueryParam("participant_name")
+	eventName := c.QueryParam("event_name")
+	scoreStr := c.QueryParam("score")
+	passingGradeStr := c.QueryParam("passing_grade")
+	isPassedStr := c.QueryParam("is_passed")
+
+	score, _ := strconv.ParseFloat(scoreStr, 64)
+	passingGrade, _ := strconv.ParseFloat(passingGradeStr, 64)
+	isPassed := isPassedStr == "true"
+
+	pdfBytes, err := h.service.ExportReviewAnswersPDF(c.Request().Context(), approvalID, participantName, eventName, score, passingGrade, isPassed)
+	if err != nil {
+		return response.Error(c, http.StatusInternalServerError, "Gagal export PDF review jawaban", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
+	}
+
+	c.Response().Header().Set("Content-Type", "application/pdf")
+	c.Response().Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"PramukaCAT - Review Jawaban %s.pdf\"", participantName))
+
+	return c.Blob(http.StatusOK, "application/pdf", pdfBytes)
+}
+
 // ReviewAnswersParticipant godoc
 // @Summary     Lihat Hasil Ujian Peserta
 // @Description Peserta melihat hasil ujian (skor, soal, jawaban, kunci jawaban) setelah menyelesaikan ujian
@@ -245,4 +275,36 @@ func (h *ExamHandler) ReviewAnswersParticipant(c echo.Context) error {
 	}
 
 	return response.Success(c, http.StatusOK, "Detail hasil ujian berhasil diambil", answers)
+}
+
+func (h *ExamHandler) ExportReviewAnswersParticipantPDF(c echo.Context) error {
+	userID, err := getUserIDFromContext(c)
+	if err != nil {
+		return response.Error(c, http.StatusUnauthorized, err.Error(), nil)
+	}
+
+	eventID, err := uuid.Parse(c.Param("event_id"))
+	if err != nil {
+		return response.Error(c, http.StatusBadRequest, "ID event tidak valid", nil)
+	}
+
+	participantName := c.QueryParam("participant_name")
+	eventName := c.QueryParam("event_name")
+	scoreStr := c.QueryParam("score")
+	passingGradeStr := c.QueryParam("passing_grade")
+	isPassedStr := c.QueryParam("is_passed")
+
+	score, _ := strconv.ParseFloat(scoreStr, 64)
+	passingGrade, _ := strconv.ParseFloat(passingGradeStr, 64)
+	isPassed := isPassedStr == "true"
+
+	pdfBytes, err := h.service.ExportReviewAnswersByEventPDF(c.Request().Context(), userID, eventID, participantName, eventName, score, passingGrade, isPassed)
+	if err != nil {
+		return response.Error(c, http.StatusInternalServerError, "Gagal export PDF review jawaban", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
+	}
+
+	c.Response().Header().Set("Content-Type", "application/pdf")
+	c.Response().Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"PramukaCAT - Hasil Ujian %s.pdf\"", participantName))
+
+	return c.Blob(http.StatusOK, "application/pdf", pdfBytes)
 }

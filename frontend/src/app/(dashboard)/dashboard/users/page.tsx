@@ -18,6 +18,7 @@ import { isAxiosError } from 'axios';
 
 import Badge from '@/components/ui/Badge';
 import Spinner from '@/components/ui/Spinner';
+import StatCard from '@/components/ui/StatCard';
 import Pagination from '@/components/ui/Pagination';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { ToastContainer, useToast } from '@/components/ui/Toast';
@@ -230,13 +231,16 @@ function UsersContent() {
 
       {/* ── Page Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
-            <Users size={18} className="text-amber-700" />
+        <div>
+          <h1 className="text-2xl font-black text-[#5C3010] tracking-tight mb-1">Manajemen User</h1>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-[#FAF7F2] flex items-center justify-center flex-shrink-0 border border-[#E8DCC8]">
+              <Users size={16} className="text-[#9C5A22]" />
+            </div>
+            <p className="text-[#7C4318] text-sm font-medium">
+              Kelola akun peserta ujian
+            </p>
           </div>
-          <p className="text-gray-500 text-sm">
-            Kelola akun peserta ujian
-          </p>
         </div>
         <button
           onClick={() => {
@@ -244,7 +248,7 @@ function UsersContent() {
             setFormModal({ open: true, mode: 'create', user: null });
           }}
           id="btn-add-user"
-          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#7C4318] to-[#9C5A22] text-white text-sm font-semibold rounded-xl shadow-sm shadow-amber-900/20 hover:from-[#5C3010] hover:to-[#7C4318] transition-all"
+          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#7C4318] to-[#5C3010] text-white text-sm font-bold rounded-xl shadow-md shadow-[#7C4318]/20 hover:from-[#5C3010] hover:to-[#4A260D] transition-all"
         >
           <UserPlus size={16} />
           Tambah Peserta
@@ -253,42 +257,38 @@ function UsersContent() {
 
       {/* ── Stats Cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-          <p className="text-gray-500 text-xs font-medium">Total Peserta</p>
-          <p className="text-gray-900 text-2xl font-bold mt-1">
-            {meta?.total_records ?? '—'}
-          </p>
-        </div>
-        <div
-          className="text-left rounded-2xl p-4 border shadow-sm transition-all bg-emerald-50 border-emerald-300 ring-2 ring-emerald-200"
-        >
-          <div className="flex items-center gap-2 mb-1">
-            <UserX size={14} className="text-emerald-600" />
-            <p className="text-gray-500 text-xs font-medium">Peserta Aktif</p>
-          </div>
-          <p className="text-gray-900 text-2xl font-bold">{pesertaCount}</p>
-        </div>
+        <StatCard
+          title="Total Peserta"
+          value={meta?.total_records ?? '—'}
+          icon={<Users size={20} className="text-[#9C5A22]" />}
+        />
+        <StatCard
+          title="Peserta Aktif"
+          value={pesertaCount}
+          icon={<UserCheck size={20} className="text-emerald-600" />}
+          color="bg-emerald-50 border-emerald-100"
+        />
       </div>
 
       {/* ── Table Card ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-[#E8DCC8] shadow-sm overflow-hidden">
 
         {/* Toolbar */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 border-b border-gray-100">
-          <div className="flex-1 flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100 focus-within:ring-2 focus-within:ring-amber-500/30 focus-within:border-amber-300 focus-within:bg-white transition-all relative">
-            <Search size={14} className="text-gray-400 flex-shrink-0" />
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 px-5 py-5 border-b border-[#E8DCC8] bg-white">
+          <div className="flex-1 flex items-center gap-2 bg-[#FAF7F2] rounded-xl px-3 py-2.5 border border-[#E8DCC8] focus-within:ring-2 focus-within:ring-[#D4924A]/30 focus-within:border-[#D4924A] transition-all relative shadow-sm">
+            <Search size={16} className="text-[#9C5A22] flex-shrink-0" />
             <input
               type="text"
               placeholder="Cari nama atau username..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none pr-6"
+              className="flex-1 bg-transparent text-sm text-[#5C3010] font-medium placeholder:text-gray-400 outline-none pr-6"
               id="search-users"
             />
             {searchInput && (
               <button
                 onClick={() => setSearchInput('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
                 title="Hapus filter"
               >
                 <XCircle size={14} />
@@ -301,10 +301,10 @@ function UsersContent() {
           <button
             onClick={fetchUsers}
             disabled={isLoading}
-            className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E8DCC8] bg-white text-[#9C5A22] hover:bg-[#FAF7F2] hover:text-[#5C3010] text-sm font-bold shadow-sm transition-all disabled:opacity-50"
             title="Refresh"
           >
-            <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
+            <RefreshCw size={15} className={isLoading ? 'animate-spin' : ''} />
             <span className="hidden sm:inline">Refresh</span>
           </button>
         </div>
@@ -313,23 +313,23 @@ function UsersContent() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50/70 border-b border-gray-100">
-                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-10">
+              <tr className="table-header-premium">
+                <th className="table-header-cell-premium w-10">
                   No
                 </th>
-                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="table-header-cell-premium">
                   Pengguna
                 </th>
-                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">
+                <th className="table-header-cell-premium hidden md:table-cell">
                   Username
                 </th>
-                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="table-header-cell-premium">
                   Role
                 </th>
-                <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">
+                <th className="table-header-cell-premium hidden lg:table-cell">
                   Terdaftar
                 </th>
-                <th className="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="table-header-cell-premium text-right">
                   Aksi
                 </th>
               </tr>
@@ -364,13 +364,13 @@ function UsersContent() {
                   return (
                     <tr
                       key={user.id}
-                      className={`hover:bg-gray-50/60 transition-colors ${isDeleted ? 'opacity-50' : ''}`}
+                      className={`table-row-premium group ${isDeleted ? 'opacity-50' : ''}`}
                     >
                       {/* No */}
-                      <td className="px-5 py-3.5 text-gray-400 text-xs">{rowNo}</td>
+                      <td className="px-5 py-4 text-gray-500 font-medium text-xs align-top">{rowNo}</td>
 
                       {/* Pengguna */}
-                      <td className="px-5 py-3.5">
+                      <td className="table-cell-premium">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-700 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-sm overflow-hidden">
                             {user.photo_url ? (
@@ -380,7 +380,7 @@ function UsersContent() {
                             )}
                           </div>
                           <div>
-                            <p className="text-gray-900 font-semibold text-sm leading-tight">
+                            <p className="text-gray-900 font-semibold text-sm leading-tight group-hover:text-[#7C4318] transition-colors">
                               {user.full_name}
                               {isDeleted && (
                                 <span className="ml-2 text-xs text-red-400 font-normal">(Dihapus)</span>
@@ -392,24 +392,24 @@ function UsersContent() {
                       </td>
 
                       {/* Username */}
-                      <td className="px-5 py-3.5 hidden md:table-cell">
+                      <td className="table-cell-premium hidden md:table-cell">
                         <span className="font-mono text-gray-600 text-xs bg-gray-100 px-2 py-1 rounded-lg">
                           {user.username}
                         </span>
                       </td>
 
                       {/* Role */}
-                      <td className="px-5 py-3.5">
+                      <td className="table-cell-premium">
                         <Badge variant={user.role} />
                       </td>
 
                       {/* Terdaftar */}
-                      <td className="px-5 py-3.5 text-gray-400 text-xs hidden lg:table-cell">
+                      <td className="table-cell-premium text-gray-400 text-xs hidden lg:table-cell">
                         {formatDate(user.created_at)}
                       </td>
 
                       {/* Aksi */}
-                      <td className="px-5 py-3.5">
+                      <td className="table-cell-premium">
                         <div className="flex items-center justify-end gap-1">
                           {/* Edit */}
                           <button
@@ -418,7 +418,7 @@ function UsersContent() {
                               setFormModal({ open: true, mode: 'edit', user });
                             }}
                             disabled={isDeleted}
-                            className="p-2 rounded-lg text-gray-400 hover:text-amber-700 hover:bg-amber-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                            className="p-2 rounded-xl text-[#9C5A22] hover:text-[#5C3010] hover:bg-[#FAF7F2] border border-transparent hover:border-[#E8DCC8] transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
                             title="Edit pengguna"
                             aria-label="Edit pengguna"
                           >
@@ -432,7 +432,7 @@ function UsersContent() {
                               setPasswordModal({ open: true, user });
                             }}
                             disabled={isDeleted}
-                            className="p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                            className="p-2 rounded-xl text-[#9C5A22] hover:text-[#5C3010] hover:bg-[#FAF7F2] border border-transparent hover:border-[#E8DCC8] transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
                             title="Ganti password"
                             aria-label="Ganti password"
                           >
@@ -445,7 +445,7 @@ function UsersContent() {
                               setDeleteDialog({ open: true, user, isLoading: false })
                             }
                             disabled={isDeleted}
-                            className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                            className="p-2 rounded-xl text-gray-400 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
                             title="Hapus pengguna"
                             aria-label="Hapus pengguna"
                           >

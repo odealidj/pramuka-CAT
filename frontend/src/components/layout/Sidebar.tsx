@@ -17,6 +17,7 @@ import {
   BarChart3,
   Server,
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 // --- Navigation Config ---
 interface NavItem {
@@ -91,8 +92,8 @@ function NavLink({ item, onClick, isCollapsed }: { item: NavItem; onClick?: () =
         ${isCollapsed ? 'justify-center px-0' : 'px-3'}
         ${
           isActive
-            ? 'sidebar-link-active text-white'
-            : 'text-amber-100/70 hover:text-white hover:bg-white/10'
+            ? 'bg-gradient-to-r from-[#7C4318] to-[#9C5A22] text-white shadow-md shadow-black/20 border border-white/5'
+            : 'text-amber-100/70 hover:text-white hover:bg-white/5'
         }
       `}
       title={isCollapsed ? item.label : undefined}
@@ -151,33 +152,33 @@ const SidebarContent = ({
         {onToggleCollapse && (
           <button 
             onClick={onToggleCollapse} 
-            className="hidden lg:flex items-center justify-center w-6 h-6 rounded bg-white/10 hover:bg-white/20 text-amber-200 transition-colors flex-shrink-0"
+            className="hidden lg:flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br from-black/20 to-black/40 hover:from-[#7C4318] hover:to-[#9C5A22] text-[#E3CE95] hover:text-white border border-white/10 hover:border-white/20 shadow-inner hover:shadow-lg hover:shadow-black/40 transition-all duration-300 hover:scale-110 active:scale-95 flex-shrink-0"
             title={isCollapsed ? "Perbesar Sidebar" : "Perkecil Sidebar"}
           >
-            <ChevronRight size={14} className={`transform transition-transform ${isCollapsed ? '' : 'rotate-180'}`} />
+            <ChevronRight size={14} className={`transform transition-transform duration-300 ${isCollapsed ? '' : 'rotate-180'}`} />
           </button>
         )}
       </div>
 
       {/* Role Badge */}
-      <div className={`py-3 flex items-center ${isCollapsed ? 'justify-center' : 'px-4 justify-start'}`}>
+      <div className={`py-4 flex items-center ${isCollapsed ? 'justify-center' : 'px-4 justify-start'}`}>
         {!isCollapsed ? (
-          <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2 w-full justify-center">
+          <div className="flex items-center gap-2 bg-gradient-to-r from-black/20 to-black/5 border border-white/5 rounded-xl px-3 py-2.5 w-full justify-center shadow-inner">
             <ShieldCheck
-              size={14}
-              className={role === 'admin' ? 'text-amber-300' : 'text-emerald-300'}
+              size={15}
+              className={role === 'admin' ? 'text-amber-300' : 'text-[#E3CE95]'}
             />
             <span
-              className={`text-xs font-semibold uppercase tracking-wider ${
-                role === 'admin' ? 'text-amber-300' : 'text-emerald-300'
+              className={`text-[11px] font-bold uppercase tracking-widest ${
+                role === 'admin' ? 'text-amber-300' : 'text-[#E3CE95]'
               }`}
             >
-              {role === 'admin' ? 'Admin / Panitia' : 'Peserta'}
+              {role === 'admin' ? 'Admin / Panitia' : 'Peserta Ujian'}
             </span>
           </div>
         ) : (
-          <div className="bg-white/10 rounded-lg p-2 flex items-center justify-center" title={role === 'admin' ? 'Admin / Panitia' : 'Peserta'}>
-             <ShieldCheck size={18} className={role === 'admin' ? 'text-amber-300' : 'text-emerald-300'} />
+          <div className="bg-black/20 border border-white/5 rounded-xl p-2.5 flex items-center justify-center shadow-inner" title={role === 'admin' ? 'Admin / Panitia' : 'Peserta Ujian'}>
+             <ShieldCheck size={18} className={role === 'admin' ? 'text-amber-300' : 'text-[#E3CE95]'} />
           </div>
         )}
       </div>
@@ -223,18 +224,18 @@ const SidebarContent = ({
       </nav>
 
       {/* Footer */}
-      <div className={`py-4 border-t border-white/10 ${isCollapsed ? 'px-2' : 'px-4'}`}>
-        <div className={`flex items-center gap-3 py-2.5 rounded-xl hover:bg-white/10 cursor-pointer group ${isCollapsed ? 'justify-center px-0' : 'px-3'}`} title={isCollapsed ? "Admin Pramuka" : undefined}>
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-            A
+      <div className={`py-4 border-t border-white/5 bg-black/10 ${isCollapsed ? 'px-2' : 'px-4'}`}>
+        <div className={`flex items-center gap-3 py-2 rounded-xl hover:bg-white/5 cursor-pointer transition-colors group ${isCollapsed ? 'justify-center px-0' : 'px-2'}`} title={isCollapsed ? "Profil Anda" : undefined}>
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#E8B478] to-[#9C5A22] border-2 border-white/10 flex items-center justify-center text-white text-sm font-extrabold flex-shrink-0 shadow-md">
+            P
           </div>
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-white text-sm font-medium truncate">
-                Admin Pramuka
+              <p className="text-[#FAF0E6] text-sm font-semibold truncate">
+                Akun Saya
               </p>
-              <p className="text-amber-300/50 text-xs truncate">
-                admin@pramuka.id
+              <p className="text-amber-200/50 text-[11px] truncate">
+                Kelola Profil
               </p>
             </div>
           )}
@@ -250,7 +251,7 @@ export default function Sidebar({ isOpen, onClose, role = 'admin', isCollapsed, 
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className={`hidden lg:flex flex-col h-screen bg-gradient-to-b from-[#3B1F0A] via-[#5C3010] to-[#3B1F0A] fixed left-0 top-0 z-30 shadow-2xl transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`}>
+      <aside className={`hidden lg:flex flex-col h-screen bg-gradient-to-b from-[#4A2B18] via-[#3B1F0A] to-[#2D1608] border-r border-[#5C3010]/30 fixed left-0 top-0 z-30 shadow-[4px_0_24px_rgba(0,0,0,0.2)] transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`}>
         <SidebarContent role={role} visibleNavItems={visibleNavItems} onClose={onClose} isCollapsed={isCollapsed} onToggleCollapse={onToggleCollapse} />
       </aside>
 
@@ -267,8 +268,8 @@ export default function Sidebar({ isOpen, onClose, role = 'admin', isCollapsed, 
       <aside
         className={`
           lg:hidden fixed left-0 top-0 h-screen w-72 z-50
-          bg-gradient-to-b from-[#5C3010] via-[#7C4318] to-[#5C3010]
-          shadow-2xl transform transition-transform duration-300 ease-in-out
+          bg-gradient-to-b from-[#4A2B18] via-[#3B1F0A] to-[#2D1608]
+          shadow-[4px_0_24px_rgba(0,0,0,0.4)] transform transition-transform duration-300 ease-in-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
