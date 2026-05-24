@@ -219,8 +219,8 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
                     <table className="w-full text-sm">
                       <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
                         <tr>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-600">Baris</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-600 whitespace-nowrap">Kategori ID</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-600">#</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-600 whitespace-nowrap">K.ID</th>
                           <th className="px-4 py-3 text-left font-semibold text-gray-600">Teks Soal</th>
                           <th className="px-4 py-3 text-left font-semibold text-gray-600">Opsi A</th>
                           <th className="px-4 py-3 text-left font-semibold text-gray-600">Opsi B</th>
