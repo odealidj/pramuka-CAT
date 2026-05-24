@@ -20,6 +20,9 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
   const [isLoading, setIsLoading] = useState(false);
   const [previewData, setPreviewData] = useState<ImportQuestionsPreviewResponse | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [showErrorsOnly, setShowErrorsOnly] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 50;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
@@ -29,6 +32,8 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
     setFile(null);
     setPreviewData(null);
     setApiError(null);
+    setShowErrorsOnly(false);
+    setCurrentPage(1);
     onClose();
   };
 
@@ -43,11 +48,15 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
         const data = await previewImportExcelApi(selectedFile);
         setPreviewData(data);
         setPhase("preview");
+        setShowErrorsOnly(data.error_rows > 0);
+        setCurrentPage(1);
       } catch (err: any) {
         if (isAxiosError(err) && err.response?.status === 422) {
           // This means there are validation errors per row
           setPreviewData(err.response.data.data);
           setPhase("preview");
+          setShowErrorsOnly(true);
+          setCurrentPage(1);
         } else {
           const msg = isAxiosError(err)
             ? err.response?.data?.message || "Gagal memproses file Excel"
@@ -76,6 +85,12 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
       setIsLoading(false);
     }
   };
+
+  // Derived state for pagination
+  const filteredData = previewData ? previewData.data.filter(row => showErrorsOnly ? !row.is_valid : true) : [];
+  const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE) || 1;
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedData = filteredData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -141,7 +156,14 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
                   disabled={isLoading}
                   className="px-6 py-2.5 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 disabled:opacity-50 transition-colors flex items-center gap-2"
                 >
-                  {isLoading ? <Loader2 size={18} className="animate-spin" /> : "Pilih File Excel"}
+                  {isLoading ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      <span>Memproses File...</span>
+                    </>
+                  ) : (
+                    "Pilih File Excel"
+                  )}
                 </button>
               </div>
             </div>
@@ -166,12 +188,26 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
               )}
 
               {previewData && previewData.error_rows > 0 && (
-                <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3">
-                  <AlertCircle size={20} className="text-amber-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="text-amber-800 font-semibold text-sm">Terdapat data yang tidak valid</h4>
-                    <p className="text-amber-700 text-sm mt-1">Harap perbaiki file Excel Anda dan unggah ulang, atau baris yang error tidak dapat disimpan.</p>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-amber-50 border border-amber-200">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle size={20} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-amber-800 font-semibold text-sm">Terdapat data yang tidak valid</h4>
+                      <p className="text-amber-700 text-sm mt-1">Harap perbaiki file Excel Anda dan unggah ulang, atau baris yang error tidak dapat disimpan.</p>
+                    </div>
                   </div>
+                  <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-2 rounded-lg border border-amber-200 shadow-sm">
+                    <input 
+                      type="checkbox" 
+                      className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                      checked={showErrorsOnly}
+                      onChange={(e) => {
+                        setShowErrorsOnly(e.target.checked);
+                        setCurrentPage(1); // Reset page on filter change
+                      }}
+                    />
+                    <span className="text-sm font-semibold text-amber-900 whitespace-nowrap">Hanya Tampilkan Error</span>
+                  </label>
                 </div>
               )}
 
@@ -190,7 +226,7 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100">
-                        {previewData.data.map((row) => (
+                        {paginatedData.map((row) => (
                           <tr key={row.row} className={row.is_valid ? "hover:bg-gray-50" : "bg-red-50/50 hover:bg-red-50"}>
                             <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{row.row}</td>
                             <td className="px-4 py-3">
@@ -220,6 +256,34 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
                       </tbody>
                     </table>
                   </div>
+                  
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && (
+                    <div className="px-4 py-3 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
+                      <p className="text-sm text-gray-500">
+                        Menampilkan <span className="font-medium">{startIndex + 1}</span> - <span className="font-medium">{Math.min(startIndex + ITEMS_PER_PAGE, filteredData.length)}</span> dari <span className="font-medium">{filteredData.length}</span> baris
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                          className="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                        >
+                          Sebelumnya
+                        </button>
+                        <span className="text-sm font-medium text-gray-600">
+                          Halaman {currentPage} dari {totalPages}
+                        </span>
+                        <button
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          disabled={currentPage === totalPages}
+                          className="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                        >
+                          Selanjutnya
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
