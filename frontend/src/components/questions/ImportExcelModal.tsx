@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { X, UploadCloud, FileDown, CheckCircle2, AlertCircle, FileSpreadsheet, Loader2 } from "lucide-react";
+import { X, UploadCloud, FileDown, CheckCircle2, AlertCircle, FileSpreadsheet, Loader2, Search } from "lucide-react";
 import { previewImportExcelApi, confirmImportExcelApi } from "@/services/question.service";
 import type { ImportQuestionsPreviewResponse, ImportQuestionRow } from "@/types/auth";
 import { isAxiosError } from "axios";
@@ -22,6 +22,7 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
   const [previewData, setPreviewData] = useState<ImportQuestionsPreviewResponse | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
   const [showErrorsOnly, setShowErrorsOnly] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 50;
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -34,6 +35,7 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
     setPreviewData(null);
     setApiError(null);
     setShowErrorsOnly(false);
+    setSearchQuery("");
     setCurrentPage(1);
     onClose();
   };
@@ -50,6 +52,7 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
         setPreviewData(data);
         setPhase("preview");
         setShowErrorsOnly(data.error_rows > 0);
+        setSearchQuery("");
         setCurrentPage(1);
       } catch (err: any) {
         if (isAxiosError(err) && err.response?.status === 422) {
@@ -57,6 +60,7 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
           setPreviewData(err.response.data.data);
           setPhase("preview");
           setShowErrorsOnly(true);
+          setSearchQuery("");
           setCurrentPage(1);
         } else {
           const msg = isAxiosError(err)
@@ -88,7 +92,11 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
   };
 
   // Derived state for pagination
-  const filteredData = previewData ? previewData.data.filter(row => showErrorsOnly ? !row.is_valid : true) : [];
+  const filteredData = previewData ? previewData.data.filter(row => {
+    if (showErrorsOnly && row.is_valid) return false;
+    if (searchQuery && !row.question_text?.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    return true;
+  }) : [];
   const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE) || 1;
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedData = filteredData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
@@ -209,6 +217,42 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
                     />
                     <span className="text-sm font-semibold text-amber-900 whitespace-nowrap">Hanya Tampilkan Error</span>
                   </label>
+                </div>
+              )}
+
+              {/* Toolbar */}
+              {previewData && (
+                <div className="flex flex-col sm:flex-row items-center gap-4 justify-between">
+                  <div className="relative w-full sm:max-w-xs">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <input
+                      type="text"
+                      placeholder="Cari teks soal..."
+                      value={searchQuery}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-white"
+                    />
+                  </div>
+                  {/* Pindahkan toggle ke sini jika tidak ada error rows agar user tetap bisa mem-filter error (misal 0 error, tapi toggle tetap ada jika butuh layout rapi). 
+                      Tapi karena di atas sudah ada kotak amber khusus error_rows > 0, kita biarkan saja.
+                      Namun, kita bisa juga tambahkan toggle di sini secara persisten. */}
+                  {previewData.error_rows === 0 && (
+                    <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm">
+                      <input 
+                        type="checkbox" 
+                        className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                        checked={showErrorsOnly}
+                        onChange={(e) => {
+                          setShowErrorsOnly(e.target.checked);
+                          setCurrentPage(1);
+                        }}
+                      />
+                      <span className="text-sm font-semibold text-gray-700 whitespace-nowrap">Hanya Tampilkan Error</span>
+                    </label>
+                  )}
                 </div>
               )}
 
