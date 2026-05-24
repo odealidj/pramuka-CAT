@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { getExamResultParticipantApi } from '@/services/exam.service';
 import type { UserAnswerDetail } from '@/types/auth';
-import { ArrowLeft, CheckCircle2, XCircle, Trophy, Download, Loader2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, XCircle, Trophy, Download, Loader2, FileText } from 'lucide-react';
 import Spinner from '@/components/ui/Spinner';
 import { exportReviewAnswersParticipantApi } from '@/services/exam.service';
 
@@ -124,32 +124,32 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
         <button
           onClick={handleExportPDF}
           disabled={isExporting}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-medium disabled:opacity-50 shadow-sm"
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-[#E8DCC8] text-[#5C3010] rounded-xl hover:bg-[#FAF7F2] hover:border-[#D4924A] hover:text-[#9C5A22] transition-all font-bold disabled:opacity-50 shadow-sm group"
         >
-          {isExporting ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
+          {isExporting ? <Loader2 size={18} className="animate-spin" /> : <FileText size={18} className="text-red-600 group-hover:text-[#9C5A22] transition-colors" />}
           Download PDF
         </button>
       </div>
 
       {/* Summary Score Card */}
-      <div className="bg-[#FAF7F2] rounded-2xl border border-[#E8DCC8] shadow-sm p-6 overflow-hidden relative">
-        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none text-[#7A4520]">
-          <Trophy size={120} />
+      <div className="bg-gradient-to-br from-[#FAF7F2] to-white rounded-2xl border border-[#E8DCC8] shadow-sm p-8 overflow-hidden relative group hover:shadow-md hover:border-[#D4924A] transition-all duration-300">
+        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none text-[#D4924A] group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-500">
+          <Trophy size={140} />
         </div>
         
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-          <div className="flex-1 space-y-2 text-center md:text-left">
-            <h2 className="text-[#7A4520] font-medium">Skor Akhir Anda</h2>
-            <div className="text-5xl font-black text-[#5C3410] tracking-tighter">
+          <div className="flex-1 space-y-3 text-center md:text-left">
+            <h2 className="text-[#D4924A] font-extrabold uppercase tracking-widest text-sm">Skor Akhir Anda</h2>
+            <div className="text-6xl font-black text-[#5C3010] tracking-tighter drop-shadow-sm">
               {rawScore.toFixed(2)}
             </div>
-            <div className="flex flex-wrap gap-3 mt-4 justify-center md:justify-start">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#E8DCC8] text-sm font-semibold text-[#5C3410]">
-                <CheckCircle2 size={16} className="text-emerald-600" />
+            <div className="flex flex-wrap gap-3 mt-5 justify-center md:justify-start">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-sm font-bold text-emerald-800 shadow-sm">
+                <CheckCircle2 size={18} className="text-emerald-600" />
                 {correctCount} Benar
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#E8DCC8] text-sm font-semibold text-[#5C3410]">
-                <XCircle size={16} className="text-red-500" />
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-50 border border-red-200 text-sm font-bold text-red-800 shadow-sm">
+                <XCircle size={18} className="text-red-600" />
                 {totalQuestions - correctCount} Salah
               </div>
             </div>
@@ -159,28 +159,28 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
 
       {/* Questions Review List */}
       <div className="space-y-4">
-        <h3 className="font-bold text-gray-900 text-lg px-1">Pembahasan Soal</h3>
+        <h3 className="font-black text-[#5C3010] text-xl px-1 border-b-2 border-[#E8DCC8] pb-3 inline-block mb-2">Pembahasan Soal</h3>
         
         {results.map((item, idx) => {
           const isUserCorrect = item.is_correct;
           const hasAnswered = item.selected_answer !== '';
           
           return (
-            <div key={item.answer_id} className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-all ${isUserCorrect ? 'border-emerald-200 shadow-emerald-50' : 'border-red-200 shadow-red-50'}`}>
-              <div className={`px-5 py-3 border-b flex justify-between items-center ${isUserCorrect ? 'bg-emerald-50 border-emerald-100' : 'bg-red-50 border-red-100'}`}>
-                <span className={`font-bold text-sm ${isUserCorrect ? 'text-emerald-700' : 'text-red-700'}`}>
+            <div key={item.answer_id} className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md ${isUserCorrect ? 'border-emerald-200 hover:border-emerald-300' : 'border-red-200 hover:border-red-300'}`}>
+              <div className={`px-6 py-4 flex justify-between items-center border-b ${isUserCorrect ? 'bg-gradient-to-r from-emerald-50 to-white border-emerald-100' : 'bg-gradient-to-r from-red-50 to-white border-red-100'}`}>
+                <span className={`font-extrabold text-sm uppercase tracking-wider ${isUserCorrect ? 'text-emerald-800' : 'text-red-800'}`}>
                   Soal Nomor {idx + 1}
                 </span>
-                <div className={`flex items-center gap-1.5 text-sm font-bold ${isUserCorrect ? 'text-emerald-600' : 'text-red-600'}`}>
-                  {isUserCorrect ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
+                <div className={`flex items-center gap-2 text-sm font-bold px-3 py-1 rounded-lg bg-white shadow-sm border ${isUserCorrect ? 'text-emerald-700 border-emerald-100' : 'text-red-700 border-red-100'}`}>
+                  {isUserCorrect ? <CheckCircle2 size={16} className="text-emerald-500" /> : <XCircle size={16} className="text-red-500" />}
                   {isUserCorrect ? 'Benar' : 'Salah'}
-                  <span className="opacity-50 mx-1">•</span>
-                  Bobot: {item.weight}
+                  <div className="w-px h-4 bg-gray-200 mx-1"></div>
+                  <span className="text-gray-500">Bobot:</span> <span className="text-[#5C3010]">{item.weight}</span>
                 </div>
               </div>
               
-              <div className="p-5 space-y-6">
-                <p className="text-gray-800 font-medium leading-relaxed whitespace-pre-wrap">
+              <div className="p-6 space-y-6">
+                <p className="text-[#5C3010] font-semibold text-base leading-relaxed whitespace-pre-wrap">
                   {item.question_text}
                 </p>
 
@@ -198,21 +198,21 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
                     let icon = null;
 
                     if (isCorrectOption) {
-                      bgClass = 'bg-emerald-50 border-emerald-300 ring-1 ring-emerald-300';
-                      textClass = 'text-emerald-900 font-semibold';
-                      icon = <CheckCircle2 size={18} className="text-emerald-600" />;
+                      bgClass = 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-400/20';
+                      textClass = 'text-emerald-950 font-bold';
+                      icon = <CheckCircle2 size={20} className="text-emerald-600" />;
                     } else if (isSelected && !isCorrectOption) {
                       bgClass = 'bg-red-50 border-red-300';
-                      textClass = 'text-red-900';
-                      icon = <XCircle size={18} className="text-red-500" />;
+                      textClass = 'text-red-950 font-medium';
+                      icon = <XCircle size={20} className="text-red-500" />;
                     }
 
                     return (
                       <div key={opt} className={`relative flex items-center p-4 rounded-xl border ${bgClass} transition-all`}>
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 font-bold mr-4 ${
-                          isCorrectOption ? 'bg-emerald-200 text-emerald-800' : 
-                          isSelected ? 'bg-red-200 text-red-800' : 
-                          'bg-gray-200 text-gray-600'
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 font-bold text-lg mr-4 shadow-sm ${
+                          isCorrectOption ? 'bg-emerald-500 text-white shadow-emerald-200' : 
+                          isSelected ? 'bg-red-500 text-white shadow-red-200' : 
+                          'bg-[#FAF7F2] text-[#9C5A22] border border-[#E8DCC8]'
                         }`}>
                           {opt}
                         </div>
@@ -227,12 +227,12 @@ export default function ExamResultPage({ params }: { params: Promise<{ id: strin
                         
                         {/* Selected Indicator Label */}
                         {isSelected && (
-                          <div className="absolute -top-2.5 -right-2 px-2 py-0.5 bg-gray-900 text-white text-[10px] font-bold uppercase tracking-wider rounded-full shadow-sm">
+                          <div className="absolute -top-3 -right-2 px-3 py-1 bg-[#5C3010] text-white text-[10px] font-extrabold uppercase tracking-widest rounded-full shadow-md border-2 border-white">
                             Jawaban Anda
                           </div>
                         )}
                         {isCorrectOption && !isSelected && (
-                          <div className="absolute -top-2.5 -right-2 px-2 py-0.5 bg-emerald-600 text-white text-[10px] font-bold uppercase tracking-wider rounded-full shadow-sm">
+                          <div className="absolute -top-3 -right-2 px-3 py-1 bg-emerald-500 text-white text-[10px] font-extrabold uppercase tracking-widest rounded-full shadow-md border-2 border-white">
                             Kunci Jawaban
                           </div>
                         )}

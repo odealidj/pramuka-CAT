@@ -525,23 +525,23 @@ function MyExamCard({ exam }: { exam: UserApproval }) {
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-[#E8DCC8] shadow-sm hover:shadow-lg hover:border-[#D4924A] hover:-translate-y-1 transition-all duration-300 group flex flex-col relative overflow-hidden">
+    <div className="bg-white rounded-2xl border border-[#E8DCC8] shadow-sm hover:shadow-xl hover:border-[#D4924A] hover:-translate-y-1.5 transition-all duration-300 group flex flex-col relative overflow-hidden">
       {/* Decorative top accent */}
       <div className={`absolute top-0 left-0 right-0 h-1.5 ${
-        exam.is_completed ? 'bg-gradient-to-r from-[#7C4318] to-[#9C5A22]' : 
+        exam.is_completed ? 'bg-gradient-to-r from-[#9C5A22] to-[#7C4318]' : 
         isEventFinished ? 'bg-gray-300' : 
-        exam.status === 'approved' ? 'bg-gradient-to-r from-[#7C4318] to-[#D97706]' : 
+        exam.status === 'approved' ? 'bg-gradient-to-r from-[#D4924A] via-[#9C5A22] to-[#5C3010]' : 
         exam.status === 'revoked' ? 'bg-red-400' : 
-        'bg-amber-400'
+        'bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500'
       }`} />
       
       <div className="p-5 pt-6 flex flex-col flex-1">
         <div className="flex justify-between items-start mb-4 gap-4">
-          <h3 className="font-bold text-gray-900 text-lg leading-snug line-clamp-2 group-hover:text-[#7C4318] transition-colors">{exam.name}</h3>
+          <h3 className="font-black text-[#5C3010] text-xl leading-tight line-clamp-2 group-hover:text-[#9C5A22] transition-colors">{exam.name}</h3>
           <span className={`flex-shrink-0 px-2.5 py-1 rounded-full border text-[10px] font-extrabold uppercase tracking-widest shadow-sm ${
             exam.is_completed ? 'bg-[#FAF7F2] text-[#7A4520] border-[#E8DCC8]' :
-            isEventFinished ? 'bg-gray-50 text-gray-500 border-gray-200' :
-            exam.status === 'approved' ? 'bg-[#FAF7F2] text-[#7A4520] border-[#E8DCC8]' :
+            isEventFinished ? 'bg-[#FAF7F2] text-gray-500 border-[#E8DCC8]' :
+            exam.status === 'approved' ? 'bg-[#FAF7F2] text-[#9C5A22] border-[#E8DCC8]' :
             exam.status === 'revoked' ? 'bg-red-50 text-red-600 border-red-200' :
             'bg-amber-50 text-amber-600 border-amber-200'
           }`}>
@@ -550,26 +550,26 @@ function MyExamCard({ exam }: { exam: UserApproval }) {
         </div>
         
         <div className="space-y-3 mb-6 flex-1">
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Calendar size={14} className="text-gray-400 flex-shrink-0" />
+          <div className="flex items-center gap-2 text-sm text-[#7A4520] font-medium">
+            <Calendar size={15} className="text-[#9C5A22] flex-shrink-0" />
             <span>{fmtDateRange(exam.start_time, exam.end_time)}</span>
           </div>
           
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-500">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[#7A4520] font-medium">
             <div className="flex items-center gap-1.5">
-              <Clock size={14} className={countdownColor} />
+              <Clock size={15} className={countdownColor} />
               <span className={countdownColor}>{countdownText}</span>
             </div>
             
             <div className={`flex items-center gap-1.5 ${isEventFinished || exam.is_completed ? 'opacity-70' : ''}`}>
-              <HelpCircle size={14} className={isEventFinished || exam.is_completed ? 'text-gray-400' : 'text-[#9C5A22]'} />
-              <span className={`font-medium ${isEventFinished || exam.is_completed ? 'text-gray-400' : 'text-[#5C3010]'}`}>{exam.question_count || 0} soal</span>
+              <HelpCircle size={15} className={isEventFinished || exam.is_completed ? 'text-gray-400' : 'text-[#9C5A22]'} />
+              <span className={`font-bold ${isEventFinished || exam.is_completed ? 'text-gray-400' : 'text-[#5C3010]'}`}>{exam.question_count || 0} soal</span>
             </div>
 
             <div className={`flex items-center gap-1.5 ${isEventFinished || exam.is_completed ? 'opacity-70' : ''}`}>
-              <Trophy size={14} className={isEventFinished || exam.is_completed ? 'text-gray-400' : 'text-[#7A4520]'} />
-              <span className={`font-medium ${isEventFinished || exam.is_completed ? 'text-gray-400' : 'text-[#5C3010]'}`}>
-                Batas Lulus <span className={`font-bold ${isEventFinished || exam.is_completed ? 'text-gray-500' : 'text-[#3B1F0A]'}`}>{exam.passing_grade || 0}%</span>
+              <Trophy size={15} className={isEventFinished || exam.is_completed ? 'text-gray-400' : 'text-[#7A4520]'} />
+              <span className={`font-bold ${isEventFinished || exam.is_completed ? 'text-gray-400' : 'text-[#5C3010]'}`}>
+                Batas Lulus <span className={`font-black ${isEventFinished || exam.is_completed ? 'text-gray-500' : 'text-[#3B1F0A]'}`}>{exam.passing_grade || 0}%</span>
               </span>
             </div>
           </div>
@@ -577,33 +577,33 @@ function MyExamCard({ exam }: { exam: UserApproval }) {
         
         {exam.is_completed ? (
           <div className="space-y-4 mt-2">
-            <div className="relative overflow-hidden p-4 rounded-xl border bg-[#FAF7F2] border-[#E8DCC8] shadow-inner flex flex-col items-center justify-center">
-              <Trophy size={60} className="absolute -right-4 -bottom-4 text-[#7A4520] opacity-5 pointer-events-none" />
-              <span className={`text-[10px] font-extrabold uppercase tracking-widest mb-1 ${exam.is_passed ? 'text-emerald-600' : 'text-red-600'}`}>
-                {exam.is_passed ? 'Lulus Ujian' : 'Tidak Lulus'}
+            <div className="relative overflow-hidden p-4 rounded-xl border bg-gradient-to-br from-[#FAF7F2] to-white border-[#E8DCC8] shadow-inner flex flex-col items-center justify-center">
+              <Trophy size={60} className="absolute -right-4 -bottom-4 text-[#D4924A] opacity-10 pointer-events-none" />
+              <span className={`text-[11px] font-extrabold uppercase tracking-widest mb-1 ${exam.is_passed ? 'text-emerald-600' : 'text-red-600'}`}>
+                {exam.is_passed ? '★ Lulus Ujian ★' : 'Tidak Lulus'}
               </span>
-              <span className="text-3xl font-black text-[#5C3410] tracking-tighter">
+              <span className="text-3xl font-black text-[#5C3010] tracking-tighter">
                 {exam.score.toFixed(2)}
               </span>
             </div>
-            <Link href={`/dashboard/exams/${exam.event_id}/result`} className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#7C4318] to-[#9C5A22] text-white hover:from-[#5C3010] hover:to-[#7C4318] shadow-sm shadow-amber-900/20 py-2.5 rounded-xl text-sm font-semibold transition-all hover:scale-[1.02]">
+            <Link href={`/dashboard/exams/${exam.event_id}/result`} className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#9C5A22] to-[#5C3010] text-white hover:shadow-lg shadow-md shadow-[#9C5A22]/30 py-2.5 rounded-xl text-sm font-bold transition-all hover:-translate-y-0.5">
               Lihat Hasil & Pembahasan
             </Link>
           </div>
         ) : isEventFinished ? (
-          <button disabled className="w-full flex items-center justify-center gap-2 bg-gray-50 text-gray-400 py-2.5 rounded-xl text-sm font-semibold transition-colors border border-gray-200">
+          <button disabled className="w-full flex items-center justify-center gap-2 bg-[#FAF7F2] text-[#9C5A22] py-2.5 rounded-xl text-sm font-bold transition-colors border border-[#E8DCC8] shadow-sm opacity-70">
             <CheckCircle2 size={16} /> Ujian Berakhir
           </button>
         ) : exam.status === 'approved' ? (
-          <Link href={`/dashboard/exams/${exam.event_id}`} className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#7C4318] to-[#D97706] hover:from-[#5C3010] hover:to-[#B45309] shadow-sm shadow-amber-900/20 text-white py-2.5 rounded-xl text-sm font-semibold transition-all hover:scale-[1.02]">
+          <Link href={`/dashboard/exams/${exam.event_id}`} className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#D4924A] via-[#9C5A22] to-[#5C3010] shadow-md shadow-[#9C5A22]/30 text-white py-2.5 rounded-xl text-sm font-bold transition-all hover:-translate-y-0.5 hover:shadow-lg">
             <Play size={16} fill="currentColor" /> Mulai Ujian
           </Link>
         ) : exam.status === 'pending' ? (
-          <button disabled className="w-full flex items-center justify-center gap-2 bg-[#FAF7F2] text-[#9C5A22] border border-[#E8DCC8] py-2.5 rounded-xl text-sm font-semibold transition-colors">
+          <button disabled className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-50 to-[#FAF7F2] text-amber-600 border border-amber-200 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-colors">
             <Clock size={16} /> Menunggu Admin
           </button>
         ) : (
-          <button disabled className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 border border-red-200 py-2.5 rounded-xl text-sm font-semibold transition-colors">
+          <button disabled className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 border border-red-200 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-colors">
             Dibatalkan
           </button>
         )}
@@ -623,64 +623,66 @@ function UpcomingExamCard({ event, onEnroll, enrolling }: { event: Event, onEnro
   let countdownColor = 'text-gray-500';
   if (countdown.status === 'upcoming') {
     countdownText = `Dimulai dalam ${fmtDurationFull(countdown.minutesLeft)}`;
-    countdownColor = 'text-blue-600';
+    countdownColor = 'text-[#7C4318]';
   } else if (countdown.status === 'ongoing') {
     countdownText = `${fmtDurationFull(countdown.minutesLeft)} akan berakhir`;
-    countdownColor = 'text-emerald-600 font-medium';
+    countdownColor = 'text-[#D4924A] font-bold';
   } else {
     countdownText = '0 menit (Selesai)';
     countdownColor = 'text-gray-400';
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-[#E8DCC8] shadow-sm hover:shadow-lg hover:border-[#D4924A] hover:-translate-y-1 transition-all flex flex-col group overflow-hidden">
-      <div className={`h-2 w-full ${statusInfo.dot}`} />
-      <div className="p-5 flex flex-col flex-1">
+    <div className="bg-white rounded-2xl border border-[#E8DCC8] shadow-sm hover:shadow-xl hover:border-[#D4924A] hover:-translate-y-1.5 transition-all duration-300 flex flex-col group overflow-hidden relative">
+      <div className={`absolute top-0 left-0 right-0 h-1.5 ${statusInfo.label === 'BERLANGSUNG' ? 'bg-gradient-to-r from-[#D4924A] via-[#9C5A22] to-[#5C3010]' : 'bg-gray-300'}`} />
+      <div className="p-5 pt-6 flex flex-col flex-1">
         <div className="flex justify-between items-start mb-4 gap-4">
-          <h3 className="font-bold text-gray-900 text-lg line-clamp-2">{event.name}</h3>
-          <span className={`flex-shrink-0 px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider ${statusInfo.color}`}>
+          <h3 className="font-black text-[#5C3010] text-xl leading-tight line-clamp-2 group-hover:text-[#9C5A22] transition-colors">{event.name}</h3>
+          <span className={`flex-shrink-0 px-2.5 py-1 rounded-full border text-[10px] font-extrabold uppercase tracking-widest shadow-sm ${
+             statusInfo.label === 'BERLANGSUNG' ? 'bg-[#FAF7F2] text-[#9C5A22] border-[#E8DCC8]' : 'bg-gray-50 text-gray-500 border-gray-200'
+          }`}>
             {statusInfo.label}
           </span>
         </div>
         <div className="space-y-3 mb-6 flex-1">
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Calendar size={14} className="text-gray-400 flex-shrink-0" />
+          <div className="flex items-center gap-2 text-sm text-[#7A4520] font-medium">
+            <Calendar size={15} className="text-[#9C5A22] flex-shrink-0" />
             <span>{fmtDateRange(event.start_time, event.end_time)}</span>
           </div>
           
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-500">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[#7A4520] font-medium">
             <div className="flex items-center gap-1.5">
-              <Clock size={14} className="text-amber-500" />
+              <Clock size={15} className="text-[#D4924A]" />
               <span>Durasi: {fmtDuration(event.duration_minutes)}</span>
             </div>
             
             <div className="flex items-center gap-1.5">
-              <Clock size={14} className={countdownColor} />
+              <Clock size={15} className={countdownColor} />
               <span className={countdownColor}>{countdownText}</span>
             </div>
             
             <div className="flex items-center gap-1.5">
-              <HelpCircle size={14} className="text-blue-500" />
-              <span className="font-medium text-gray-700">{event.total_questions || 0} soal</span>
+              <HelpCircle size={15} className="text-[#9C5A22]" />
+              <span className="font-bold text-[#5C3010]">{event.total_questions || 0} soal</span>
             </div>
 
             <div className="flex items-center gap-1.5">
-              <Trophy size={14} className="text-emerald-500" />
-              <span className="font-medium text-gray-700">
-                Batas Lulus <span className="font-bold text-gray-900">{event.passing_grade || 0}%</span>
+              <Trophy size={15} className="text-[#7A4520]" />
+              <span className="font-bold text-[#5C3010]">
+                Batas Lulus <span className="font-black text-[#3B1F0A]">{event.passing_grade || 0}%</span>
               </span>
             </div>
           </div>
         </div>
         {isEventFinished ? (
-          <button disabled className="w-full flex items-center justify-center gap-2 bg-gray-100 text-gray-500 py-2.5 rounded-xl text-sm font-semibold transition-colors border border-gray-200">
+          <button disabled className="w-full flex items-center justify-center gap-2 bg-[#FAF7F2] text-[#9C5A22] py-2.5 rounded-xl text-sm font-bold transition-colors border border-[#E8DCC8] shadow-sm opacity-70">
             <CheckCircle2 size={16} /> Ujian Selesai
           </button>
         ) : (
           <button
             onClick={() => onEnroll(event.id)}
             disabled={enrolling === event.id}
-            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#9C5A22] to-[#5C3010] text-white shadow-md shadow-[#9C5A22]/30 hover:shadow-lg hover:-translate-y-0.5 py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-50"
           >
             {enrolling === event.id ? <Spinner size={16} /> : <Plus size={16} />}
             Daftar Ujian
@@ -756,9 +758,11 @@ function PesertaEventsContent() {
             <Spinner size={28} className="text-indigo-600" />
           </div>
         ) : myExams.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-3 text-gray-400 bg-white rounded-2xl border border-gray-100 shadow-sm">
-            <ClipboardCheck size={40} className="text-gray-200" />
-            <p className="text-sm font-medium text-gray-500">Belum ada riwayat pendaftaran ujian.</p>
+          <div className="flex flex-col items-center justify-center py-16 gap-4 text-gray-400 bg-gradient-to-b from-white to-[#FAF7F2]/50 rounded-2xl border-2 border-dashed border-[#E8DCC8] shadow-sm">
+            <div className="w-16 h-16 rounded-full bg-[#FAF7F2] border border-[#E8DCC8] shadow-sm flex items-center justify-center">
+              <ClipboardCheck size={32} className="text-[#D4924A]" />
+            </div>
+            <p className="text-sm font-bold text-[#7A4520]">Belum ada riwayat pendaftaran ujian.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -795,9 +799,11 @@ function PesertaEventsContent() {
             <Spinner size={28} className="text-blue-600" />
           </div>
         ) : upcomingEvents.filter(e => !myExams.some(m => m.event_id === e.id)).length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-3 text-gray-400 bg-white rounded-2xl border border-gray-100 shadow-sm">
-            <CalendarDays size={40} className="text-gray-200" />
-            <p className="text-sm font-medium text-gray-500">Tidak ada jadwal ujian baru yang tersedia.</p>
+          <div className="flex flex-col items-center justify-center py-16 gap-4 text-gray-400 bg-gradient-to-b from-white to-[#FAF7F2]/50 rounded-2xl border-2 border-dashed border-[#E8DCC8] shadow-sm">
+            <div className="w-16 h-16 rounded-full bg-[#FAF7F2] border border-[#E8DCC8] shadow-sm flex items-center justify-center">
+              <CalendarDays size={32} className="text-[#D4924A]" />
+            </div>
+            <p className="text-sm font-bold text-[#7A4520]">Tidak ada jadwal ujian baru yang tersedia.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

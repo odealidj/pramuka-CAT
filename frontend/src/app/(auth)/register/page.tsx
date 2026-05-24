@@ -90,40 +90,43 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#3B1F0A] via-[#5C3010] to-[#7C4318] flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-[#1C1005] via-[#3B1F0A] to-[#1C1005] flex items-center justify-center p-4 relative overflow-hidden">
       {/* Decorative background blobs */}
-      <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-amber-400/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-amber-600/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-[#D4924A]/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-[#9C5A22]/10 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="relative w-full max-w-md py-8">
         {/* Card */}
-        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+        <div className="bg-white rounded-[2rem] shadow-2xl overflow-hidden ring-1 ring-white/10">
           {/* Card Header */}
-          <div className="bg-gradient-to-r from-[#5C3010] to-[#9C5A22] px-8 py-8 text-center relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
-            <div className="relative inline-flex w-16 h-16 rounded-2xl bg-white/15 backdrop-blur items-center justify-center mb-4 shadow-lg">
-              <FlameKindling size={32} className="text-amber-300" />
+          <div className="bg-gradient-to-r from-[#FAF7F2] to-white px-10 py-10 text-center relative overflow-hidden border-b border-[#E8DCC8]">
+            {/* Decorative elements in header */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#D4924A]/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/3" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-[#9C5A22]/5 to-transparent rounded-full translate-y-1/3 -translate-x-1/3" />
+
+            <div className="relative inline-flex w-20 h-20 rounded-[1.5rem] bg-gradient-to-br from-white to-[#FAF7F2] border border-[#E8DCC8] shadow-sm items-center justify-center mb-5 z-10 transition-transform hover:scale-105 duration-500">
+              <FlameKindling size={36} className="text-[#D4924A]" />
             </div>
-            <h1 className="text-white text-2xl font-bold tracking-tight">Pramuka CAT</h1>
-            <p className="text-amber-200/80 text-sm mt-1">Pendaftaran Peserta Baru</p>
+            <h1 className="relative z-10 text-[#5C3010] text-3xl font-black tracking-tight">Pramuka CAT</h1>
+            <p className="relative z-10 text-[#7A4520] text-sm font-extrabold mt-1.5 uppercase tracking-widest">Pendaftaran Peserta Baru</p>
           </div>
 
           {/* Card Body — Form */}
-          <div className="px-8 py-8">
+          <div className="px-10 py-10">
             {isSuccess ? (
               <div className="text-center py-6">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 mb-4">
-                  <FlameKindling size={32} className="text-emerald-500" />
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-[1.5rem] bg-gradient-to-br from-emerald-50 to-emerald-100 mb-6 shadow-sm border border-emerald-200">
+                  <FlameKindling size={36} className="text-emerald-500" />
                 </div>
-                <h2 className="text-gray-900 text-xl font-bold mb-2">Pendaftaran Berhasil! 🎉</h2>
-                <p className="text-gray-500 text-sm mb-6">Akun Anda telah berhasil dibuat. Anda akan dialihkan ke halaman login...</p>
-                <Spinner size={24} className="text-amber-500 mx-auto" />
+                <h2 className="text-[#5C3010] text-2xl font-extrabold tracking-tight mb-2">Pendaftaran Berhasil! 🎉</h2>
+                <p className="text-[#7A4520] text-sm font-medium mb-8">Akun Anda telah berhasil dibuat. Anda akan dialihkan ke halaman login...</p>
+                <Spinner size={28} className="text-emerald-500 mx-auto" />
               </div>
             ) : (
               <>
-                <div className="mb-6">
-                  <h2 className="text-gray-900 text-xl font-bold">Buat Akun Baru</h2>
-                  <p className="text-gray-500 text-sm mt-1">Lengkapi data di bawah ini untuk mendaftar</p>
+                <div className="mb-8">
+                  <h2 className="text-[#5C3010] text-2xl font-extrabold tracking-tight">Buat Akun Baru</h2>
+                  <p className="text-[#7A4520] text-sm font-medium mt-1.5">Lengkapi data di bawah ini untuk mendaftar</p>
                 </div>
 
                 {/* API Error Banner */}
@@ -137,7 +140,7 @@ export default function RegisterPage() {
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
                   {/* Nama Lengkap */}
                   <div>
-                    <label htmlFor="full_name" className="block text-gray-700 text-sm font-semibold mb-1.5">
+                    <label htmlFor="full_name" className="block text-[#5C3010] text-sm font-bold mb-2">
                       Nama Lengkap
                     </label>
                     <input
@@ -146,23 +149,23 @@ export default function RegisterPage() {
                       placeholder="Masukkan nama lengkap Anda"
                       disabled={isSubmitting}
                       {...register('full_name')}
-                      className={`w-full px-4 py-3 rounded-xl border text-gray-800 text-sm placeholder:text-gray-400 outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed
+                      className={`w-full px-4 py-3.5 rounded-xl border-2 text-gray-800 text-sm font-medium placeholder:text-gray-400 outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed
                         ${
                           errors.full_name
-                            ? 'border-red-300 bg-red-50 focus:ring-2 focus:ring-red-200 focus:border-red-400'
-                            : 'border-gray-200 bg-white focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400'
+                            ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10'
+                            : 'border-[#E8DCC8] bg-[#FAF7F2]/50 hover:bg-[#FAF7F2] focus:bg-white focus:border-[#D4924A] focus:ring-4 focus:ring-[#D4924A]/10'
                         }`}
                     />
                     {errors.full_name && (
-                      <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
-                        <AlertCircle size={11} /> {errors.full_name.message}
+                      <p className="text-red-500 text-xs font-bold mt-1.5 flex items-center gap-1">
+                        <AlertCircle size={12} /> {errors.full_name.message}
                       </p>
                     )}
                   </div>
 
                   {/* Email */}
                   <div>
-                    <label htmlFor="email" className="block text-gray-700 text-sm font-semibold mb-1.5">
+                    <label htmlFor="email" className="block text-[#5C3010] text-sm font-bold mb-2">
                       Email
                     </label>
                     <input
@@ -171,23 +174,23 @@ export default function RegisterPage() {
                       placeholder="contoh@email.com"
                       disabled={isSubmitting}
                       {...register('email')}
-                      className={`w-full px-4 py-3 rounded-xl border text-gray-800 text-sm placeholder:text-gray-400 outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed
+                      className={`w-full px-4 py-3.5 rounded-xl border-2 text-gray-800 text-sm font-medium placeholder:text-gray-400 outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed
                         ${
                           errors.email
-                            ? 'border-red-300 bg-red-50 focus:ring-2 focus:ring-red-200 focus:border-red-400'
-                            : 'border-gray-200 bg-white focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400'
+                            ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10'
+                            : 'border-[#E8DCC8] bg-[#FAF7F2]/50 hover:bg-[#FAF7F2] focus:bg-white focus:border-[#D4924A] focus:ring-4 focus:ring-[#D4924A]/10'
                         }`}
                     />
                     {errors.email && (
-                      <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
-                        <AlertCircle size={11} /> {errors.email.message}
+                      <p className="text-red-500 text-xs font-bold mt-1.5 flex items-center gap-1">
+                        <AlertCircle size={12} /> {errors.email.message}
                       </p>
                     )}
                   </div>
 
                   {/* Username Field */}
                   <div>
-                    <label htmlFor="username" className="block text-gray-700 text-sm font-semibold mb-1.5">
+                    <label htmlFor="username" className="block text-[#5C3010] text-sm font-bold mb-2">
                       Username
                     </label>
                     <input
@@ -197,23 +200,23 @@ export default function RegisterPage() {
                       placeholder="Masukkan username Anda"
                       disabled={isSubmitting}
                       {...register('username')}
-                      className={`w-full px-4 py-3 rounded-xl border text-gray-800 text-sm placeholder:text-gray-400 outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed
+                      className={`w-full px-4 py-3.5 rounded-xl border-2 text-gray-800 text-sm font-medium placeholder:text-gray-400 outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed
                         ${
                           errors.username
-                            ? 'border-red-300 bg-red-50 focus:ring-2 focus:ring-red-200 focus:border-red-400'
-                            : 'border-gray-200 bg-white focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400'
+                            ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10'
+                            : 'border-[#E8DCC8] bg-[#FAF7F2]/50 hover:bg-[#FAF7F2] focus:bg-white focus:border-[#D4924A] focus:ring-4 focus:ring-[#D4924A]/10'
                         }`}
                     />
                     {errors.username && (
-                      <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
-                        <AlertCircle size={11} /> {errors.username.message}
+                      <p className="text-red-500 text-xs font-bold mt-1.5 flex items-center gap-1">
+                        <AlertCircle size={12} /> {errors.username.message}
                       </p>
                     )}
                   </div>
 
                   {/* Password Field */}
                   <div>
-                    <label htmlFor="password" className="block text-gray-700 text-sm font-semibold mb-1.5">
+                    <label htmlFor="password" className="block text-[#5C3010] text-sm font-bold mb-2">
                       Password
                     </label>
                     <div className="relative">
@@ -224,26 +227,26 @@ export default function RegisterPage() {
                         placeholder="••••••••"
                         disabled={isSubmitting}
                         {...register('password')}
-                        className={`w-full px-4 py-3 pr-11 rounded-xl border text-gray-800 text-sm placeholder:text-gray-400 outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed
+                        className={`w-full px-4 py-3.5 pr-12 rounded-xl border-2 text-gray-800 text-sm font-medium placeholder:text-gray-400 outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed
                           ${
                             errors.password
-                              ? 'border-red-300 bg-red-50 focus:ring-2 focus:ring-red-200 focus:border-red-400'
-                              : 'border-gray-200 bg-white focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400'
+                              ? 'border-red-300 bg-red-50 focus:border-red-500 focus:ring-4 focus:ring-red-500/10'
+                              : 'border-[#E8DCC8] bg-[#FAF7F2]/50 hover:bg-[#FAF7F2] focus:bg-white focus:border-[#D4924A] focus:ring-4 focus:ring-[#D4924A]/10'
                           }`}
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword((v) => !v)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#D4924A] transition-colors p-1"
                         tabIndex={-1}
                         aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
                       >
-                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
                     {errors.password && (
-                      <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
-                        <AlertCircle size={11} /> {errors.password.message}
+                      <p className="text-red-500 text-xs font-bold mt-1.5 flex items-center gap-1">
+                        <AlertCircle size={12} /> {errors.password.message}
                       </p>
                     )}
                   </div>
@@ -252,11 +255,11 @@ export default function RegisterPage() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#7C4318] to-[#9C5A22] text-white font-semibold py-3 rounded-xl hover:from-[#5C3010] hover:to-[#7C4318] transition-all shadow-lg shadow-amber-900/25 disabled:opacity-70 disabled:cursor-not-allowed mt-2"
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#9C5A22] to-[#5C3010] text-white font-bold py-4 rounded-xl hover:from-[#7C4318] hover:to-[#3B1F0A] transition-all duration-300 shadow-xl shadow-[#9C5A22]/20 hover:shadow-2xl hover:shadow-[#9C5A22]/30 hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0 mt-6"
                   >
                     {isSubmitting ? (
                       <>
-                        <Spinner size={16} className="text-white/80" />
+                        <Spinner size={18} className="text-white/80" />
                         <span>Memproses...</span>
                       </>
                     ) : (
@@ -270,10 +273,10 @@ export default function RegisterPage() {
 
           {/* Card Footer */}
           {!isSuccess && (
-            <div className="px-8 pb-6 text-center border-t border-gray-100 pt-5 bg-gray-50/50">
-              <p className="text-gray-600 text-sm">
+            <div className="px-10 pb-8 pt-6 text-center border-t border-gray-100 bg-gray-50/50">
+              <p className="text-[#7A4520] text-sm font-medium">
                 Sudah punya akun?{' '}
-                <Link href="/login" className="text-amber-600 font-bold hover:text-amber-700 transition-colors">
+                <Link href="/login" className="text-[#D4924A] font-bold hover:text-[#9C5A22] transition-colors underline decoration-2 underline-offset-4 decoration-[#D4924A]/30 hover:decoration-[#9C5A22]">
                   Masuk di sini
                 </Link>
               </p>
