@@ -148,8 +148,8 @@ func (s *questionService) PreviewImportExcel(ctx context.Context, fileData []byt
 		return nil, fmt.Errorf("file Excel kosong atau tidak memiliki data")
 	}
 
-	if len(rows) > 2001 {
-		return nil, fmt.Errorf("file Excel terlalu besar. Maksimal 2000 data soal per file")
+	if len(rows) > 501 {
+		return nil, fmt.Errorf("file Excel terlalu besar. Maksimal 500 data soal per file")
 	}
 
 	var response domain.ImportQuestionsPreviewResponse
