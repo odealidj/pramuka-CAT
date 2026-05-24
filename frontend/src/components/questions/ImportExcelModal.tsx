@@ -5,6 +5,7 @@ import { X, UploadCloud, FileDown, CheckCircle2, AlertCircle, FileSpreadsheet, L
 import { previewImportExcelApi, confirmImportExcelApi } from "@/services/question.service";
 import type { ImportQuestionsPreviewResponse, ImportQuestionRow } from "@/types/auth";
 import { isAxiosError } from "axios";
+import Pagination from "@/components/ui/Pagination";
 
 type Phase = "upload" | "preview";
 
@@ -263,25 +264,11 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }: Props) 
                       <p className="text-sm text-gray-500">
                         Menampilkan <span className="font-medium">{startIndex + 1}</span> - <span className="font-medium">{Math.min(startIndex + ITEMS_PER_PAGE, filteredData.length)}</span> dari <span className="font-medium">{filteredData.length}</span> baris
                       </p>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                          disabled={currentPage === 1}
-                          className="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors"
-                        >
-                          Sebelumnya
-                        </button>
-                        <span className="text-sm font-medium text-gray-600">
-                          Halaman {currentPage} dari {totalPages}
-                        </span>
-                        <button
-                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                          disabled={currentPage === totalPages}
-                          className="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors"
-                        >
-                          Selanjutnya
-                        </button>
-                      </div>
+                      <Pagination
+                        page={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                      />
                     </div>
                   )}
                 </div>
