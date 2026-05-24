@@ -295,19 +295,66 @@ func (s *questionService) ConfirmImportExcel(ctx context.Context, req domain.Con
 
 func (s *questionService) DownloadTemplateExcel(ctx context.Context) ([]byte, error) {
 	f := excelize.NewFile()
-	
+
+	// Buat Style untuk Header (Background Cokelat Tema, Text Putih Bold, Border)
+	headerStyle, err := f.NewStyle(&excelize.Style{
+		Font: &excelize.Font{Bold: true, Color: "FFFFFF"},
+		Fill: excelize.Fill{Type: "pattern", Color: []string{"9C5A22"}, Pattern: 1},
+		Border: []excelize.Border{
+			{Type: "left", Color: "000000", Style: 1},
+			{Type: "right", Color: "000000", Style: 1},
+			{Type: "top", Color: "000000", Style: 1},
+			{Type: "bottom", Color: "000000", Style: 1},
+		},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("gagal membuat style header: %w", err)
+	}
+
+	// Buat Style untuk Data (Hanya Border)
+	dataStyle, err := f.NewStyle(&excelize.Style{
+		Border: []excelize.Border{
+			{Type: "left", Color: "000000", Style: 1},
+			{Type: "right", Color: "000000", Style: 1},
+			{Type: "top", Color: "000000", Style: 1},
+			{Type: "bottom", Color: "000000", Style: 1},
+		},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("gagal membuat style data: %w", err)
+	}
+
+	// ===============================
 	// Sheet 1: Soal
+	// ===============================
 	sheetSoal := "Soal"
 	f.SetSheetName("Sheet1", sheetSoal)
 	headersSoal := []string{"Kategori ID", "Teks Soal", "Opsi A", "Opsi B", "Opsi C", "Opsi D", "Kunci Jawaban", "Bobot Nilai"}
+	
+	// Set Header Soal
 	for i, header := range headersSoal {
 		col := string(rune('A'+i)) + "1"
 		f.SetCellValue(sheetSoal, col, header)
 	}
+	f.SetCellStyle(sheetSoal, "A1", "H1", headerStyle)
 
+	// Set Lebar Kolom agar lebih rapi
+	f.SetColWidth(sheetSoal, "A", "A", 15)
+	f.SetColWidth(sheetSoal, "B", "B", 40)
+	f.SetColWidth(sheetSoal, "C", "F", 25)
+	f.SetColWidth(sheetSoal, "G", "G", 15)
+	f.SetColWidth(sheetSoal, "H", "H", 15)
+
+	// Berikan border kosong untuk beberapa baris (misal 50 baris untuk template)
+	for i := 2; i <= 51; i++ {
+		f.SetCellStyle(sheetSoal, fmt.Sprintf("A%d", i), fmt.Sprintf("H%d", i), dataStyle)
+	}
+
+	// ===============================
 	// Sheet 2: Kategori Soal
+	// ===============================
 	sheetKategori := "Kategori Soal"
-	_, err := f.NewSheet(sheetKategori)
+	_, err = f.NewSheet(sheetKategori)
 	if err != nil {
 		return nil, fmt.Errorf("gagal membuat sheet Kategori Soal: %w", err)
 	}
@@ -317,6 +364,9 @@ func (s *questionService) DownloadTemplateExcel(ctx context.Context) ([]byte, er
 		col := string(rune('A'+i)) + "1"
 		f.SetCellValue(sheetKategori, col, header)
 	}
+	f.SetCellStyle(sheetKategori, "A1", "B1", headerStyle)
+	f.SetColWidth(sheetKategori, "A", "A", 15)
+	f.SetColWidth(sheetKategori, "B", "B", 30)
 
 	categories, _, err := s.categoryRepo.ListCategories(ctx, 1, 1000000, "")
 	if err != nil {
@@ -327,6 +377,7 @@ func (s *questionService) DownloadTemplateExcel(ctx context.Context) ([]byte, er
 		row := i + 2
 		f.SetCellValue(sheetKategori, fmt.Sprintf("A%d", row), cat.ID)
 		f.SetCellValue(sheetKategori, fmt.Sprintf("B%d", row), cat.Name)
+		f.SetCellStyle(sheetKategori, fmt.Sprintf("A%d", row), fmt.Sprintf("B%d", row), dataStyle)
 	}
 
 	var buf bytes.Buffer
