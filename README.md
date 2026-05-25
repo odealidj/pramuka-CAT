@@ -27,6 +27,7 @@ Platform ujian berbasis komputer (CAT) untuk kegiatan kepramukaan. Dibangun deng
 - **Keamanan**: Dilengkapi dengan **Rate Limiter**, perlindungan **Secure Headers**, pembatasan ukuran payload, serta validasi input menggunakan **go-playground/validator**.
 - **Observabilitas**: Menggunakan **OpenTelemetry** dan **Jaeger** untuk melakukan *distributed tracing*. Memudahkan pelacakan dan pencarian masalah performa mulai dari HTTP masuk hingga *query database*.
 - **Real-Time Data (SSE)**: Backend mengimplementasikan arsitektur **Server-Sent Events (SSE)** untuk memancarkan notifikasi dan pembaruan aliran data secara langsung (satu arah) ke sisi *client* dengan jejak memori yang jauh lebih ringan dibandingkan *WebSockets*.
+- **Pemrosesan Data Massal (Bulk Import)**: Mendukung pengunggahan data soal ujian dalam jumlah besar melalui *file* Excel. Sistem memanfaatkan *stream parsing* (menggunakan pustaka `excelize`) dan optimasi kueri *Bulk Insert* tingkat *database*. Hal ini memungkinkan ribuan baris data diproses secara kilat tanpa menyebabkan lonjakan RAM (*Out-of-Memory*) yang bisa membuat *server* *crash*.
 - **Pengujian (Testing)**: Logika *backend* dicakup oleh *Unit Test* dan *Integration Test*. *Integration testing* menggunakan *database* pengujian yang terpisah (`pramukacat_test`) untuk menyimulasikan alur dari sisi admin hingga peserta.
 - **Load Testing**: Performa sistem telah diukur menggunakan **Grafana k6** untuk memastikan API tidak mengalami kendala saat diakses oleh pengguna secara bersamaan.
 
