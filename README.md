@@ -9,6 +9,7 @@ Platform ujian berbasis komputer (CAT) untuk kegiatan kepramukaan. Dibangun deng
 - **Backend:** Go (Echo Framework) · **DB:** PostgreSQL · **Cache/MQ:** Redis
 - **Background Jobs:** Asynq · **Emailing:** SMTP
 - **DB Query:** sqlc · **Auth:** Stateful JWT · **Export:** Excel & PDF
+- **Testing:** Unit Testing · **Load Testing:** Grafana k6
 
 ---
 
