@@ -41,6 +41,8 @@ import (
 	"github.com/odealidj/pramuka-CAT/backend/pkg/database"
 	"github.com/odealidj/pramuka-CAT/backend/pkg/sse"
 	"github.com/odealidj/pramuka-CAT/backend/pkg/tracer"
+	"github.com/odealidj/pramuka-CAT/backend/pkg/validator"
+	"golang.org/x/time/rate"
 	"github.com/hibiken/asynq"
 	"fmt"
 )
@@ -166,9 +168,20 @@ func main() {
 	// 5. Siapkan Server Echo
 	e := echo.New()
 
+	// Pasang custom validator
+	e.Validator = validator.NewCustomValidator()
+
 	// Pasang Middleware dasar (Log, Recover dari panic, dan CORS)
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+
+	// Security Hardening: Anti-XSS, Clickjacking, MIME-Sniffing
+	e.Use(middleware.Secure())
+	// Security Hardening: Mencegah serangan OOM dengan JSON raksasa
+	e.Use(middleware.BodyLimit("2M"))
+	// Security Hardening: Anti-DDoS dan Brute-force (Maks 20 request per detik per IP)
+	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(rate.Limit(20))))
+
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins:  []string{"*"},
 		AllowHeaders:  []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
