@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	_ "github.com/lib/pq"
 	"github.com/XSAM/otelsql"
@@ -26,6 +27,11 @@ func ConnectPostgres() (*sql.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("gagal membuka konfigurasi database: %w", err)
 	}
+
+	// Performance Tuning: Database Connection Pooling
+	db.SetMaxOpenConns(100) // Batasi koneksi maksimum agar DB tidak kehabisan resource saat diserang (Max Postgres default 100)
+	db.SetMaxIdleConns(20)  // Jumlah koneksi menganggur yang disimpan di pool agar tidak perlu buka/tutup koneksi
+	db.SetConnMaxLifetime(15 * time.Minute) // Daur ulang koneksi agar tidak hang
 
 	// Tes Ping ke database
 	if err := db.Ping(); err != nil {

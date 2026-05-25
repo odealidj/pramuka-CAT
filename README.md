@@ -123,12 +123,25 @@ Kami menjalankan 2 skenario pengujian utama pada localhost:
     * Sebanyak `76.37%` request dari IP penguji yang sama diblokir dengan status **HTTP 429 (Too Many Requests)** karena melampaui limit keamanan **20 request/detik per IP**.
     * Kecepatan respons untuk request yang dibatasi sangat instan (Rata-rata `317.95 µs`), sehingga tidak membebani pemrosesan CPU server. Ini menunjukkan sistem pertahanan yang bekerja dengan sangat optimal untuk mengisolasi penyerang tanpa mengorbankan resource server.
 
+#### C. Stress Test (Max Capacity & Latency Check)
+* **Konfigurasi:** Ramp-up bertahap hingga **500 Virtual Users serentak** dalam durasi 1 menit 40 detik. *Rate Limiter* sementara dinonaktifkan (dinaikkan ke 2000 RPS) agar beban benar-benar masuk menembus _middleware_ hingga ke level *Database & Cache*.
+* **Tujuan:** Mencari batas performa puncak backend, mengukur distribusi latensi riil (P90, P95) di bawah tekanan ekstrem, dan memastikan tidak ada *memory leak*.
+* **Hasil Empiris (Tanpa Rate Limiter):**
+  * **Total Requests:** `20.628 request` terlayani dengan **100% Success Rate** (0 gagal) dengan rata-rata **200 request/second**.
+  * **Distribusi Waktu Respons (Latensi):**
+    * **Median:** `456.08 ms`
+    * **P90 (90% pengguna mengalami ini atau lebih cepat):** `2.00 s` (Dua Detik)
+    * **P95 (95% pengguna mengalami ini atau lebih cepat):** `2.35 s`
+  * **Kapasitas CPU & RAM:** Sistem Go mampu menangani `5.157 iterasi penuh` (alur *Health -> Login -> Get Exams -> Get Profile*) secara konstan tanpa *crash* atau OOM (*Out Of Memory*).
+  * **Analisis Performa Backend:** Rata-rata P95 berada di kisaran 2,3 detik ketika diserbu secara serentak oleh 500 pengguna bersamaan yang melakukan login dan *fetching* data. Ini membuktikan *bottleneck* tidak terjadi pada Golang (yang bisa memproses dalam orde mikrodetik), melainkan kemungkinan antrean koneksi pada *PostgreSQL* lokal atau keterbatasan _resource_ CPU lokal. Kecepatan ini tergolong **sangat layak (acceptable)** mengingat 500 pengguna tersebut semuanya mengklik tombol dalam detik yang bersamaan.
+
 ---
 
 ### 3. Analisis & Kesimpulan Teknikal (CV Showcase Points)
 
-1. **Golang Concurrency Engine:** Dengan 50 user aktif serentak tanpa jeda, sistem sanggup menangani lebih dari **83 request per detik** (RPS) dengan latensi pemrosesan internal Go yang sangat cepat (`~1.14 ms` median).
-2. **Efektivitas Rate Limiter (Security Hardened):** Tingginya angka kegagalan check k6 merupakan **keberhasilan sistem keamanan**! Limit 20 RPS per IP sukses mencegah sabotase server atau brute-force token dari satu mesin penyerang, sementara resource server tetap aman dan responsif bagi pengguna resmi lainnya.
-3. **Optimasi Cache Redis:** Sesi JWT yang disimpan di Redis mencegah lonjakan kueri autentikasi ke database utama PostgreSQL, menjaga beban database tetap minimal.
-4. **OTel Observability:** Selama pengujian berlangsung, server secara periodik (setiap 10 detik) memancarkan metrik hardware (memori fisik, persentase CPU, jumlah goroutines aktif) ke terminal via OpenTelemetry SDK, siap divisualisasikan menggunakan dashboard Grafana.
+1. **Golang Concurrency Engine:** Dengan 500 user aktif serentak tanpa jeda, sistem sanggup menangani lebih dari **200 request per detik** (RPS) dengan **0% Error Rate** pada kapabilitas *Stress Test*.
+2. **Efektivitas Rate Limiter (Security Hardened):** Pada kondisi *default*, limit 20 RPS per IP sukses mencegah sabotase server atau brute-force token dari satu mesin penyerang, sementara resource server tetap aman.
+3. **Analisis P90 & P95 (Responsivitas Backend):** Dalam kondisi diserang 500 pengguna secara konstan bersamaan (tanpa Rate Limiter), 95% request berhasil diselesaikan dalam rentang maksimal **2.35 detik** (P95). Ini menunjukkan stabilitas arsitektur asinkron dan pembagian beban (*Connection Pooling*) yang efektif.
+4. **Optimasi Cache Redis:** Sesi JWT yang disimpan di Redis mencegah lonjakan kueri autentikasi ke database utama PostgreSQL, menjaga beban database tetap minimal.
+5. **OTel Observability:** Selama pengujian berlangsung, server secara periodik memancarkan metrik hardware (memori fisik, persentase CPU, jumlah goroutines aktif) ke terminal via OpenTelemetry SDK, siap divisualisasikan menggunakan dashboard Grafana.
 

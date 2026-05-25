@@ -31,4 +31,10 @@ type ExamCache interface {
 
 	// IsExamSessionExists mengecek apakah sesi ujian masih ada di Redis
 	IsExamSessionExists(ctx context.Context, approvalID uuid.UUID) (bool, error)
+
+	// CacheUpcomingEvents menyimpan sementara hasil query daftar event mendatang
+	CacheUpcomingEvents(ctx context.Context, page, limit int32, events []domain.UpcomingEvent, total int64) error
+
+	// GetCachedUpcomingEvents mengambil data cache event mendatang
+	GetCachedUpcomingEvents(ctx context.Context, page, limit int32) ([]domain.UpcomingEvent, int64, error)
 }

@@ -63,6 +63,34 @@ func (_m *AuthRepository) CreateSession(ctx context.Context, arg sqlcgen.CreateS
 	return r0, r1
 }
 
+// CreateUser provides a mock function with given fields: ctx, arg
+func (_m *AuthRepository) CreateUser(ctx context.Context, arg sqlcgen.CreateUserParams) (sqlcgen.User, error) {
+	ret := _m.Called(ctx, arg)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateUser")
+	}
+
+	var r0 sqlcgen.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, sqlcgen.CreateUserParams) (sqlcgen.User, error)); ok {
+		return rf(ctx, arg)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, sqlcgen.CreateUserParams) sqlcgen.User); ok {
+		r0 = rf(ctx, arg)
+	} else {
+		r0 = ret.Get(0).(sqlcgen.User)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, sqlcgen.CreateUserParams) error); ok {
+		r1 = rf(ctx, arg)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetSession provides a mock function with given fields: ctx, id
 func (_m *AuthRepository) GetSession(ctx context.Context, id uuid.UUID) (sqlcgen.Session, error) {
 	ret := _m.Called(ctx, id)

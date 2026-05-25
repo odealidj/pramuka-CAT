@@ -25,7 +25,22 @@ func NewExamService(repo ports.ExamRepository, cache ports.ExamCache, task worke
 }
 
 func (s *examService) ListUpcomingEvents(ctx context.Context, page int32, limit int32) ([]domain.UpcomingEvent, int64, error) {
-	return s.repo.ListUpcomingEvents(ctx, page, limit)
+	// 1. Coba ambil dari Redis Cache terlebih dahulu
+	events, total, err := s.cache.GetCachedUpcomingEvents(ctx, page, limit)
+	if err == nil {
+		return events, total, nil // Cache Hit
+	}
+
+	// 2. Jika Cache Miss, ambil dari Database PostgreSQL
+	events, total, err = s.repo.ListUpcomingEvents(ctx, page, limit)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// 3. Simpan ke Cache secara asynchronous (atau ignore error) untuk request selanjutnya
+	_ = s.cache.CacheUpcomingEvents(ctx, page, limit, events, total)
+
+	return events, total, nil
 }
 
 func (s *examService) ListMyExams(ctx context.Context, userID uuid.UUID, page int32, limit int32) ([]domain.UserApproval, int64, error) {

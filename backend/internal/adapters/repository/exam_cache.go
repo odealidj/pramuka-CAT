@@ -118,3 +118,45 @@ func (c *examCache) IsExamSessionExists(ctx context.Context, approvalID uuid.UUI
 	}
 	return exists > 0, nil
 }
+
+func upcomingEventsKey(page, limit int32) string {
+	return fmt.Sprintf("upcoming_events:page:%d:limit:%d", page, limit)
+}
+
+type cachedUpcoming struct {
+	Events []domain.UpcomingEvent `json:"events"`
+	Total  int64                  `json:"total"`
+}
+
+func (c *examCache) CacheUpcomingEvents(ctx context.Context, page, limit int32, events []domain.UpcomingEvent, total int64) error {
+	payload := cachedUpcoming{
+		Events: events,
+		Total:  total,
+	}
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("gagal serialize daftar event mendatang: %w", err)
+	}
+
+	// Cache selama 1 menit untuk menahan gempuran refresh halaman sebelum ujian mulai
+	err = c.client.Set(ctx, upcomingEventsKey(page, limit), data, 1*time.Minute).Err()
+	if err != nil {
+		return fmt.Errorf("gagal menyimpan cache event mendatang: %w", err)
+	}
+
+	return nil
+}
+
+func (c *examCache) GetCachedUpcomingEvents(ctx context.Context, page, limit int32) ([]domain.UpcomingEvent, int64, error) {
+	data, err := c.client.Get(ctx, upcomingEventsKey(page, limit)).Bytes()
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var payload cachedUpcoming
+	if err := json.Unmarshal(data, &payload); err != nil {
+		return nil, 0, fmt.Errorf("gagal deserialize daftar event mendatang: %w", err)
+	}
+
+	return payload.Events, payload.Total, nil
+}
