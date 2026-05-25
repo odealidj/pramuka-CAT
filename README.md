@@ -141,7 +141,7 @@ Kami menjalankan 2 skenario pengujian utama pada localhost:
 
 ---
 
-### 3. Analisis & Kesimpulan Teknikal (CV Showcase Points)
+### 3. Analisis & Kesimpulan Teknikal
 
 1. **Golang Concurrency Engine:** Dengan 500 user aktif serentak tanpa jeda, sistem sanggup menangani lebih dari **200 request per detik** (RPS) dengan **0% Error Rate** pada kapabilitas *Stress Test*.
 2. **Optimasi Cache Redis (Read-Through):** Implementasi _Redis Caching_ untuk User Profile sangat dramatis mengurangi beban Database. Latensi P95 pada beban 500 VUs berhasil ditekan menjadi **1.9 detik** (sangat responsif), membuktikan bahwa _cache-hit_ menyelematkan antrean I/O PostgreSQL.
