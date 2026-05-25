@@ -27,7 +27,8 @@ Aplikasi akan menggunakan arsitektur **Client-Server** berbasis web (Web Applica
 
 ### 2.5. Framework Pengujian (Testing Stack)
 - **Unit Testing:** Go standard library `testing` dipadukan dengan **`github.com/stretchr/testify`** (untuk *assertions* dan *mocking*).
-- **Integration Testing:** **`testcontainers-go`** (Direkomendasikan) untuk men-*spin-up* *container* PostgreSQL & Redis secara otomatis dan terisolasi khusus untuk *testing*, guna mencegah tumpang-tindih data dengan database *development*/*production*.
+- **Integration Testing:** Membangun lingkungan basis data terisolasi (`pramukacat_test`) khusus untuk menguji integrasi REST API, SQLC, dan fungsionalitas Redis.
+- **Load Testing:** **Grafana k6** dipilih untuk menyimulasikan ribuan pengguna virtual (Virtual Users) secara konkuren demi membuktikan ketangguhan sistem di tingkat produksi (*production-grade*).
 
 ## 3. Mekanisme Inti (Core Mechanisms)
 
@@ -92,11 +93,11 @@ Semua *query* yang melibatkan soal melakukan `JOIN categories c ON q.category_id
 3. **Pengacakan Event (AddRandomEventQuestions):** Soal dari kategori yang dihapus tidak bisa tertarik secara acak ke dalam Event ujian baru.
 4. **Integritas Riwayat Terjaga:** Data soal dan jawaban peserta dari ujian masa lalu tetap utuh di database, karena tidak ada data yang benar-benar dihapus.
 
-### 3.9. Dashboard Statistics API Endpoint
-- Endpoint `GET /admin/dashboard/stats` menyediakan agregasi data statistik sistem secara *real-time*.
+### 3.9. Dashboard Statistics API Endpoint & Real-Time SSE
+- Endpoint `GET /admin/dashboard/stats` menyediakan agregasi data statistik sistem.
 - Response mencakup 4 metrik utama: `total_participants`, `total_questions`, `active_events`, `completed_exams`.
-- Juga menyertakan array `activities` berisi 5 log aktivitas terbaru (enroll, approval, penyelesaian ujian) dengan `activity_time` dari `COALESCE(updated_at, created_at)` — memilih waktu yang paling relevan.
-- Menggunakan 5 SQL query terpisah yang dieksekusi secara berurutan di handler.
+- Juga menyertakan array `activities` berisi 5 log aktivitas terbaru.
+- **Server-Sent Events (SSE):** Terdapat endpoint khusus `/admin/dashboard/stream` yang mengimplementasikan protokol **SSE**. *Backend* akan memancarkan (*emit*) aliran data JSON ke browser *admin* setiap kali ada perubahan data (seperti pendaftaran baru atau selesainya ujian). Hal ini memastikan bahwa dasbor diperbarui secara *real-time* tanpa perlu intervensi manual (me-*refresh* halaman) dengan beban *resource* yang jauh lebih ringan daripada *WebSockets*.
 
 ### 3.10. Pola Global Layout (Global Shell Pattern)
 - `(dashboard)/layout.tsx` bertindak sebagai **Global Shell** yang bertanggung jawab atas state dan komponen yang bersifat lintas-halaman.
@@ -118,6 +119,11 @@ Semua *query* yang melibatkan soal melakukan `JOIN categories c ON q.category_id
 - Sistem mengimplementasikan pola asinkron menggunakan *package* **`hibiken/asynq`** (berbasis Redis) untuk tugas-tugas berat di *background* agar tidak memblokir laju _request_ HTTP utama.
 - Pengiriman ini dikelola melalui antrian tugas (*task queue*). Ketika ada perubahan krusial (misal: pendaftaran otomatis, pembersihan sesi kedaluwarsa, atau pengiriman email massal), backend akan men-_distribute_ pesan tersebut ke *worker* di _background_.
 - *Worker* memproses pengiriman email melalui protokol SMTP secara mandiri, lengkap dengan mekanisme *retry* dan *Global Error Handling* jika terjadi kegagalan sistemik berulang kali, memastikan antarmuka frontend tetap responsif seketika tanpa perlu menunggu proses jaringan _handshake_ ke _server email_ selesai.
+
+### 3.14. Data Seeding & Pemrosesan Data Massal (Bulk Import)
+- Untuk mempermudah proses inisiasi (baik di fase _development_ maupun bagi panitia nyata), sistem menyediakan kapabilitas **Bulk Import Excel**.
+- **Excel Stream Parsing:** Proses ekstraksi data dari *file* `.xlsx` (menggunakan pustaka `excelize/v2`) dilakukan secara *streaming* sehingga ramah memori (menghindari ancaman *Out of Memory* saat file yang diunggah berisi ribuan baris data soal).
+- **Bulk Insert (SQLC):** Penyimpanan ke dalam *database* PostgreSQL menggunakan operasi penyisipan massal (*Bulk Insert* / `COPY`), menggantikan metode `INSERT` yang berulang-ulang (*looping*). Pendekatan ini berhasil memangkas drastis latensi pemrosesan dan antrean I/O *database*.
 
 ## 4. Infrastruktur dan Deployment
 - Aplikasi akan di-containerisasi menggunakan **Docker** agar mudah dideploy di berbagai server (VPS atau Cloud).

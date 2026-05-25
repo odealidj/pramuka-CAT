@@ -48,6 +48,7 @@ Aplikasi memiliki 3 jenis peran utama:
    - Admin dimudahkan dengan antarmuka manajemen peserta *full-page* berskala besar yang dilengkapi fitur pencarian (*Search*) berdasarkan "Nama" atau "Nomor Peserta" (`username`), serta *Pagination* terintegrasi langsung ke *backend* (*server-side pagination*).
 4. **Manajemen Soal (Bank Soal - CRUD):**
    - Membuat, membaca, mengubah, dan menghapus soal berbasis teks. Manajemen Bank Soal ini didukung dengan fitur pencarian dan filter *real-time*.
+   - **Pemrosesan Data Massal (Bulk Import):** Admin dapat mengunggah ratusan soal ujian sekaligus melalui _file_ Excel untuk menghemat waktu pendataan.
    - Menentukan opsi jawaban A, B, C, D dan mengatur mana yang menjadi kunci jawaban.
    - **Validasi Duplikasi Soal:** Sistem mencegah masuknya soal dengan teks yang sama (mengabaikan perbedaan huruf kapital dan variasi penomoran seperti "1.", "2)", dsb) serta mencegah opsi jawaban yang duplikat dalam satu soal. Pengecekan hanya dilakukan terhadap soal dari **kategori yang masih aktif** — soal dari kategori yang sudah dihapus (diarsipkan) tidak ikut diperiksa sehingga tidak memblokir input soal baru.
    - **Kategori Materi Soal (Tagging):** Admin dapat mengelompokkan soal berdasarkan kategori (contoh: Pengetahuan Umum Kepramukaan/PUPK, Sandi, Tali-temali, Sejarah).
@@ -68,7 +69,7 @@ Aplikasi memiliki 3 jenis peran utama:
    - Melihat rincian ujian per peserta: meninjau soal-soal apa saja yang dikerjakan peserta, apa jawaban yang dipilih peserta, dan mencocokkannya dengan kunci jawaban (via endpoint `GET /admin/exams/approvals/:approval_id/answers`).
    - **Export Laporan (Excel & PDF):** Mengunduh rekap nilai seluruh peserta pada suatu event dalam format **Excel (.xlsx)** atau **PDF** untuk keperluan pelaporan kegiatan Gugus Depan/Kwartir (via endpoint `GET /admin/events/:id/export?format=excel` atau `?format=pdf`). Ekspor dilakukan dengan perantara *HTTP Client* yang tersertifikasi *Bearer Token* secara otomatis.
 8. **Dashboard Admin (Statistik Sistem):**
-   - Halaman *Dashboard* Admin menampilkan **4 kartu statistik** secara *real-time* dari Backend: jumlah total peserta terdaftar, total soal dalam bank soal, jumlah event yang sedang aktif, dan total ujian yang sudah diselesaikan.
+   - Halaman *Dashboard* Admin menampilkan **4 kartu statistik** secara *real-time* memanfaatkan aliran **Server-Sent Events (SSE)** dari Backend: jumlah total peserta terdaftar, total soal dalam bank soal, jumlah event yang sedang aktif, dan total ujian yang sudah diselesaikan. Angka ini akan otomatis diperbarui setiap kali ada perubahan di _server_.
    - Terdapat panel **Aktivitas Terkini** yang memperlihatkan 5 log aktivitas terakhir (enroll, approval, atau penyelesaian ujian) beserta waktu relatif ("Baru saja", "X menit lalu", dst).
    - Panel **Aksi Cepat** menyediakan pintasan langsung ke aksi-aksi yang paling sering dilakukan Admin (buat soal, buat event, tambah peserta, approval peserta).
 9. **Command Palette (Panel Perintah Cepat):**
@@ -94,7 +95,8 @@ Aplikasi memiliki 3 jenis peran utama:
 ## 4. Kebutuhan Pengujian Sistem (Testing Requirements)
 Untuk menjamin stabilitas aplikasi dan akurasi logika penilaian (scoring), sistem diwajibkan untuk mengimplementasikan pengujian otomatis (_Automated Testing_):
 1. **Unit Test:** Menguji secara mandiri fungsi-fungsi inti secara terisolasi. Fokus pada logika kalkulasi bobot soal, mekanisme pengacakan soal, dan konversi batas waktu (timer).
-2. **Integration Test:** Menguji integrasi alur keseluruhan dari _Backend_ ke _Database_ (PostgreSQL) dan _Cache_ (Redis). Tujuannya memastikan _endpoint HTTP_, _middleware_ (Auth), dan _query_ database (SQLC) bekerja sinkron.
+2. **Integration Test:** Menguji integrasi alur keseluruhan dari _Backend_ ke _Database_ (PostgreSQL) dan _Cache_ (Redis). Tujuannya memastikan _endpoint HTTP_, _middleware_ (Auth), dan _query_ database (SQLC) bekerja sinkron. Pengujian dijalankan di dalam skema database pengujian terpisah (`pramukacat_test`).
+3. **Load Testing:** Menggunakan **Grafana k6** untuk menyimulasikan ratusan pengguna virtual secara serentak guna memastikan _Rate Limiter_, _Caching_, dan arsitektur database sanggup menangani lonjakan lalu lintas ujian berskala besar.
 
 **Struktur Folder Pengujian (Go Backend):**
 ```text
