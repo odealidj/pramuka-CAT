@@ -7,6 +7,7 @@ import (
 	"os"
 
 	_ "github.com/lib/pq"
+	"github.com/XSAM/otelsql"
 )
 
 // ConnectPostgres membuka koneksi ke PostgreSQL menggunakan Environment Variables
@@ -21,7 +22,7 @@ func ConnectPostgres() (*sql.DB, error) {
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		host, port, user, password, dbname, sslmode)
 
-	db, err := sql.Open("postgres", dsn)
+	db, err := otelsql.Open("postgres", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("gagal membuka konfigurasi database: %w", err)
 	}

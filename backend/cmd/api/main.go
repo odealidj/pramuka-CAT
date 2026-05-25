@@ -80,7 +80,14 @@ func main() {
 		log.Printf("Distributed tracing aktif → mengirim trace ke %s", otlpEndpoint)
 	}
 
-	// 4. Setup Dependency Injection (Hexagonal Wiring)
+	// 5. Inisialisasi OpenTelemetry Metrics (CPU, RAM, GC) → Terminal/Stdout
+	metricShutdown, err := tracer.InitMetrics(context.Background(), "pramuka-cat-api")
+	if err != nil {
+		log.Printf("Peringatan: Gagal menginisialisasi metrics: %v", err)
+		metricShutdown = func(ctx context.Context) error { return nil }
+	}
+
+	// 6. Setup Dependency Injection (Hexagonal Wiring)
 	queries := sqlcgen.New(db)
 
 	// Inisialisasi Broker SSE terlebih dahulu karena dibutuhkan oleh Worker
@@ -307,6 +314,11 @@ func main() {
 	// Flush dan tutup tracer agar semua span terkirim ke Jaeger
 	if err := tracerShutdown(ctx); err != nil {
 		log.Printf("Peringatan: Gagal menutup tracer: %v", err)
+	}
+
+	// Tutup metric provider
+	if err := metricShutdown(ctx); err != nil {
+		log.Printf("Peringatan: Gagal menutup metric provider: %v", err)
 	}
 
 	log.Println("Server berhasil dimatikan dengan aman. Sampai jumpa!")

@@ -6,6 +6,8 @@ import (
 	"github.com/hibiken/asynq"
 	"log"
 
+	"go.opentelemetry.io/otel"
+
 	"github.com/odealidj/pramuka-CAT/backend/internal/adapters/repository/sqlcgen"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/ports"
 	"github.com/odealidj/pramuka-CAT/backend/pkg/sse"
@@ -97,6 +99,15 @@ func NewRedisTaskProcessor(redisOpt asynq.RedisClientOpt, repo *sqlcgen.Queries,
 
 func (processor *RedisTaskProcessor) Start() error {
 	mux := asynq.NewServeMux()
+
+	// Tracing Middleware for OpenTelemetry
+	mux.Use(func(next asynq.Handler) asynq.Handler {
+		return asynq.HandlerFunc(func(ctx context.Context, task *asynq.Task) error {
+			ctx, span := otel.Tracer("asynq-worker").Start(ctx, fmt.Sprintf("ProcessTask: %s", task.Type()))
+			defer span.End()
+			return next.ProcessTask(ctx, task)
+		})
+	})
 
 	mux.HandleFunc(TaskSendEmail, processor.ProcessTaskSendEmail)
 	mux.HandleFunc(TaskCreateNotification, processor.ProcessTaskCreateNotification)

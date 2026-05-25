@@ -8,8 +8,30 @@ import (
 	"net/smtp"
 	"os"
 
+	"time"
+
 	"github.com/hibiken/asynq"
+	"github.com/sony/gobreaker"
 )
+
+var smtpCircuitBreaker *gobreaker.CircuitBreaker
+
+func init() {
+	st := gobreaker.Settings{
+		Name:        "SMTPBreaker",
+		MaxRequests: 1, // Number of requests allowed in half-open state
+		Interval:    0, // Doesn't clear internal counts during closed state unless successful
+		Timeout:     30 * time.Second, // Duration before entering half-open state after open
+		ReadyToTrip: func(counts gobreaker.Counts) bool {
+			// Trip the breaker if 3 consecutive failures occur
+			return counts.ConsecutiveFailures >= 3
+		},
+		OnStateChange: func(name string, from gobreaker.State, to gobreaker.State) {
+			log.Printf("Circuit Breaker '%s' changed state from %s to %s", name, from.String(), to.String())
+		},
+	}
+	smtpCircuitBreaker = gobreaker.NewCircuitBreaker(st)
+}
 
 const TaskSendEmail = "task:send_email"
 
@@ -62,9 +84,14 @@ func (processor *RedisTaskProcessor) ProcessTaskSendEmail(ctx context.Context, t
 	auth := smtp.PlainAuth("", smtpUser, smtpPass, smtpHost)
 	msg := []byte(fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s", smtpSender, payload.ToAddress, payload.Subject, payload.Body))
 
-	err := smtp.SendMail(fmt.Sprintf("%s:%s", smtpHost, smtpPort), auth, smtpUser, []string{payload.ToAddress}, msg)
+	// Execute inside circuit breaker
+	_, err := smtpCircuitBreaker.Execute(func() (interface{}, error) {
+		err := smtp.SendMail(fmt.Sprintf("%s:%s", smtpHost, smtpPort), auth, smtpUser, []string{payload.ToAddress}, msg)
+		return nil, err
+	})
+
 	if err != nil {
-		return fmt.Errorf("failed to send email: %w", err)
+		return fmt.Errorf("failed to send email (circuit status: %v): %w", smtpCircuitBreaker.State().String(), err)
 	}
 
 	log.Printf("Email successfully sent to %s", payload.ToAddress)

@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/redis/go-redis/v9"
+	"github.com/redis/go-redis/extra/redisotel/v9"
 )
 
 // ConnectRedis membuka koneksi ke Redis menggunakan Environment Variables
@@ -27,6 +28,10 @@ func ConnectRedis() (*redis.Client, error) {
 		Password: password,
 		DB:       dbInt,
 	})
+
+	if err := redisotel.InstrumentTracing(rdb); err != nil {
+		log.Printf("Gagal menginisialisasi Redis Tracing: %v", err)
+	}
 
 	// Tes Ping ke redis
 	ctx := context.Background()
