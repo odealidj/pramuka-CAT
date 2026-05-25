@@ -12,15 +12,22 @@ Platform ujian berbasis komputer (CAT) untuk kegiatan kepramukaan. Dibangun deng
 
 ---
 
-## 🚀 Keunggulan Sistem
+## 🚀 Keunggulan Sistem (Fitur CV)
 
-- **Konkurensi Tinggi (*High Concurrency*)**: Dibangun dengan Golang, sistem ini sangat ringan namun tangguh dalam menangani ribuan lalu lintas data peserta ujian secara serentak berkat arsitektur *goroutine*.
-- **Pemrosesan Latar Belakang (*Worker Service*)**: Pekerjaan berat yang memakan waktu lama (seperti pengiriman email, ekstraksi file Excel, dan notifikasi massal) sepenuhnya didelegasikan kepada *Background Worker* via Redis (*Asynq*). Hasilnya, API selalu memberikan waktu respons super instan (< 50ms) bagi pengguna di layar depan.
-- **Performa Cepat & Anti-Gagal (*Caching & Auto-Resume*)**: Menahan gempuran kueri ke database utama dengan mendelegasikan status sesi aktif dan jawaban ujian sementara ke memori RAM (Redis). Memastikan aplikasi anti-lambat dan melindungi jawaban peserta meskipun koneksi internet terputus.
-- **Pengujian Unit (*Unit Test*)**: Terlindungi oleh pengujian komponen secara isolasi untuk memastikan seluruh logika bisnis, algoritma penilaian nilai (skor), dan manajemen autentikasi bekerja tanpa cacat.
-- **Pengujian Integrasi (*Integration Test*)**: Arsitektur sistem diuji secara menyeluruh (*end-to-end*) untuk memastikan komunikasi mulus dari *routing* HTTP hingga *query* database PostgreSQL.
-- **Ketahanan Sistem (*Circuit Breaker*)**: Sangat tangguh menghadapi kegagalan jaringan eksternal (misal: server email SMTP mati). Menerapkan *Circuit Breaker* untuk secara pintar memutus beban tunggu (Fail-fast) demi mencegah *system exhaustion*, sehingga performa sisa API tetap stabil.
-- **Observabilitas Enterprise (*OpenTelemetry*)**: Dilengkapi sensor pemantauan menyeluruh standar industri (OTel). Mampu memancarkan *Distributed Tracing* (pelacakan durasi lintas fungsi) dan metrik perangkat keras (CPU, RAM fisik, metrik *Garbage Collection*) secara otomatis untuk dihubungkan ke Grafana maupun Jaeger.
+### ⚙️ Arsitektur Backend (Golang, PostgreSQL, Redis)
+- **Konkurensi Tinggi (*High Concurrency*)**: Dibangun menggunakan **Golang** (*Echo Framework*). Sangat ringan dan memori-efisien dalam menangani ribuan lalu lintas peserta ujian secara serentak berkat *goroutine*.
+- **Pemrosesan Asinkron (*Worker Service*)**: Integrasi **Redis & Asynq** untuk mendelegasikan beban kerja berat (seperti ekstraksi file Excel, pengiriman email SMTP, dan notifikasi massal) ke *Background Worker*. Menghasilkan *response time* API yang selalu instan (< 50ms).
+- **Performa Ekstrem (*Caching & Auto-Resume*)**: Menggunakan **Redis** sebagai *In-Memory Cache* untuk menyimpan sesi dan jawaban ujian peserta secara *real-time*. Mengurangi beban kueri langsung ke **PostgreSQL** dan melindungi jawaban peserta meskipun koneksi internet terputus.
+- **Ketahanan Sistem (*Circuit Breaker*)**: Menggunakan **gobreaker** untuk memutus arus (*Fail-fast*) saat layanan eksternal (misal: SMTP) mati. Melindungi server dari penumpukan antrean koneksi (*system exhaustion*).
+- **Observabilitas Enterprise (*OpenTelemetry*)**: Dilengkapi pelacakan sistem mendalam standar industri (**OTel**). Memancarkan *Distributed Tracing* (pelacakan API ke DB) dan metrik perangkat keras (CPU, RAM, *Garbage Collection*) yang siap dihubungkan ke **Grafana** dan **Jaeger**.
+- **Teruji Penuh (*Unit & Integration Test*)**: Dilindungi oleh rangkaian _test_ otomatis berlapis untuk memastikan algoritma kalkulasi skor, autentikasi stateful JWT, dan routing HTTP bekerja tanpa cacat (*Bug-free*).
+
+### 🎨 Antarmuka Frontend (Next.js, Tailwind CSS)
+- **Desain Ultra Premium (*Glassmorphism & Gradients*)**: Menggunakan **Tailwind CSS** untuk menciptakan antarmuka tingkat atas yang mewah, misterius, elegan, dan menawan secara visual tanpa mengorbankan performa.
+- **Rendering Cepat (*Server-Side Rendering*)**: Mengandalkan **Next.js (App Router)** untuk memuat halaman secara instan, meningkatkan SEO, dan menyajikan data statistik dasbor admin dengan aman sebelum dikirim ke klien.
+- **Navigasi Kelas Atas (*Command Palette*)**: Implementasi pencarian *Spotlight-style* interaktif (`Ctrl+K`) yang memungkinkan pengguna melompat antar menu atau menjalankan "Aksi Cepat" dengan cepat bagaikan *Power User*.
+- **Manajemen Ujian Real-Time**: Sinkronisasi penghitung waktu hitung mundur (*Countdown Timer*) dan auto-penyimpanan (*Auto-Submit*) yang berkesinambungan tanpa me-*refresh* halaman saat peserta mengerjakan soal.
+- **Responsif & Aksesibel**: Layout antarmuka otomatis menyesuaikan diri dengan indah (*Fluid Responsive*) di perangkat _mobile_, tablet, maupun _desktop_, memastikan kenyamanan ujian di layar sekecil apa pun.
 
 ---
 
