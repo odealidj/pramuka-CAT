@@ -6,7 +6,8 @@ Platform ujian berbasis komputer (CAT) untuk kegiatan kepramukaan. Dibangun deng
 
 ## Tech Stack
 
-- **Backend:** Go (Echo Framework) · **DB:** PostgreSQL · **Cache/MQ:** Redis
+- **Backend:** Go (Echo Framework) · **DB:** PostgreSQL
+- **Cache & Message Broker:** Redis (Dual Role)
 - **Infra & Observability:** Docker · OpenTelemetry · Jaeger Tracing
 - **Background Jobs:** Asynq · **Emailing:** SMTP
 - **DB Query:** sqlc · **Auth:** Stateful JWT · **Export:** Excel & PDF
@@ -14,12 +15,13 @@ Platform ujian berbasis komputer (CAT) untuk kegiatan kepramukaan. Dibangun deng
 
 ---
 
-## 🚀 Keunggulan Sistem (Fitur CV)
+## 🚀 Keunggulan Sistem
 
 ### ⚙️ Arsitektur Backend (Golang, PostgreSQL, Redis)
 - **Konkurensi Tinggi (*High Concurrency*)**: Dibangun menggunakan **Golang** (*Echo Framework*). Sangat ringan dan memori-efisien dalam menangani ribuan lalu lintas peserta ujian secara serentak berkat *goroutine*.
-- **Pemrosesan Asinkron (*Worker Service*)**: Integrasi **Redis & Asynq** untuk mendelegasikan beban kerja berat (seperti ekstraksi file Excel, pengiriman email SMTP, dan notifikasi massal) ke *Background Worker*. Menghasilkan *response time* API yang selalu instan (< 50ms).
-- **Performa Ekstrem (*Caching & Auto-Resume*)**: Menggunakan **Redis** sebagai *In-Memory Cache* untuk menyimpan sesi dan jawaban ujian peserta secara *real-time*. Mengurangi beban kueri langsung ke **PostgreSQL** dan melindungi jawaban peserta meskipun koneksi internet terputus.
+- **Peran Ganda Redis (*Dual Role: Cache & Broker*)**: Memanfaatkan arsitektur Redis untuk dua fungsi vital sekaligus:
+  1. **Sebagai *Message Broker* (Antrean Pekerjaan):** Berpadu dengan **Asynq** untuk mendelegasikan tugas berat (ekspor Excel, kirim email SMTP) ke *Background Worker* di belakang layar, sehingga *response time* API tetap instan (< 50ms) dengan fitur *auto-retry* saat gagal.
+  2. **Sebagai *In-Memory Cache*:** Menyimpan sesi (*Stateful JWT*), profil pengguna, dan mem-_backup_ auto-simpan jawaban ujian peserta secara *real-time*, sukses memangkas latensi ekstrem (P95) hingga di bawah 2 detik.
 - **Infrastruktur Terisolasi (*Docker Containerization*)**: *Database*, *Cache*, dan UI Observabilitas telah di-*dockerize* menggunakan `docker-compose`, memastikan lingkungan *deployment* yang konsisten, aman, dan *easy-to-scale* dari *local* hingga *production*.
 - **Ketahanan Sistem (*Circuit Breaker*)**: Menggunakan **gobreaker** untuk memutus arus (*Fail-fast*) saat layanan eksternal (misal: SMTP) mati. Melindungi server dari penumpukan antrean koneksi (*system exhaustion*).
 - **Keamanan Lapis Baja (*Security Hardening*)**: Eksekusi API dilindungi oleh pembatasan laju lalu lintas (**Rate Limiter**) anti-DDoS, tameng **Secure Headers** anti-XSS, pembatas muatan *JSON Payload* (**Body Limit**), dan sanitasi input otomatis dengan **go-playground/validator** untuk menyapu data kotor.
