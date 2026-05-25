@@ -121,41 +121,31 @@ Kami menjalankan 2 skenario pengujian utama pada localhost:
     * `✓ get exams is status 200`
     * `✓ get profile is status 200`
 
-#### B. Load Test (Concurrency & Security Hardening Test)
-* **Konfigurasi:** Ramp-up bertahap hingga **50 Virtual Users serentak** dalam durasi 1 menit.
-* **Tujuan:** Menyimulasikan lalu lintas ujian padat satu ruangan laboratorium sekolah dan menguji ketangguhan sistem keamanan anti-DDoS (**Rate Limiter**).
-* **Hasil Empiris:**
-  * **Total Requests:** `5.054 request` dalam 1 menit (Rata-rata `83.2 req/second`).
-  * **Total Checks:** `7.343 checks` dijalankan.
-  * **Allowed Request Latency:** Rata-rata `16.52 ms` (Median: `1.14 ms`) untuk request yang berhasil lolos pembatasan, membuktikan performa tetap kilat meski di bawah beban tinggi.
-  * **Beban Puncak CPU & Memori (OTel Metrics):** Terlacak stabil, pemakaian CPU tetap berada di batas aman dan *no goroutine leak* meskipun dihujani ribuan koneksi paralel.
-  * **Dampak Rate Limiter (HTTP 429 - Anti DDoS Protection):**
-    * Sebanyak `76.37%` request dari IP penguji yang sama diblokir dengan status **HTTP 429 (Too Many Requests)** karena melampaui limit keamanan **20 request/detik per IP**.
-    * Kecepatan respons untuk request yang dibatasi sangat instan (Rata-rata `317.95 µs`), sehingga tidak membebani pemrosesan CPU server. Ini menunjukkan sistem pertahanan yang bekerja dengan sangat optimal untuk mengisolasi penyerang tanpa mengorbankan resource server.
+#### B. Load Test (Concurrency & Security)
+* **Konfigurasi:** 50 Virtual Users (VU) serentak selama 1 menit.
+* **Tujuan:** Simulasi lalu lintas ujian yang padat dan menguji pertahanan *Rate Limiter* (Anti-DDoS).
+* **Hasil:**
+  * **Total Requests:** `5.054 req` (Rata-rata `83.2 req/sec`).
+  * **Latensi Normal:** Rata-rata `16.52 ms`. Performa tetap stabil tanpa kebocoran memori (*goroutine leak*).
+  * **Rate Limiter Aktif:** `76.37%` request dari IP yang sama (melebihi batas 20 req/detik) berhasil diblokir secara instan (`317 µs`) dengan *HTTP 429*, sehingga mengamankan server dari serangan *spam*.
 
-#### C. Stress Test (Max Capacity & Latency Check)
-* **Konfigurasi:** Ramp-up bertahap hingga beban puncak **500 Virtual Users** dan **1000 Virtual Users** secara berurutan. *Rate Limiter* dilonggarkan ke 5000 RPS. Skenario *k6* disempurnakan (Realistis): Login (bcrypt) dilakukan hanya satu kali per VU di awal, lalu VU menyimpan token untuk melakukan akses *Cache-Hit* berulang kali ke _endpoint_ `/exams/upcoming` dan profil HPA (`/users/me`).
-* **Tujuan:** Mengukur efektivitas **Redis Caching (Read-Through)** dan dampak pemisahan kueri basis data pada latensi ekstrem (P95).
-* **Hasil Empiris 500 Virtual Users:**
-  * **Total Requests:** `20.860 request` terlayani dengan **100% Success Rate** (0 gagal) dengan throughput **204 request/second**.
-  * **Distribusi Waktu Respons (Latensi):**
-    * **Median:** `243 ms`
-    * **P90:** `1.71 s`
-    * **P95:** `1.90 s` (Berhasil di bawah target < 3 detik)
-* **Hasil Empiris 1000 Virtual Users (Ekstrem):**
-  * **Total Requests:** `11.213 request` terlayani dengan **100% Success Rate** (0 gagal) dengan throughput **92 request/second**.
-  * **Distribusi Waktu Respons (Latensi):**
-    * **Median:** `5.75 s`
-    * **P95:** `11.56 s`
-  * **Penjelasan Pelambatan Latensi:** Meskipun *Error Rate* tetap stabil di angka 0.00%, latensi P95 melambat signifikan. Hal ini diakibatkan oleh *CPU exhaustion* (bottleneck CPU). Saat pengujian berlangsung, 1000 *Virtual Users* melakukan _login_ secara serentak di 1 detik pertama. _Endpoint login_ menggunakan fungsi enkripsi **bcrypt** yang didesain memakan resource CPU yang tinggi (*CPU-intensive*). Kalkulasi *hash bcrypt* untuk 1000 permintaan konkuren mengunci _Thread Pool_ CPU pada server uji lokal, menyebabkan _request_ lain menunggu antrean eksekusi dan berdampak pada tingginya latensi. Jika jumlah _user_ terus membengkak, _Auth Service_ (Login) perlu dipisahkan menjadi _Microservice_ independen agar tidak mengganggu jalur _traffic_ ujian utama.
+#### C. Stress Test (Kapasitas Maksimal)
+* **Konfigurasi:** 500 hingga 1.000 Virtual Users.
+* **Tujuan:** Mengukur batas atas arsitektur server dan efektivitas *Redis Caching*.
+* **Hasil 500 VU:**
+  * Throughput: **204 request/sec** dengan **100% Success Rate**.
+  * Latensi P95: **1.9 detik** (Sangat responsif di bawah batas aman 3 detik, berkat *Cache-Hit*).
+* **Hasil 1.000 VU:**
+  * Throughput: **92 request/sec** dengan **100% Success Rate**.
+  * Latensi P95: melambat hingga **11.5 detik**.
+  * *Catatan Analisis:* Meskipun tidak ada pesan gagal (0% error), pelambatan ini murni disebabkan oleh *bottleneck* pada CPU saat melakukan kalkulasi enkripsi **bcrypt** dari 1.000 pengguna yang melakukan *login* di waktu bersamaan. Ke depan, layanan autentikasi ini perlu dipisah menjadi *microservice* tersendiri jika target *traffic* melampaui 1.000 pengguna serentak di perangkat *server* bertenaga rendah.
 
 ---
 
-### 3. Analisis & Kesimpulan Teknikal
+### 3. Kesimpulan Teknis
 
-1. **Golang Concurrency Engine:** Dengan 500 user aktif serentak tanpa jeda, sistem sanggup menangani lebih dari **200 request per detik** (RPS) dengan **0% Error Rate** pada kapabilitas *Stress Test*.
-2. **Optimasi Cache Redis (Read-Through):** Implementasi _Redis Caching_ untuk User Profile sangat dramatis mengurangi beban Database. Latensi P95 pada beban 500 VUs berhasil ditekan menjadi **1.9 detik** (sangat responsif), membuktikan bahwa _cache-hit_ menyelematkan antrean I/O PostgreSQL.
-3. **Analisis P90 & P95 (Responsivitas Backend):** Dalam kondisi diserang 500 pengguna secara konstan bersamaan, 95% request berhasil diselesaikan di bawah target **3 detik** (tepatnya 1.9 detik).
-4. **Bcrypt CPU Bottleneck:** Pada beban 1000 VUs, P95 melambat menjadi 11.56 detik. Pelambatan ini murni disebabkan oleh *CPU exhaustion* saat 1000 *goroutine* melakukan kalkulasi *hashing bcrypt* secara bersamaan di endpoint `/login` pada fase awal ujian. Ini membuktikan pentingnya pemisahan server autentikasi (SSO/Auth Service) dari server ujian riil jika target pengguna melampaui 1000 konkuren di _hardware_ kecil.
-5. **Efektivitas Rate Limiter (Security Hardened):** Pada kondisi *default*, limit 20 RPS per IP sukses mencegah sabotase server atau brute-force token dari satu mesin penyerang, sementara resource server tetap aman.
+1. **Keandalan Golang**: Sistem terbukti stabil menangani ratusan *request* serentak berkat *goroutine* tanpa menghasilkan *error* sama sekali.
+2. **Performa Redis**: Penggunaan *Redis* terbukti krusial dalam menyelamatkan *database* (PostgreSQL) dari kelebihan beban, menjaga latensi 95% pengguna tetap di bawah 2 detik.
+3. **Limitasi CPU (Bcrypt)**: Pengujian ini berhasil memetakan bahwa enkripsi *password* adalah titik lemah (*bottleneck*) utama CPU. Temuan ini menjadi *insight* penting untuk merancang arsitektur penskalaan (*scaling*) berikutnya.
+4. **Keamanan Maksimal**: Fitur *Rate Limiter* bawaan bekerja dengan sangat optimal menangkis serangan *spam request* dari alamat IP yang mencurigakan, menjaga *resource* memori agar tidak jebol.
 
