@@ -23,6 +23,20 @@ build:
 test:
 	@echo "Menjalankan Unit Test..."
 	cd backend && go test -v ./...
+
+# --- Performance Testing (K6) ---
+test-smoke:
+	@echo "Menjalankan Smoke Test (K6) - 1 User, 10 Detik..."
+	k6 run -e MODE=smoke backend/loadtest/script.js
+
+test-load:
+	@echo "Menjalankan Load Test (K6) - Maks 50 User serentak..."
+	k6 run -e MODE=load backend/loadtest/script.js
+
+test-stress:
+	@echo "Menjalankan Stress Test (K6) - Maks 500 User serentak..."
+	k6 run -e MODE=stress backend/loadtest/script.js
+
 swagger:
 	@echo "Generate Swagger Docs..."
 	cd backend && swag init -g cmd/api/main.go -o docs --parseDependency --parseInternal
