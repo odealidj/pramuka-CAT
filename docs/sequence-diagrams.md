@@ -39,8 +39,6 @@ sequenceDiagram
     end
 ```
 
----
-
 ## 1.5 Alur Refresh Token & Keamanan Sesi
 Alur ini berjalan secara transparan di *background* untuk memastikan kenyamanan peserta tanpa mengorbankan keamanan.
 
@@ -65,8 +63,6 @@ sequenceDiagram
     B->>R: Cache Session ID Baru di Redis (TTL 15m)
     B-->>F: Return Tokens Baru
 ```
-
----
 
 ## 2. Alur Manajemen Event & Setup Soal (Admin Flow)
 Alur ini merinci bagaimana Admin menyiapkan Bank Soal dan merilis Jadwal Ujian (Event).
@@ -110,8 +106,6 @@ sequenceDiagram
     B-->>F: Success (Event Diterbitkan)
 ```
 
----
-
 ## 2.5. Alur Manajemen Kategori (Admin Flow)
 Alur ini menjelaskan bagaimana Admin mengelola kategori soal, termasuk mekanisme *soft delete* dan validasi nama unik.
 
@@ -148,8 +142,6 @@ sequenceDiagram
     B-->>F: Success (200 OK)
     F->>A: Kategori Hilang dari Daftar
 ```
-
----
 
 ## 3. Alur Persetujuan (Approval) Peserta
 Peserta tidak bisa sembarangan mengikuti ujian meskipun sudah login. Mereka harus mendaftar/memilih *event*, lalu disetujui Admin.
@@ -195,8 +187,6 @@ sequenceDiagram
     W->>E: Kirim Email Pemberitahuan via SMTP
 ```
 
----
-
 ## 4. Alur Pelaksanaan Ujian (Real-time & Auto-Resume)
 Ini adalah alur di mana Redis berperan sebagai penyimpan jawaban sementara untuk menahan *load* ke database utama.
 
@@ -234,8 +224,6 @@ sequenceDiagram
         B-->>F: OK (Tanpa Hit DB)
     end
 ```
-
----
 
 ## 5. Alur Penilaian & Auto-Submit (Scoring Flow)
 Terjadi ketika waktu di *browser* habis, atau peserta sengaja menekan tombol "Selesai".
@@ -276,8 +264,6 @@ sequenceDiagram
     F->>P: Tampilkan Layar Hasil Ujian
 ```
 
----
-
 ## 6. Alur Command Palette (Ctrl+K)
 
 ```mermaid
@@ -311,8 +297,6 @@ sequenceDiagram
     end
 ```
 
----
-
 ## 7. Alur Aksi Cepat (Quick Action Modal)
 
 ```mermaid
@@ -341,8 +325,6 @@ sequenceDiagram
     end
 ```
 
----
-
 ## 8. Alur Sidebar Collapse/Expand
 
 ```mermaid
@@ -363,8 +345,6 @@ sequenceDiagram
     Note over N: Judul berubah dari "Bank Soal" → "Pramuka CAT — Bank Soal"
     Note over L: Main content: lg:ml-64 → lg:ml-20 (offset ikut menyesuaikan)
 ```
-
----
 
 ## 9. Alur Memuat Statistik Dashboard Admin
 
