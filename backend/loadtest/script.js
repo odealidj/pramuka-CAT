@@ -18,20 +18,27 @@ let optionsMap = {
             { duration: '10s', target: 0 },  // Turun ke 0 user dalam 10 detik
         ],
     },
-    // 3. Stress Test: Mencari titik pecah server (Maks 500 user)
+    // 3. Stress Test: Mencari titik pecah server (Maks target VUs)
     stress: {
         stages: [
-            { duration: '20s', target: 100 }, // Naik bertahap
-            { duration: '30s', target: 300 }, // Naik lagi
-            { duration: '30s', target: 500 }, // Beban puncak
+            { duration: '20s', target: Math.floor((__ENV.TARGET_VUS || 500) * 0.2) }, // Naik 20%
+            { duration: '30s', target: Math.floor((__ENV.TARGET_VUS || 500) * 0.6) }, // Naik 60%
+            { duration: '30s', target: (__ENV.TARGET_VUS || 500) }, // Beban puncak
             { duration: '20s', target: 0 },   // Normalisasi
         ],
     },
 };
 
-export let options = optionsMap[MODE];
+export let options = Object.assign({}, optionsMap[MODE], {
+    thresholds: {
+        http_req_duration: ['p(95)<3000'], // 95% request harus selesai di bawah 3 detik
+        http_req_failed: ['rate<0.01'],    // Error rate maksimal 1%
+    },
+});
 
 const BASE_URL = 'http://localhost:8080/api/v1';
+
+let vuToken = null;
 
 export default function () {
     // 1. Test Endpoint: Health Check
@@ -40,44 +47,44 @@ export default function () {
         'health is status 200': (r) => r.status === 200,
     });
 
-    // 2. Test Endpoint: Login (Peserta Seed)
-    const loginPayload = JSON.stringify({
-        username: 'peserta1',
-        password: 'peserta123',
-    });
-    
-    const params = {
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    };
+    // 2. Test Endpoint: Login (Peserta Seed) HANYA SEKALI per VU
+    if (!vuToken) {
+        const loginPayload = JSON.stringify({
+            username: 'peserta1',
+            password: 'peserta123',
+        });
+        
+        const params = {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        };
 
-    let resLogin = http.post(`${BASE_URL}/auth/login`, loginPayload, params);
-    
-    check(resLogin, {
-        'login is status 200': (r) => r.status === 200,
-        'has token': (r) => {
-            try {
-                const body = r.json();
-                return body.data && body.data.access_token !== undefined;
-            } catch (e) {
-                return false;
-            }
-        },
-    });
+        let resLogin = http.post(`${BASE_URL}/auth/login`, loginPayload, params);
+        
+        check(resLogin, {
+            'login is status 200': (r) => r.status === 200,
+            'has token': (r) => {
+                try {
+                    const body = r.json();
+                    return body.data && body.data.access_token !== undefined;
+                } catch (e) {
+                    return false;
+                }
+            },
+        });
 
-    // Jika gagal login, jangan lanjutkan ke endpoint ber-auth
-    if (resLogin.status !== 200) {
-        sleep(1);
-        return;
+        if (resLogin.status !== 200) {
+            sleep(1);
+            return;
+        }
+        vuToken = resLogin.json().data.access_token;
     }
 
-    // Ambil token dari response
-    const token = resLogin.json().data.access_token;
     const authParams = {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${vuToken}`
         },
     };
 
@@ -87,8 +94,8 @@ export default function () {
         'get exams is status 200': (r) => r.status === 200,
     });
 
-    // 4. Test Endpoint: Get Profile
-    let resProfile = http.get(`${BASE_URL}/protected/profile`, authParams);
+    // 4. Test Endpoint: Get Profile (Hit database to test DB pool / Redis caching)
+    let resProfile = http.get(`${BASE_URL}/protected/users/me`, authParams);
     check(resProfile, {
         'get profile is status 200': (r) => r.status === 200,
     });

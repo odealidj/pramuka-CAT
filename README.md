@@ -124,24 +124,28 @@ Kami menjalankan 2 skenario pengujian utama pada localhost:
     * Kecepatan respons untuk request yang dibatasi sangat instan (Rata-rata `317.95 µs`), sehingga tidak membebani pemrosesan CPU server. Ini menunjukkan sistem pertahanan yang bekerja dengan sangat optimal untuk mengisolasi penyerang tanpa mengorbankan resource server.
 
 #### C. Stress Test (Max Capacity & Latency Check)
-* **Konfigurasi:** Ramp-up bertahap hingga **500 Virtual Users serentak** dalam durasi 1 menit 40 detik. *Rate Limiter* sementara dinonaktifkan (dinaikkan ke 2000 RPS) agar beban benar-benar masuk menembus _middleware_ hingga ke level *Database & Cache*.
-* **Tujuan:** Mencari batas performa puncak backend, mengukur distribusi latensi riil (P90, P95) di bawah tekanan ekstrem, dan memastikan tidak ada *memory leak*.
-* **Hasil Empiris (Tanpa Rate Limiter):**
-  * **Total Requests:** `20.628 request` terlayani dengan **100% Success Rate** (0 gagal) dengan rata-rata **200 request/second**.
+* **Konfigurasi:** Ramp-up bertahap hingga beban puncak **500 Virtual Users** dan **1000 Virtual Users** secara berurutan. *Rate Limiter* dilonggarkan ke 5000 RPS. Skenario *k6* disempurnakan (Realistis): Login (bcrypt) dilakukan hanya satu kali per VU di awal, lalu VU menyimpan token untuk melakukan akses *Cache-Hit* berulang kali ke _endpoint_ `/exams/upcoming` dan profil HPA (`/users/me`).
+* **Tujuan:** Mengukur efektivitas **Redis Caching (Read-Through)** dan dampak pemisahan kueri basis data pada latensi ekstrem (P95).
+* **Hasil Empiris 500 Virtual Users:**
+  * **Total Requests:** `20.860 request` terlayani dengan **100% Success Rate** (0 gagal) dengan throughput **204 request/second**.
   * **Distribusi Waktu Respons (Latensi):**
-    * **Median:** `456.08 ms`
-    * **P90 (90% pengguna mengalami ini atau lebih cepat):** `2.00 s` (Dua Detik)
-    * **P95 (95% pengguna mengalami ini atau lebih cepat):** `2.35 s`
-  * **Kapasitas CPU & RAM:** Sistem Go mampu menangani `5.157 iterasi penuh` (alur *Health -> Login -> Get Exams -> Get Profile*) secara konstan tanpa *crash* atau OOM (*Out Of Memory*).
-  * **Analisis Performa Backend:** Rata-rata P95 berada di kisaran 2,3 detik ketika diserbu secara serentak oleh 500 pengguna bersamaan yang melakukan login dan *fetching* data. Ini membuktikan *bottleneck* tidak terjadi pada Golang (yang bisa memproses dalam orde mikrodetik), melainkan kemungkinan antrean koneksi pada *PostgreSQL* lokal atau keterbatasan _resource_ CPU lokal. Kecepatan ini tergolong **sangat layak (acceptable)** mengingat 500 pengguna tersebut semuanya mengklik tombol dalam detik yang bersamaan.
+    * **Median:** `243 ms`
+    * **P90:** `1.71 s`
+    * **P95:** `1.90 s` (Berhasil di bawah target < 3 detik)
+* **Hasil Empiris 1000 Virtual Users (Ekstrem):**
+  * **Total Requests:** `11.213 request` terlayani dengan **100% Success Rate** (0 gagal) dengan throughput **92 request/second**.
+  * **Distribusi Waktu Respons (Latensi):**
+    * **Median:** `5.75 s`
+    * **P95:** `11.56 s`
+  * **Penjelasan Pelambatan Latensi:** Meskipun *Error Rate* tetap stabil di angka 0.00%, latensi P95 melambat signifikan. Hal ini diakibatkan oleh *CPU exhaustion* (bottleneck CPU). Saat pengujian berlangsung, 1000 *Virtual Users* melakukan _login_ secara serentak di 1 detik pertama. _Endpoint login_ menggunakan fungsi enkripsi **bcrypt** yang didesain memakan resource CPU yang tinggi (*CPU-intensive*). Kalkulasi *hash bcrypt* untuk 1000 permintaan konkuren mengunci _Thread Pool_ CPU pada server uji lokal, menyebabkan _request_ lain menunggu antrean eksekusi dan berdampak pada tingginya latensi. Jika jumlah _user_ terus membengkak, _Auth Service_ (Login) perlu dipisahkan menjadi _Microservice_ independen agar tidak mengganggu jalur _traffic_ ujian utama.
 
 ---
 
 ### 3. Analisis & Kesimpulan Teknikal (CV Showcase Points)
 
 1. **Golang Concurrency Engine:** Dengan 500 user aktif serentak tanpa jeda, sistem sanggup menangani lebih dari **200 request per detik** (RPS) dengan **0% Error Rate** pada kapabilitas *Stress Test*.
-2. **Efektivitas Rate Limiter (Security Hardened):** Pada kondisi *default*, limit 20 RPS per IP sukses mencegah sabotase server atau brute-force token dari satu mesin penyerang, sementara resource server tetap aman.
-3. **Analisis P90 & P95 (Responsivitas Backend):** Dalam kondisi diserang 500 pengguna secara konstan bersamaan (tanpa Rate Limiter), 95% request berhasil diselesaikan dalam rentang maksimal **2.35 detik** (P95). Ini menunjukkan stabilitas arsitektur asinkron dan pembagian beban (*Connection Pooling*) yang efektif.
-4. **Optimasi Cache Redis:** Sesi JWT yang disimpan di Redis mencegah lonjakan kueri autentikasi ke database utama PostgreSQL, menjaga beban database tetap minimal.
-5. **OTel Observability:** Selama pengujian berlangsung, server secara periodik memancarkan metrik hardware (memori fisik, persentase CPU, jumlah goroutines aktif) ke terminal via OpenTelemetry SDK, siap divisualisasikan menggunakan dashboard Grafana.
+2. **Optimasi Cache Redis (Read-Through):** Implementasi _Redis Caching_ untuk User Profile sangat dramatis mengurangi beban Database. Latensi P95 pada beban 500 VUs berhasil ditekan menjadi **1.9 detik** (sangat responsif), membuktikan bahwa _cache-hit_ menyelematkan antrean I/O PostgreSQL.
+3. **Analisis P90 & P95 (Responsivitas Backend):** Dalam kondisi diserang 500 pengguna secara konstan bersamaan, 95% request berhasil diselesaikan di bawah target **3 detik** (tepatnya 1.9 detik).
+4. **Bcrypt CPU Bottleneck:** Pada beban 1000 VUs, P95 melambat menjadi 11.56 detik. Pelambatan ini murni disebabkan oleh *CPU exhaustion* saat 1000 *goroutine* melakukan kalkulasi *hashing bcrypt* secara bersamaan di endpoint `/login` pada fase awal ujian. Ini membuktikan pentingnya pemisahan server autentikasi (SSO/Auth Service) dari server ujian riil jika target pengguna melampaui 1000 konkuren di _hardware_ kecil.
+5. **Efektivitas Rate Limiter (Security Hardened):** Pada kondisi *default*, limit 20 RPS per IP sukses mencegah sabotase server atau brute-force token dari satu mesin penyerang, sementara resource server tetap aman.
 

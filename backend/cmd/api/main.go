@@ -154,7 +154,8 @@ func main() {
 	notifHandler := handler.NewNotificationHandler(notifService)
 
 	userRepo := repository.NewUserRepository(queries)
-	userService := services.NewUserService(userRepo)
+	userCache := repository.NewUserCache(rdb)
+	userService := services.NewUserService(userRepo, userCache)
 	userHandler := handler.NewUserHandler(userService)
 
 	inspector := asynq.NewInspector(redisOpt)

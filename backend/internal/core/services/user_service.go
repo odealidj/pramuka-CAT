@@ -13,11 +13,12 @@ import (
 )
 
 type userService struct {
-	repo ports.UserRepository
+	repo  ports.UserRepository
+	cache ports.UserCache
 }
 
-func NewUserService(repo ports.UserRepository) ports.UserService {
-	return &userService{repo: repo}
+func NewUserService(repo ports.UserRepository, cache ports.UserCache) ports.UserService {
+	return &userService{repo: repo, cache: cache}
 }
 
 func hashPassword(password string) (string, error) {
@@ -49,7 +50,22 @@ func (s *userService) CreateUser(ctx context.Context, req domain.CreateUserReque
 }
 
 func (s *userService) GetUserById(ctx context.Context, id uuid.UUID) (domain.User, error) {
-	return s.repo.GetUserById(ctx, id)
+	if s.cache != nil {
+		if cached, _ := s.cache.GetCachedUserProfile(ctx, id); cached != nil {
+			return *cached, nil
+		}
+	}
+
+	user, err := s.repo.GetUserById(ctx, id)
+	if err != nil {
+		return domain.User{}, err
+	}
+
+	if s.cache != nil {
+		_ = s.cache.CacheUserProfile(ctx, id, user)
+	}
+
+	return user, nil
 }
 
 func (s *userService) ListUsers(ctx context.Context, page int32, limit int32, search string) ([]domain.User, int64, error) {
@@ -80,7 +96,6 @@ func (s *userService) UpdateUser(ctx context.Context, id uuid.UUID, req domain.U
 		PhotoURL: req.PhotoURL,
 	}
 
-
 	res, err := s.repo.UpdateUser(ctx, id, u)
 	if err != nil {
 		if strings.Contains(err.Error(), "idx_users_email") || strings.Contains(err.Error(), "users_email_key") {
@@ -91,8 +106,12 @@ func (s *userService) UpdateUser(ctx context.Context, id uuid.UUID, req domain.U
 		}
 		return domain.User{}, err
 	}
-	return res, nil
 
+	if s.cache != nil {
+		_ = s.cache.DeleteCachedUserProfile(ctx, id)
+	}
+
+	return res, nil
 }
 
 func (s *userService) UpdateProfile(ctx context.Context, id uuid.UUID, req domain.UpdateProfileRequest) (domain.User, error) {
@@ -111,12 +130,16 @@ func (s *userService) UpdateProfile(ctx context.Context, id uuid.UUID, req domai
 		Username:           req.Username,
 		Email:              emailPtr,
 		FullName:           req.FullName,
-		Role:               existingUser.Role,     // Do not allow role change
-		PhotoURL:           existingUser.PhotoURL, // Do not change photo here
+		Role:               existingUser.Role,
+		PhotoURL:           existingUser.PhotoURL,
 		EmailNotifications: req.EmailNotifications,
 	}
 
-	return s.repo.UpdateUser(ctx, id, u)
+	res, err := s.repo.UpdateUser(ctx, id, u)
+	if err == nil && s.cache != nil {
+		_ = s.cache.DeleteCachedUserProfile(ctx, id)
+	}
+	return res, err
 }
 
 func (s *userService) UpdateUserPassword(ctx context.Context, id uuid.UUID, req domain.UpdateUserPasswordRequest) error {
@@ -134,25 +157,21 @@ func (s *userService) UpdateUserPassword(ctx context.Context, id uuid.UUID, req 
 }
 
 func (s *userService) ChangePassword(ctx context.Context, id uuid.UUID, req domain.UpdateProfilePasswordRequest) error {
-	// 1. Ambil password lama dari database
 	oldHash, err := s.repo.GetUserPasswordHash(ctx, id)
 	if err != nil {
 		return fmt.Errorf("user tidak ditemukan")
 	}
 
-	// 2. Verifikasi kecocokan password lama
 	err = utils.CheckPassword(req.OldPassword, oldHash)
 	if err != nil {
 		return fmt.Errorf("kata sandi lama tidak sesuai")
 	}
 
-	// 3. Hash password baru
 	hashedPassword, err := hashPassword(req.NewPassword)
 	if err != nil {
 		return fmt.Errorf("gagal mengenkripsi kata sandi baru: %w", err)
 	}
 
-	// 4. Update
 	return s.repo.UpdateUserPassword(ctx, id, hashedPassword)
 }
 
@@ -161,7 +180,11 @@ func (s *userService) UpdateUserPhoto(ctx context.Context, id uuid.UUID, photoUr
 	if err != nil {
 		return fmt.Errorf("user tidak ditemukan")
 	}
-	return s.repo.UpdateUserPhoto(ctx, id, photoUrl)
+	err = s.repo.UpdateUserPhoto(ctx, id, photoUrl)
+	if err == nil && s.cache != nil {
+		_ = s.cache.DeleteCachedUserProfile(ctx, id)
+	}
+	return err
 }
 
 func (s *userService) DeleteUser(ctx context.Context, id uuid.UUID) error {
@@ -170,5 +193,9 @@ func (s *userService) DeleteUser(ctx context.Context, id uuid.UUID) error {
 		return fmt.Errorf("user tidak ditemukan")
 	}
 
-	return s.repo.DeleteUser(ctx, id)
+	err = s.repo.DeleteUser(ctx, id)
+	if err == nil && s.cache != nil {
+		_ = s.cache.DeleteCachedUserProfile(ctx, id)
+	}
+	return err
 }

@@ -47,6 +47,7 @@ func (h *UserHandler) RegisterSuperAdminRoutes(superAdminGroup *echo.Group) {
 
 func (h *UserHandler) RegisterParticipantRoutes(participantGroup *echo.Group) {
 	usersGroup := participantGroup.Group("/users")
+	usersGroup.GET("/me", h.GetMyProfile)
 	usersGroup.POST("/me/photo", h.UploadPhoto)
 	usersGroup.PUT("/me", h.UpdateProfile)
 	usersGroup.PUT("/me/password", h.ChangePassword)
@@ -246,6 +247,34 @@ func (h *UserHandler) UpdateUserPassword(c echo.Context) error {
 	}
 
 	return response.Success(c, http.StatusOK, "Kata sandi user berhasil diperbarui", nil)
+}
+
+// GetMyProfile godoc
+// @Summary     Lihat Profil Saya
+// @Description Mengambil profil peserta yang sedang login
+// @Tags        User - Profile
+// @Security    BearerAuth
+// @Produce     json
+// @Success     200  {object}  response.SuccessResponse{data=domain.User}
+// @Failure     401  {object}  response.ErrorResponse
+// @Router      /protected/users/me [get]
+func (h *UserHandler) GetMyProfile(c echo.Context) error {
+	payloadValue := c.Get(appMiddleware.AuthorizationPayloadKey)
+	if payloadValue == nil {
+		return response.Error(c, http.StatusUnauthorized, "Tidak terautentikasi", nil)
+	}
+
+	payload, ok := payloadValue.(*utils.TokenPayload)
+	if !ok {
+		return response.Error(c, http.StatusInternalServerError, "Terjadi kesalahan internal", nil)
+	}
+
+	user, err := h.service.GetUserById(c.Request().Context(), payload.UserID)
+	if err != nil {
+		return response.Error(c, http.StatusNotFound, "Profil tidak ditemukan", nil)
+	}
+
+	return response.Success(c, http.StatusOK, "Berhasil mengambil profil", user)
 }
 
 // UpdateProfile godoc
