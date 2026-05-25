@@ -7,6 +7,7 @@ Platform ujian berbasis komputer (CAT) untuk kegiatan kepramukaan. Dibangun deng
 ## Tech Stack
 
 - **Backend:** Go (Echo Framework) · **DB:** PostgreSQL · **Cache/MQ:** Redis
+- **Infra & Observability:** Docker · OpenTelemetry · Jaeger Tracing
 - **Background Jobs:** Asynq · **Emailing:** SMTP
 - **DB Query:** sqlc · **Auth:** Stateful JWT · **Export:** Excel & PDF
 - **Testing:** Unit Testing · **Load Testing:** Grafana k6
@@ -19,10 +20,11 @@ Platform ujian berbasis komputer (CAT) untuk kegiatan kepramukaan. Dibangun deng
 - **Konkurensi Tinggi (*High Concurrency*)**: Dibangun menggunakan **Golang** (*Echo Framework*). Sangat ringan dan memori-efisien dalam menangani ribuan lalu lintas peserta ujian secara serentak berkat *goroutine*.
 - **Pemrosesan Asinkron (*Worker Service*)**: Integrasi **Redis & Asynq** untuk mendelegasikan beban kerja berat (seperti ekstraksi file Excel, pengiriman email SMTP, dan notifikasi massal) ke *Background Worker*. Menghasilkan *response time* API yang selalu instan (< 50ms).
 - **Performa Ekstrem (*Caching & Auto-Resume*)**: Menggunakan **Redis** sebagai *In-Memory Cache* untuk menyimpan sesi dan jawaban ujian peserta secara *real-time*. Mengurangi beban kueri langsung ke **PostgreSQL** dan melindungi jawaban peserta meskipun koneksi internet terputus.
+- **Infrastruktur Terisolasi (*Docker Containerization*)**: *Database*, *Cache*, dan UI Observabilitas telah di-*dockerize* menggunakan `docker-compose`, memastikan lingkungan *deployment* yang konsisten, aman, dan *easy-to-scale* dari *local* hingga *production*.
 - **Ketahanan Sistem (*Circuit Breaker*)**: Menggunakan **gobreaker** untuk memutus arus (*Fail-fast*) saat layanan eksternal (misal: SMTP) mati. Melindungi server dari penumpukan antrean koneksi (*system exhaustion*).
 - **Keamanan Lapis Baja (*Security Hardening*)**: Eksekusi API dilindungi oleh pembatasan laju lalu lintas (**Rate Limiter**) anti-DDoS, tameng **Secure Headers** anti-XSS, pembatas muatan *JSON Payload* (**Body Limit**), dan sanitasi input otomatis dengan **go-playground/validator** untuk menyapu data kotor.
-- **Observabilitas Enterprise (*OpenTelemetry*)**: Dilengkapi pelacakan sistem mendalam standar industri (**OTel**). Memancarkan *Distributed Tracing* (pelacakan API ke DB) dan metrik perangkat keras (CPU, RAM, *Garbage Collection*) yang siap dihubungkan ke **Grafana** dan **Jaeger**.
-- **Teruji Penuh (*Unit & Integration Test*)**: Dilindungi oleh rangkaian _test_ otomatis berlapis untuk memastikan algoritma kalkulasi skor, autentikasi stateful JWT, dan routing HTTP bekerja tanpa cacat (*Bug-free*).
+- **Observabilitas Enterprise (*OTel & Jaeger*)**: Dilengkapi pelacakan sistem mendalam menggunakan **OpenTelemetry**. Memancarkan *Distributed Tracing* secara *real-time* ke **Jaeger** untuk memvisualisasikan durasi *query* DB dan jejak HTTP, serta metrik ke Grafana (RAM, CPU, GC).
+- **Teruji Kode (*Unit Testing*)**: Dilindungi oleh rangkaian _unit test_ otomatis (dengan _Mocking_ interaksi *database*) untuk menjamin logika algoritma autentikasi dan layanan utama berjalan tanpa cacat (*Bug-free*).
 - **Battle-Tested & Load-Ready (*K6 Stress Testing*)**: Ketangguhan arsitektur telah dibuktikan secara empiris menggunakan **Grafana k6**, sanggup menangani simulasi **1000 *Virtual Users*** secara konkuren tanpa *downtime* (0% *error rate*), mendemonstrasikan keandalan sistem berskala produksi.
 
 ### 🎨 Antarmuka Frontend (Next.js, Tailwind CSS)
