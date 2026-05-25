@@ -17,24 +17,24 @@ Platform ujian berbasis komputer (CAT) untuk kegiatan kepramukaan. Dibangun deng
 
 ## 🚀 Keunggulan Sistem
 
-### ⚙️ Arsitektur Backend (Golang, PostgreSQL, Redis)
-- **Konkurensi Tinggi (*High Concurrency*)**: Dibangun menggunakan **Golang** (*Echo Framework*). Sangat ringan dan memori-efisien dalam menangani ribuan lalu lintas peserta ujian secara serentak berkat *goroutine*.
-- **Peran Ganda Redis (*Dual Role: Cache & Broker*)**: Memanfaatkan arsitektur Redis untuk dua fungsi vital sekaligus:
-  1. **Sebagai *Message Broker* (Antrean Pekerjaan):** Berpadu dengan **Asynq** untuk mendelegasikan tugas berat (ekspor Excel, kirim email SMTP) ke *Background Worker* di belakang layar, sehingga *response time* API tetap instan (< 50ms) dengan fitur *auto-retry* saat gagal.
-  2. **Sebagai *In-Memory Cache*:** Menyimpan sesi (*Stateful JWT*), profil pengguna, dan mem-_backup_ auto-simpan jawaban ujian peserta secara *real-time*, sukses memangkas latensi ekstrem (P95) hingga di bawah 2 detik.
-- **Infrastruktur Terisolasi (*Docker Containerization*)**: Seluruh ekosistem (*Database*, *Cache*, dan *UI Observabilitas*) berjalan mulus di dalam *container* menggunakan `docker-compose`. Menjamin lingkungan yang stabil (*it works on my machine!*), *easy-to-scale*, terisolasi, dan siap untuk skenario *production-grade deployment* tanpa kerumitan instalasi manual.
-- **Ketahanan Sistem (*Circuit Breaker*)**: Menggunakan **gobreaker** untuk memutus arus (*Fail-fast*) saat layanan eksternal (misal: SMTP) mati. Melindungi server dari penumpukan antrean koneksi (*system exhaustion*).
-- **Keamanan Lapis Baja (*Security Hardening*)**: Eksekusi API dilindungi oleh pembatasan laju lalu lintas (**Rate Limiter**) anti-DDoS, tameng **Secure Headers** anti-XSS, pembatas muatan *JSON Payload* (**Body Limit**), dan sanitasi input otomatis dengan **go-playground/validator** untuk menyapu data kotor.
-- **Observabilitas Enterprise (*OTel & Jaeger*)**: Dilengkapi sistem *Distributed Tracing* secara *real-time* menggunakan **Jaeger** dan **OpenTelemetry**. Memungkinkan kita memonitor jejak *request* dari HTTP masuk, latensi *query* database, hingga eksekusi *background worker* Asynq di satu *dashboard*. Ini adalah kunci emas untuk mendiagnosis *bottleneck* performa!
-- **Teruji Kode (*Unit & Integration Testing*)**: Sistem dijaga kualitasnya oleh *Unit Test* dengan *Mocking* serta **Integration Test** menyeluruh. *Integration Test* berjalan di atas _test database_ independen (`pramukacat_test`), menyimulasikan siklus ujian penuh (E2E) mulai dari Admin buat jadwal hingga Peserta submit jawaban, menjamin keakuratan _business logic_ di dunia nyata.
-- **Battle-Tested & Load-Ready (*K6 Stress Testing*)**: Ketangguhan arsitektur telah dibuktikan secara empiris menggunakan **Grafana k6**, sanggup menangani simulasi **1000 *Virtual Users*** secara konkuren tanpa *downtime* (0% *error rate*), mendemonstrasikan keandalan sistem berskala produksi.
+### ⚙️ Backend (Golang, PostgreSQL, Redis)
+- **Konkurensi**: Dibangun menggunakan **Go (Echo Framework)**. Cukup ringan dan efisien untuk menangani *request* peserta ujian dalam jumlah besar karena memanfaatkan *goroutine*.
+- **Penggunaan Redis**: Digunakan untuk dua kebutuhan:
+  1. **Message Broker**: Terintegrasi dengan **Asynq** untuk memproses *background jobs* seperti ekspor Excel dan pengiriman email. Hal ini membuat respon API tetap cepat.
+  2. **In-Memory Cache**: Digunakan untuk menyimpan data sesi (Stateful JWT), profil pengguna, dan *auto-save* jawaban peserta untuk meminimalisir *query* langsung ke *database*.
+- **Docker**: Layanan seperti PostgreSQL, Redis, dan Jaeger sudah dibungkus di dalam *container* menggunakan `docker-compose`. Memudahkan proses instalasi dan *deployment* agar konsisten di berbagai *environment*.
+- **Circuit Breaker**: Menggunakan **gobreaker** untuk mencegah penumpukan koneksi jika layanan eksternal (seperti SMTP) sedang bermasalah.
+- **Keamanan**: Dilengkapi dengan **Rate Limiter**, perlindungan **Secure Headers**, pembatasan ukuran payload, serta validasi input menggunakan **go-playground/validator**.
+- **Observabilitas**: Menggunakan **OpenTelemetry** dan **Jaeger** untuk melakukan *distributed tracing*. Memudahkan pelacakan dan pencarian masalah performa mulai dari HTTP masuk hingga *query database*.
+- **Pengujian (Testing)**: Logika *backend* dicakup oleh *Unit Test* dan *Integration Test*. *Integration testing* menggunakan *database* pengujian yang terpisah (`pramukacat_test`) untuk menyimulasikan alur dari sisi admin hingga peserta.
+- **Load Testing**: Performa sistem telah diukur menggunakan **Grafana k6** untuk memastikan API tidak mengalami kendala saat diakses oleh pengguna secara bersamaan.
 
-### 🎨 Antarmuka Frontend (Next.js, Tailwind CSS)
-- **Desain Ultra Premium (*Glassmorphism & Gradients*)**: Menggunakan **Tailwind CSS** untuk menciptakan antarmuka tingkat atas yang mewah, misterius, elegan, dan menawan secara visual tanpa mengorbankan performa.
-- **Rendering Cepat (*Server-Side Rendering*)**: Mengandalkan **Next.js (App Router)** untuk memuat halaman secara instan, meningkatkan SEO, dan menyajikan data statistik dasbor admin dengan aman sebelum dikirim ke klien.
-- **Navigasi Kelas Atas (*Command Palette*)**: Implementasi pencarian *Spotlight-style* interaktif (`Ctrl+K`) yang memungkinkan pengguna melompat antar menu atau menjalankan "Aksi Cepat" dengan cepat bagaikan *Power User*.
-- **Manajemen Ujian Real-Time**: Sinkronisasi penghitung waktu hitung mundur (*Countdown Timer*) dan auto-penyimpanan (*Auto-Submit*) yang berkesinambungan tanpa me-*refresh* halaman saat peserta mengerjakan soal.
-- **Responsif & Aksesibel**: Layout antarmuka otomatis menyesuaikan diri dengan indah (*Fluid Responsive*) di perangkat _mobile_, tablet, maupun _desktop_, memastikan kenyamanan ujian di layar sekecil apa pun.
+### 🎨 Frontend (Next.js, Tailwind CSS)
+- **Desain UI**: Dibangun menggunakan **Tailwind CSS** untuk menyediakan antarmuka pengguna yang bersih, modern, dan mudah digunakan.
+- **Server-Side Rendering (SSR)**: Menggunakan **Next.js (App Router)** untuk SSR guna memproses halaman statistik dasbor langsung di server sebelum dikirimkan ke *browser*.
+- **Command Palette**: Tersedia fitur pencarian interaktif (tekan `Ctrl+K`) agar pengguna bisa berpindah menu dengan lebih cepat.
+- **Fitur Ujian**: Dilengkapi *countdown timer* dan fitur penyimpanan jawaban otomatis (*auto-submit*) tanpa perlu memuat ulang halaman (*refresh*).
+- **Responsif**: Tampilan antarmuka disesuaikan agar dapat diakses dengan baik melalui perangkat seluler, tablet, maupun komputer *desktop*.
 
 ---
 
