@@ -59,7 +59,7 @@ export default function () {
         'has token': (r) => {
             try {
                 const body = r.json();
-                return body.data && body.data.token !== undefined;
+                return body.data && body.data.access_token !== undefined;
             } catch (e) {
                 return false;
             }
@@ -73,7 +73,7 @@ export default function () {
     }
 
     // Ambil token dari response
-    const token = resLogin.json().data.token;
+    const token = resLogin.json().data.access_token;
     const authParams = {
         headers: {
             'Content-Type': 'application/json',
@@ -82,13 +82,13 @@ export default function () {
     };
 
     // 3. Test Endpoint: Get Exams (Menguji caching & read performance)
-    let resExams = http.get(`${BASE_URL}/exams`, authParams);
+    let resExams = http.get(`${BASE_URL}/protected/exams/upcoming`, authParams);
     check(resExams, {
         'get exams is status 200': (r) => r.status === 200,
     });
 
     // 4. Test Endpoint: Get Profile
-    let resProfile = http.get(`${BASE_URL}/users/profile`, authParams);
+    let resProfile = http.get(`${BASE_URL}/protected/profile`, authParams);
     check(resProfile, {
         'get profile is status 200': (r) => r.status === 200,
     });
