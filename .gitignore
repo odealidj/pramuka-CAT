@@ -49,3 +49,6 @@ coverage/
 # Docker
 .docker/
 docker-compose.override.yml
+
+# Docs
+branch-sequence.md
