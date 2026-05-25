@@ -26,9 +26,11 @@ graph TD
     B14 --> B15[15. feature/jaeger-tracing]
     B15 --> B16[16. feature/advanced-search-index]
     B16 --> B17[17. feat/dashboard-detailed-logs]
+    B17 --> B18[18. feat/import-soal-excel]
+    B18 --> B19[19. feature/integration-testing]
     
     style B1 fill:#4F46E5,stroke:#312E81,stroke-width:2px,color:#fff
-    style B17 fill:#10B981,stroke:#064E3B,stroke-width:2px,color:#fff
+    style B19 fill:#10B981,stroke:#064E3B,stroke-width:2px,color:#fff
 ```
 
 ---
@@ -175,6 +177,14 @@ graph TD
     - Membangun Modal "Import Excel" interaktif di halaman Bank Soal yang memisahkan tahap unggah file dan validasi.
     - Menyediakan fitur Batch Insert di backend menggunakan Database Transaction untuk performa dan keamanan.
     - Mengenerate template otomatis `template-soal-pramuka.xlsx` yang dapat diunduh oleh Admin.
+
+### 19. `feature/integration-testing`
+*   **Tujuan:** Mengamankan kode dan menguji aplikasi secara End-to-End dengan skema database pengujian terpisah.
+*   **Aktivitas:**
+    - Menyembunyikan `.env` dengan GitGuardian best-practices (`.gitignore`).
+    - Membuat database test `pramukacat_test`.
+    - Menulis _Integration Test_ API secara komprehensif (`e2e_test.go` & `setup_test.go`) mencakup alur Login, Get Exam, Submit Answer, Add Question, dan Event Creation.
+    - Memperbarui dokumentasi teknis (PRD & Implementation Decisions) dengan kapabilitas baru (k6, SSE, Bulk Import).
 
 ---
 
