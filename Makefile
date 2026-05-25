@@ -22,7 +22,16 @@ build:
 
 test:
 	@echo "Menjalankan Unit Test..."
-	cd backend && go test -v ./...
+	cd backend && go test -v ./internal/...
+
+test-integration:
+	@echo "Menyiapkan Database Integration Test (pramukacat_test)..."
+	@docker exec -i pramukacat_postgres psql -U POSTGRES_USER -d pramukacat -c "DROP DATABASE IF EXISTS pramukacat_test;" || true
+	@docker exec -i pramukacat_postgres psql -U POSTGRES_USER -d pramukacat -c "CREATE DATABASE pramukacat_test;"
+	@echo "Menjalankan Migrasi..."
+	@docker run --rm -v $$(pwd)/backend/sql/migrations:/migrations --network host migrate/migrate -path=/migrations -database "postgres://POSTGRES_USER:POSTGRES_PASSWORD@localhost:5432/pramukacat_test?sslmode=disable" up
+	@echo "Menjalankan Integration Test..."
+	cd backend && TEST_DB_URL="postgres://POSTGRES_USER:POSTGRES_PASSWORD@localhost:5432/pramukacat_test?sslmode=disable" go test -v ./tests/integration/...
 
 # --- Performance Testing (K6) ---
 test-smoke:

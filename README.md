@@ -7,11 +7,11 @@ Platform ujian berbasis komputer (CAT) untuk kegiatan kepramukaan. Dibangun deng
 ## Tech Stack
 
 - **Backend:** Go (Echo Framework) · **DB:** PostgreSQL
-- **Cache & Message Broker:** Redis (Dual Role)
-- **Infra & Observability:** Docker · OpenTelemetry · Jaeger Tracing
+- **Cache & Message Broker:** Redis (In-Memory Cache untuk sesi/performa, Message Broker untuk *background jobs*)
+- **Infra & Observability:** Docker (Containerization) · OpenTelemetry · Jaeger (Distributed Tracing)
 - **Background Jobs:** Asynq (Redis-backed) · **Emailing:** SMTP
 - **DB Query:** sqlc · **Auth:** Stateful JWT · **Export:** Excel & PDF
-- **Testing:** Unit Testing · **Load Testing:** Grafana k6
+- **Testing:** Unit Testing · Integration Testing · **Load Testing:** Grafana k6
 
 ---
 
@@ -22,11 +22,11 @@ Platform ujian berbasis komputer (CAT) untuk kegiatan kepramukaan. Dibangun deng
 - **Peran Ganda Redis (*Dual Role: Cache & Broker*)**: Memanfaatkan arsitektur Redis untuk dua fungsi vital sekaligus:
   1. **Sebagai *Message Broker* (Antrean Pekerjaan):** Berpadu dengan **Asynq** untuk mendelegasikan tugas berat (ekspor Excel, kirim email SMTP) ke *Background Worker* di belakang layar, sehingga *response time* API tetap instan (< 50ms) dengan fitur *auto-retry* saat gagal.
   2. **Sebagai *In-Memory Cache*:** Menyimpan sesi (*Stateful JWT*), profil pengguna, dan mem-_backup_ auto-simpan jawaban ujian peserta secara *real-time*, sukses memangkas latensi ekstrem (P95) hingga di bawah 2 detik.
-- **Infrastruktur Terisolasi (*Docker Containerization*)**: *Database*, *Cache*, dan UI Observabilitas telah di-*dockerize* menggunakan `docker-compose`, memastikan lingkungan *deployment* yang konsisten, aman, dan *easy-to-scale* dari *local* hingga *production*.
+- **Infrastruktur Terisolasi (*Docker Containerization*)**: Seluruh ekosistem (*Database*, *Cache*, dan *UI Observabilitas*) berjalan mulus di dalam *container* menggunakan `docker-compose`. Menjamin lingkungan yang stabil (*it works on my machine!*), *easy-to-scale*, terisolasi, dan siap untuk skenario *production-grade deployment* tanpa kerumitan instalasi manual.
 - **Ketahanan Sistem (*Circuit Breaker*)**: Menggunakan **gobreaker** untuk memutus arus (*Fail-fast*) saat layanan eksternal (misal: SMTP) mati. Melindungi server dari penumpukan antrean koneksi (*system exhaustion*).
 - **Keamanan Lapis Baja (*Security Hardening*)**: Eksekusi API dilindungi oleh pembatasan laju lalu lintas (**Rate Limiter**) anti-DDoS, tameng **Secure Headers** anti-XSS, pembatas muatan *JSON Payload* (**Body Limit**), dan sanitasi input otomatis dengan **go-playground/validator** untuk menyapu data kotor.
-- **Observabilitas Enterprise (*OTel & Jaeger*)**: Dilengkapi pelacakan sistem mendalam menggunakan **OpenTelemetry**. Memancarkan *Distributed Tracing* secara *real-time* ke **Jaeger** untuk memvisualisasikan durasi *query* DB dan jejak HTTP, serta metrik ke Grafana (RAM, CPU, GC).
-- **Teruji Kode (*Unit Testing*)**: Dilindungi oleh rangkaian _unit test_ otomatis (dengan _Mocking_ interaksi *database*) untuk menjamin logika algoritma autentikasi dan layanan utama berjalan tanpa cacat (*Bug-free*).
+- **Observabilitas Enterprise (*OTel & Jaeger*)**: Dilengkapi sistem *Distributed Tracing* secara *real-time* menggunakan **Jaeger** dan **OpenTelemetry**. Memungkinkan kita memonitor jejak *request* dari HTTP masuk, latensi *query* database, hingga eksekusi *background worker* Asynq di satu *dashboard*. Ini adalah kunci emas untuk mendiagnosis *bottleneck* performa!
+- **Teruji Kode (*Unit & Integration Testing*)**: Sistem dijaga kualitasnya oleh *Unit Test* dengan *Mocking* serta **Integration Test** menyeluruh. *Integration Test* berjalan di atas _test database_ independen (`pramukacat_test`), menyimulasikan siklus ujian penuh (E2E) mulai dari Admin buat jadwal hingga Peserta submit jawaban, menjamin keakuratan _business logic_ di dunia nyata.
 - **Battle-Tested & Load-Ready (*K6 Stress Testing*)**: Ketangguhan arsitektur telah dibuktikan secara empiris menggunakan **Grafana k6**, sanggup menangani simulasi **1000 *Virtual Users*** secara konkuren tanpa *downtime* (0% *error rate*), mendemonstrasikan keandalan sistem berskala produksi.
 
 ### 🎨 Antarmuka Frontend (Next.js, Tailwind CSS)
@@ -69,7 +69,8 @@ API tersedia di: `http://localhost:8080` · Health check: `http://localhost:8080
 | `make migrate-up` / `make migrate-down` | Jalankan / rollback migrasi database |
 | `make seed` / `make clear-seed` | Tambah / hapus data simulasi |
 | `make reset-db` | Reset penuh: rollback → migrate → seed |
-| `make test` | Jalankan unit test |
+| `make test` | Jalankan unit test biasa |
+| `make test-integration` | Jalankan E2E Integration Test penuh (beserta reset test-db) |
 | `make sqlc` | Re-generate kode dari query SQL |
 
 ---
