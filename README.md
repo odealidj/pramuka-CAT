@@ -30,11 +30,11 @@ Platform ujian berbasis komputer (CAT) untuk kegiatan kepramukaan. Dibangun deng
 - **Load Testing**: Performa sistem telah diukur menggunakan **Grafana k6** untuk memastikan API tidak mengalami kendala saat diakses oleh pengguna secara bersamaan.
 
 ### 🎨 Frontend (Next.js, Tailwind CSS)
-- **Desain UI**: Dibangun menggunakan **Tailwind CSS** untuk menyediakan antarmuka pengguna yang bersih, modern, dan mudah digunakan.
-- **Server-Side Rendering (SSR)**: Menggunakan **Next.js (App Router)** untuk SSR guna memproses halaman statistik dasbor langsung di server sebelum dikirimkan ke *browser*.
-- **Command Palette**: Tersedia fitur pencarian interaktif (tekan `Ctrl+K`) agar pengguna bisa berpindah menu dengan lebih cepat.
-- **Fitur Ujian**: Dilengkapi *countdown timer* dan fitur penyimpanan jawaban otomatis (*auto-submit*) tanpa perlu memuat ulang halaman (*refresh*).
-- **Responsif**: Tampilan antarmuka disesuaikan agar dapat diakses dengan baik melalui perangkat seluler, tablet, maupun komputer *desktop*.
+- **Desain UI & Responsivitas**: Dibangun menggunakan **Tailwind CSS** untuk menyajikan antarmuka yang modern, rapi, dan otomatis menyesuaikan (*responsive*) saat dibuka di PC, tablet, maupun *smartphone*.
+- **Performa (Rendering & Optimasi)**: Menggunakan **Next.js (App Router)** dengan dukungan **Server-Side Rendering (SSR)**. Halaman diproses terlebih dahulu di server sehingga proses *loading* awal jauh lebih cepat. Fitur bawaan seperti optimasi gambar (*Image Optimization*) dan pemecahan ukuran file (*Code Splitting*) memastikan aplikasi tetap ringan meski diakses menggunakan koneksi terbatas.
+- **Keamanan (Security & Akses)**: Dilindungi oleh sistem *middleware* khusus. Halaman rahasia (seperti dasbor admin atau lembar soal) tidak akan bisa dibuka tanpa sesi login dan token JWT yang sah. Input *form* juga divalidasi terlebih dahulu di sisi *frontend* untuk memastikan data yang dikirim selalu bersih.
+- **Pengalaman Pengguna (UX)**: Menyediakan jalan pintas interaktif (*Command Palette*) yang bisa dipanggil dengan menekan `Ctrl+K`, sehingga staf admin bisa mencari atau pindah antar menu dengan jauh lebih cepat.
+- **Stabilitas Fitur Ujian**: Halaman lembar jawaban berjalan secara dinamis. Waktu hitung mundur (*countdown timer*) dan penyimpanan jawaban otomatis (*auto-submit*) ke server terjadi di latar belakang tanpa mengharuskan peserta melakukan *refresh* halaman.
 
 ---
 
