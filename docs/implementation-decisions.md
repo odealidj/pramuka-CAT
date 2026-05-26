@@ -1,5 +1,8 @@
 # Implementation Decisions: Pramuka CAT
 
+> [!WARNING]
+> **Status Implementasi:** Dokumen ini memuat _blueprint_ teknis ideal. Terdapat beberapa deviasi dan celah (*gap*) dalam implementasi saat ini, seperti fitur Redis Cache untuk ujian peserta yang belum direalisasikan.
+> Silakan merujuk ke dokumen **[GAP_ANALYSIS.md](GAP_ANALYSIS.md)** untuk daftar lengkap deviasi teknis.
 Dokumen ini memuat keputusan-keputusan teknis utama yang akan digunakan sebagai landasan dalam pengembangan aplikasi Pramuka CAT (Computer Assisted Test).
 
 ## 1. Arsitektur Sistem

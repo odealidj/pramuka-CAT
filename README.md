@@ -89,6 +89,7 @@ API tersedia di: `http://localhost:8080` · Health check: `http://localhost:8080
 | [`docs/database-erd.md`](docs/database-erd.md) | Skema Database (ERD) |
 | [`docs/implementation-decisions.md`](docs/implementation-decisions.md) | Keputusan Teknis & Arsitektur |
 | [`docs/sequence-diagrams.md`](docs/sequence-diagrams.md) | Diagram Alur Fitur |
+| [`docs/GAP_ANALYSIS.md`](docs/GAP_ANALYSIS.md) | **⚠️ Laporan Status Implementasi & Gap Fitur saat ini** |
 
 ---
 

@@ -1,5 +1,8 @@
 # Product Requirements Document (PRD): Pramuka CAT (Computer Assisted Test)
 
+> [!WARNING]
+> **Status Implementasi:** Dokumen ini memuat _blueprint_ fitur ideal. Saat ini masih terdapat beberapa fitur (terutama fitur esensial Peserta) yang **belum diimplementasikan** secara penuh pada basis kode *frontend* maupun *backend*. 
+> Silakan merujuk ke dokumen **[GAP_ANALYSIS.md](GAP_ANALYSIS.md)** untuk melihat rincian persentase kelengkapan dan fitur apa saja yang saat ini masih *missing*.
 ## 1. Pendahuluan
 Aplikasi Pramuka CAT adalah platform ujian berbasis komputer yang dirancang khusus untuk kegiatan kepramukaan. Aplikasi ini memfasilitasi pelaksanaan ujian teori secara digital, terstruktur, dan efisien, menggantikan metode ujian tertulis konvensional.
 
