@@ -1767,11 +1767,24 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(rate(http_server_request_duration_seconds_bucket{http_response_status_code=~\"4..|5..\",http_route!=\"/metrics\",le=\"+Inf\"}[1m])) by (http_route, http_response_status_code)",
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_request_duration_seconds_bucket{http_response_status_code=~\"4..|5..\",http_route!=\"/metrics\"}[1m])) by (le, http_route, http_response_status_code))",
           "instant": false,
-          "legendFormat": "{{http_response_status_code}} {{http_route}}",
+          "legendFormat": "p95 {{http_response_status_code}} {{http_route}}",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "sum(rate(http_server_request_duration_seconds_count{http_response_status_code=~\"4..|5..\",http_route!=\"/metrics\"}[1m])) by (http_route, http_response_status_code)",
+          "instant": false,
+          "legendFormat": "rate {{http_response_status_code}} {{http_route}}",
+          "range": true,
+          "refId": "B"
         }
       ],
       "title": "HTTP Error Rate by Route (Server Side) — klik ♦️ → Jaeger",
