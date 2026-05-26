@@ -191,9 +191,6 @@ func main() {
 	e.Use(middleware.Secure())
 	// Security Hardening: Mencegah serangan OOM dengan JSON raksasa
 	e.Use(middleware.BodyLimit("2M"))
-	// Security Hardening: Anti-DDoS dan Brute-force (Maks 20 request per detik per IP)
-	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(rate.Limit(20))))
-
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins:  []string{"*"},
 		AllowHeaders:  []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
@@ -202,11 +199,16 @@ func main() {
 	}))
 
 	// Distributed Tracing middleware — membuat span otomatis untuk setiap HTTP request
+	// HARUS sebelum RateLimiter agar request 429 pun tercatat di Jaeger & metrics
 	e.Use(otelecho.Middleware("pramuka-cat-api"))
 	// Middleware Metrik kustom untuk mengukur durasi dengan Exemplars (Trace ID)
 	e.Use(appMiddleware.MetricsMiddleware())
 	// Mark span sebagai Error untuk semua response >= 400 (agar terlihat merah di Jaeger UI)
 	e.Use(appMiddleware.TraceErrorMiddleware())
+
+	// Security Hardening: Anti-DDoS dan Brute-force (Maks 20 request per detik per IP)
+	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(rate.Limit(20))))
+
 
 	// Root endpoint — mengembalikan informasi API
 	e.GET("/", func(c echo.Context) error {
