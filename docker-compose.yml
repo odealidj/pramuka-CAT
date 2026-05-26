@@ -92,6 +92,10 @@ services:
   prometheus:
     image: prom/prometheus:latest
     container_name: pramukacat_prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--enable-feature=exemplar-storage"
+      - "--web.enable-remote-write-receiver"
     ports:
       - "9090:9090"
     volumes:

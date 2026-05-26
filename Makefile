@@ -46,6 +46,10 @@ test-stress:
 	@echo "Menjalankan Stress Test (K6) - Maks 500 User serentak..."
 	k6 run -e MODE=stress backend/loadtest/script.js
 
+loadtest:
+	@echo "Menjalankan Load Test (K6) terhubung ke Grafana (Prometheus)..."
+	K6_PROMETHEUS_RW_TREND_STATS="p(90),p(95),p(99),max,min,avg" K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write k6 run --tag testid=pramukacat -o experimental-prometheus-rw -e MODE=load backend/loadtest/script.js
+
 swagger:
 	@echo "Generate Swagger Docs..."
 	cd backend && swag init -g cmd/api/main.go -o docs --parseDependency --parseInternal
