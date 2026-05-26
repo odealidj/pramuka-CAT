@@ -152,6 +152,16 @@ func (s *questionService) PreviewImportExcel(ctx context.Context, fileData []byt
 		return nil, fmt.Errorf("file Excel terlalu besar. Maksimal 500 data soal per file")
 	}
 
+	// Fetch all categories for validation
+	categories, _, err := s.categoryRepo.ListCategories(ctx, 1, 1000000, "")
+	if err != nil {
+		return nil, fmt.Errorf("gagal memuat referensi kategori: %w", err)
+	}
+	validCategories := make(map[int32]bool)
+	for _, c := range categories {
+		validCategories[c.ID] = true
+	}
+
 	var response domain.ImportQuestionsPreviewResponse
 	var data []domain.ImportQuestionRow
 	validCount := 0
@@ -194,7 +204,12 @@ func (s *questionService) PreviewImportExcel(ctx context.Context, fileData []byt
 				importRow.Error = "Kategori ID harus berupa angka"
 			} else {
 				id32 := int32(catID)
-				importRow.CategoryID = &id32
+				if !validCategories[id32] {
+					importRow.IsValid = false
+					importRow.Error = fmt.Sprintf("Kategori ID %d tidak ditemukan di database", id32)
+				} else {
+					importRow.CategoryID = &id32
+				}
 			}
 		}
 

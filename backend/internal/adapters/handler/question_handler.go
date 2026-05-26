@@ -245,6 +245,7 @@ func (h *QuestionHandler) ConfirmImport(c echo.Context) error {
 
 	count, err := h.service.ConfirmImportExcel(c.Request().Context(), req)
 	if err != nil {
+		fmt.Printf("ERROR Import: %v\n", err)
 		return response.Error(c, http.StatusInternalServerError, "Gagal menyimpan import", []response.ErrorDetail{{Field: "server", Message: err.Error()}})
 	}
 

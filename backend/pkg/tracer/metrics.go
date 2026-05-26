@@ -9,20 +9,18 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/host"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/stdout/stdoutmetric"
+	"go.opentelemetry.io/otel/exporters/prometheus"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.27.0"
 )
 
-// InitMetrics menginisialisasi OpenTelemetry MeterProvider dengan Stdout exporter
-// Setiap 10 detik, metrik hardware (CPU/RAM) dan runtime (GC/Goroutines) akan dicetak ke terminal
+// InitMetrics menginisialisasi OpenTelemetry MeterProvider dengan Prometheus exporter
 func InitMetrics(ctx context.Context, serviceName string) (shutdown func(context.Context) error, err error) {
-	// 1. Buat exporter ke terminal (stdout)
-	// Kita set pretty print agar JSON-nya mudah dibaca
-	exporter, err := stdoutmetric.New(stdoutmetric.WithPrettyPrint())
+	// 1. Buat exporter ke Prometheus
+	exporter, err := prometheus.New()
 	if err != nil {
-		return nil, fmt.Errorf("gagal membuat stdout metric exporter: %w", err)
+		return nil, fmt.Errorf("gagal membuat prometheus metric exporter: %w", err)
 	}
 
 	// 2. Definisikan resource (identitas service)
@@ -36,13 +34,10 @@ func InitMetrics(ctx context.Context, serviceName string) (shutdown func(context
 		return nil, fmt.Errorf("gagal membuat OTEL metric resource: %w", err)
 	}
 
-	// 3. Buat MeterProvider dengan Reader periodik (10 detik)
-	// Ini akan mengumpulkan dan mencetak data metrik setiap 10 detik
+	// 3. Buat MeterProvider dengan Reader Prometheus
 	mp := sdkmetric.NewMeterProvider(
 		sdkmetric.WithResource(res),
-		sdkmetric.WithReader(sdkmetric.NewPeriodicReader(exporter,
-			sdkmetric.WithInterval(10*time.Second),
-		)),
+		sdkmetric.WithReader(exporter),
 	)
 
 	// 4. Set sebagai global MeterProvider
@@ -58,7 +53,7 @@ func InitMetrics(ctx context.Context, serviceName string) (shutdown func(context
 		log.Printf("Peringatan: Gagal menjalankan instrumentasi Host OS: %v", err)
 	}
 
-	log.Println("Metrik OpenTelemetry aktif → mengekspor ke Terminal setiap 10 detik")
+	log.Println("Metrik OpenTelemetry aktif → mengekspor ke Prometheus (endpoint /metrics)")
 
 	// Kembalikan fungsi shutdown
 	shutdown = func(ctx context.Context) error {

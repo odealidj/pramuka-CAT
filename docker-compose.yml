@@ -89,6 +89,27 @@ services:
       - "4317:4317"    # OTLP gRPC (tempat Go app mengirim trace)
       - "4318:4318"    # OTLP HTTP (alternatif)
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: pramukacat_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: pramukacat_grafana
+    ports:
+      - "3030:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+
 volumes:
   pramukacat_pgdata:
   pramukacat_redisdata:

@@ -62,14 +62,15 @@ down:
 
 # --- Infrastruktur Khusus ---
 infra-up:
-	@echo "Menyalakan Infrastruktur (Postgres, Redis, Migrate, Jaeger)..."
-	docker-compose up -d postgres redis migrate jaeger
+	@echo "Menyalakan Infrastruktur (Postgres, Redis, Migrate, Jaeger, Prometheus, Grafana)..."
+	docker-compose up -d postgres redis migrate jaeger prometheus grafana
 	@echo ""
 	@echo "  Jaeger UI → http://localhost:16686"
+	@echo "  Grafana   → http://localhost:3030"
 
 infra-down:
 	@echo "Mematikan Infrastruktur..."
-	docker-compose rm -s -f postgres redis migrate jaeger
+	docker-compose rm -s -f postgres redis migrate jaeger prometheus grafana
 
 # --- Database Migrations ---
 migrate-up:

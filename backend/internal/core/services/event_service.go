@@ -269,27 +269,27 @@ func (s *eventService) ExportEventParticipantsExcel(ctx context.Context, eventID
 	f.SetSheetName("Sheet1", sheet)
 
 	// ── Baris 1: Judul ──────────────────────────────────────────────────────────
-	f.MergeCell(sheet, "A1", "I1")
-	f.SetCellValue(sheet, "A1", fmt.Sprintf("PramukaCAT - Laporan Nilai Ujian %s", event.Name))
+	f.MergeCell(sheet, "A1", "G1")
+	f.SetCellValue(sheet, "A1", fmt.Sprintf("PramukaCAT - Laporan Peserta Ujian %s", event.Name))
 	styleTitle, _ := f.NewStyle(&excelize.Style{
 		Font:      &excelize.Font{Bold: true, Size: 14, Color: "5C3410"},
 		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
 	})
-	f.SetCellStyle(sheet, "A1", "I1", styleTitle)
+	f.SetCellStyle(sheet, "A1", "G1", styleTitle)
 	f.SetRowHeight(sheet, 1, 22)
 
 	// ── Baris 2: Subtitle / tanggal ─────────────────────────────────────────────
-	f.MergeCell(sheet, "A2", "I2")
+	f.MergeCell(sheet, "A2", "G2")
 	f.SetCellValue(sheet, "A2", fmt.Sprintf("Passing Grade: %.0f  |  Dicetak pada: %s", event.PassingGrade, time.Now().In(time.Local).Format("02 January 2006 15:04")))
 	styleSubtitle, _ := f.NewStyle(&excelize.Style{
 		Font:      &excelize.Font{Size: 10, Italic: true, Color: "7A4520"},
 		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
 	})
-	f.SetCellStyle(sheet, "A2", "I2", styleSubtitle)
+	f.SetCellStyle(sheet, "A2", "G2", styleSubtitle)
 	f.SetRowHeight(sheet, 2, 16)
 
 	// ── Baris 3: Header kolom ────────────────────────────────────────────────────
-	headers := []string{"No", "Username", "Nama Lengkap", "Status", "Sudah Submit", "Nilai", "Lulus", "Waktu Mulai", "Waktu Selesai"}
+	headers := []string{"No", "Username", "Nama Lengkap", "Status", "Sudah Submit", "Waktu Mulai", "Waktu Selesai"}
 	for col, h := range headers {
 		cell, _ := excelize.CoordinatesToCellName(col+1, 3)
 		f.SetCellValue(sheet, cell, h)
@@ -305,7 +305,7 @@ func (s *eventService) ExportEventParticipantsExcel(ctx context.Context, eventID
 		},
 		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center", WrapText: true},
 	})
-	f.SetCellStyle(sheet, "A3", "I3", styleHeader)
+	f.SetCellStyle(sheet, "A3", "G3", styleHeader)
 	f.SetRowHeight(sheet, 3, 18)
 
 	// ── Data rows mulai baris 4 ──────────────────────────────────────────────────
@@ -314,10 +314,6 @@ func (s *eventService) ExportEventParticipantsExcel(ctx context.Context, eventID
 		isCompleted := "Tidak"
 		if p.IsCompleted {
 			isCompleted = "Ya"
-		}
-		isPassed := "Tidak Lulus"
-		if p.IsPassed {
-			isPassed = "Lulus"
 		}
 		startedAt := "-"
 		if p.StartedAt != nil {
@@ -333,10 +329,8 @@ func (s *eventService) ExportEventParticipantsExcel(ctx context.Context, eventID
 		f.SetCellValue(sheet, fmt.Sprintf("C%d", row), p.FullName)
 		f.SetCellValue(sheet, fmt.Sprintf("D%d", row), p.Status)
 		f.SetCellValue(sheet, fmt.Sprintf("E%d", row), isCompleted)
-		f.SetCellValue(sheet, fmt.Sprintf("F%d", row), p.Score)
-		f.SetCellValue(sheet, fmt.Sprintf("G%d", row), isPassed)
-		f.SetCellValue(sheet, fmt.Sprintf("H%d", row), startedAt)
-		f.SetCellValue(sheet, fmt.Sprintf("I%d", row), completedAt)
+		f.SetCellValue(sheet, fmt.Sprintf("F%d", row), startedAt)
+		f.SetCellValue(sheet, fmt.Sprintf("G%d", row), completedAt)
 	}
 
 	// ── Lebar kolom ─────────────────────────────────────────────────────────────
@@ -345,10 +339,8 @@ func (s *eventService) ExportEventParticipantsExcel(ctx context.Context, eventID
 	f.SetColWidth(sheet, "C", "C", 26)
 	f.SetColWidth(sheet, "D", "D", 13)
 	f.SetColWidth(sheet, "E", "E", 14)
-	f.SetColWidth(sheet, "F", "F", 8)
-	f.SetColWidth(sheet, "G", "G", 14)
-	f.SetColWidth(sheet, "H", "H", 20)
-	f.SetColWidth(sheet, "I", "I", 20)
+	f.SetColWidth(sheet, "F", "F", 20)
+	f.SetColWidth(sheet, "G", "G", 20)
 
 	var buf bytes.Buffer
 	if err := f.Write(&buf); err != nil {
@@ -380,7 +372,7 @@ func (s *eventService) ExportEventParticipantsPDF(ctx context.Context, eventID u
 	// Title
 	pdf.SetFont("Arial", "B", 16)
 	pdf.SetTextColor(92, 52, 16) // #5C3410
-	pdf.CellFormat(0, 10, fmt.Sprintf("PramukaCAT - Laporan Nilai Ujian %s", event.Name), "", 1, "C", false, 0, "")
+	pdf.CellFormat(0, 10, fmt.Sprintf("PramukaCAT - Laporan Peserta Ujian %s", event.Name), "", 1, "C", false, 0, "")
 
 	// SubTitle
 	pdf.SetFont("Arial", "I", 11)
@@ -392,8 +384,8 @@ func (s *eventService) ExportEventParticipantsPDF(ctx context.Context, eventID u
 	pdf.SetFont("Arial", "B", 9)
 	pdf.SetFillColor(156, 90, 34) // Dark Brown
 	pdf.SetTextColor(255, 255, 255)
-	colW := []float64{8, 35, 50, 22, 22, 18, 22, 40, 40}
-	headers := []string{"No", "Username", "Nama Lengkap", "Status", "Submit", "Nilai", "Lulus", "Waktu Mulai", "Waktu Selesai"}
+	colW := []float64{8, 40, 60, 25, 25, 40, 40}
+	headers := []string{"No", "Username", "Nama Lengkap", "Status", "Submit", "Waktu Mulai", "Waktu Selesai"}
 	for i, h := range headers {
 		pdf.CellFormat(colW[i], 8, h, "1", 0, "C", true, 0, "")
 	}
@@ -414,10 +406,6 @@ func (s *eventService) ExportEventParticipantsPDF(ctx context.Context, eventID u
 		if p.IsCompleted {
 			isCompleted = "Ya"
 		}
-		isPassed := "Tidak Lulus"
-		if p.IsPassed {
-			isPassed = "Lulus"
-		}
 		startedAt := "-"
 		if p.StartedAt != nil {
 			startedAt = p.StartedAt.In(time.Local).Format("02/01 15:04")
@@ -433,14 +421,12 @@ func (s *eventService) ExportEventParticipantsPDF(ctx context.Context, eventID u
 			p.FullName,
 			p.Status,
 			isCompleted,
-			strconv.FormatFloat(p.Score, 'f', 2, 64),
-			isPassed,
 			startedAt,
 			completedAt,
 		}
 		for j, v := range vals {
 			align := "L"
-			if j == 0 || j == 5 {
+			if j == 0 {
 				align = "C"
 			}
 			pdf.CellFormat(colW[j], 7, v, "1", 0, align, true, 0, "")

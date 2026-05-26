@@ -164,8 +164,12 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
   }, [pickerSearch, eventQuestions]);
 
   const fetchCategories = useCallback(async () => {
-    const res = await listCategoriesApi(1, 100);
-    setCategories(res.data);
+    try {
+      const res = await listCategoriesApi(1, 100);
+      setCategories(res.data);
+    } catch (err) {
+      console.error('Gagal mengambil kategori:', err);
+    }
   }, []);
 
   // Fetch hanya total peserta (untuk badge tab) saat halaman pertama kali dibuka
@@ -694,8 +698,6 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
                         <th className="table-header-cell-premium">Nomor Peserta</th>
                         <th className="table-header-cell-premium">Nama Peserta</th>
                         <th className="table-header-cell-premium">Status</th>
-                        <th className="table-header-cell-premium">Nilai</th>
-                        <th className="table-header-cell-premium">Hasil</th>
                         <th className="table-header-cell-premium text-right">Aksi</th>
                       </tr>
                     </thead>
@@ -707,26 +709,6 @@ export default function EventManagerPage({ params }: { params: Promise<{ id: str
                           <td className="table-cell-premium font-bold text-gray-800">{p.full_name}</td>
                           <td className="table-cell-premium">
                             <StatusBadge status={p.status} />
-                          </td>
-                          <td className="table-cell-premium">
-                            <span className="font-black text-gray-900 text-base">
-                              {p.is_completed ? p.score.toFixed(1) : '—'}
-                            </span>
-                          </td>
-                          <td className="table-cell-premium">
-                            {p.is_completed ? (
-                              p.is_passed ? (
-                                <span className="inline-flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg text-xs font-bold">
-                                  <CheckCircle size={14} /> Lulus
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1.5 text-red-700 bg-red-50 px-2.5 py-1 rounded-lg text-xs font-bold">
-                                  <XCircle size={14} /> Tidak Lulus
-                                </span>
-                              )
-                            ) : (
-                              <span className="text-gray-400 text-xs font-medium italic">Belum selesai</span>
-                            )}
                           </td>
                           <td className="table-cell-premium">
                             <div className="flex items-center justify-end gap-2">

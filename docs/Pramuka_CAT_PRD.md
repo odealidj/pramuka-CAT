@@ -77,9 +77,10 @@ Aplikasi memiliki 3 jenis peran utama:
    - Daftar perintah difilter berdasarkan peran (`role`) pengguna yang sedang login.
    - Mendukung navigasi keyboard penuh: tombol `↑`/`↓` untuk berpindah pilihan, `Enter` untuk memilih, `ESC` untuk menutup.
    - Terdapat dua jenis perintah: **Navigasi** (berpindah halaman) dan **Aksi Cepat** (membuka modal buat soal/event/peserta langsung).
-10. **Pemantauan Sistem (Monitoring Jobs & Alerting):**
+10. **Pemantauan Sistem (Monitoring Jobs, Observability & Alerting):**
     - Terdapat halaman panel khusus untuk memantau status antrean pemrosesan di latar belakang (*background jobs*) seperti proses pengiriman email masal atau *auto-submit* massal.
     - **Global Error Alert:** Apabila terdapat antrean tugas yang gagal berulang kali hingga batas maksimal percobaan (*permanent failure*), sistem akan otomatis membunyikan alarm darurat dengan mengirimkan pemberitahuan ke **Lonceng Notifikasi** dan **Email** ke semua Admin / Super Admin agar perbaikan bisa segera dilakukan tanpa perlu menatap panel *monitoring* secara konstan.
+    - **Visual Monitoring (Grafana + Prometheus):** Aplikasi menyediakan dashboard Grafana komprehensif bagi Admin / tim Infrastruktur untuk memantau kesehatan server. Menampilkan metrik krusial seperti penggunaan **CPU**, ketersediaan **RAM**, serta metrik operasional secara *real-time* seperti "Total Percobaan Login" dan "Jumlah Ujian Aktif Saat Ini". Ini memastikan infrastruktur tetap terjaga stabil selama *event* berskala besar.
 
 ---
 

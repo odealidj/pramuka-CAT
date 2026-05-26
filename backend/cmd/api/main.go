@@ -44,6 +44,7 @@ import (
 	"github.com/odealidj/pramuka-CAT/backend/pkg/validator"
 	"golang.org/x/time/rate"
 	"github.com/hibiken/asynq"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"fmt"
 )
 
@@ -82,12 +83,15 @@ func main() {
 		log.Printf("Distributed tracing aktif → mengirim trace ke %s", otlpEndpoint)
 	}
 
-	// 5. Inisialisasi OpenTelemetry Metrics (CPU, RAM, GC) → Terminal/Stdout
+	// 5. Inisialisasi OpenTelemetry Metrics (CPU, RAM, GC) → Prometheus Exporter
 	metricShutdown, err := tracer.InitMetrics(context.Background(), "pramuka-cat-api")
 	if err != nil {
 		log.Printf("Peringatan: Gagal menginisialisasi metrics: %v", err)
 		metricShutdown = func(ctx context.Context) error { return nil }
 	}
+
+	// Inisialisasi Custom Business Metrics
+	tracer.InitCustomMetrics()
 
 	// 6. Setup Dependency Injection (Hexagonal Wiring)
 	queries := sqlcgen.New(db)
@@ -173,7 +177,13 @@ func main() {
 	e.Validator = validator.NewCustomValidator()
 
 	// Pasang Middleware dasar (Log, Recover dari panic, dan CORS)
-	e.Use(middleware.Logger())
+	// Pasang custom logger yang lebih singkat (tidak JSON panjang) dan abaikan endpoint /health
+	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+		Format: "[${time_rfc3339}] ${status} | ${latency_human} | ${method} ${uri}\n",
+		Skipper: func(c echo.Context) bool {
+			return c.Request().URL.Path == "/health"
+		},
+	}))
 	e.Use(middleware.Recover())
 
 	// Security Hardening: Anti-XSS, Clickjacking, MIME-Sniffing
@@ -237,6 +247,9 @@ func main() {
 
 	// Swagger UI
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
+
+	// Prometheus Metrics Endpoint
+	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
 
 	// Pendaftaran Rute API Publik
 	api := e.Group("/api/v1")

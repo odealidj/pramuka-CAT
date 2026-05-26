@@ -12,6 +12,7 @@ import (
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/domain"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/ports"
 	"github.com/odealidj/pramuka-CAT/backend/internal/worker"
+	"github.com/odealidj/pramuka-CAT/backend/pkg/tracer"
 )
 
 type examService struct {
@@ -90,6 +91,8 @@ func (s *examService) StartExam(ctx context.Context, userID uuid.UUID, eventID u
 		if err := s.repo.SetStartedAt(ctx, approval.ApprovalID); err != nil {
 			return nil, fmt.Errorf("gagal mencatat waktu mulai ujian: %w", err)
 		}
+		// Track business metric: Tambah 1 peserta aktif untuk event ini
+		tracer.IncActiveParticipant(ctx, eventID.String())
 	}
 
 	// Tarik soal dari database
@@ -153,6 +156,9 @@ func (s *examService) FinishExam(ctx context.Context, userID uuid.UUID, eventID 
 	if err != nil {
 		return domain.FinishExamResponse{}, fmt.Errorf("gagal mengantrekan proses penyelesaian ujian: %w", err)
 	}
+
+	// Track business metric: Kurangi 1 peserta aktif untuk event ini karena sudah selesai
+	tracer.DecActiveParticipant(ctx, eventID.String())
 
 	return domain.FinishExamResponse{
 		Message:  "Jawaban sedang diproses di latar belakang. Silakan tunggu beberapa saat.",

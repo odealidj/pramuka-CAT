@@ -12,6 +12,7 @@ import (
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/domain"
 	"github.com/odealidj/pramuka-CAT/backend/internal/core/ports"
 	"github.com/odealidj/pramuka-CAT/backend/pkg/utils"
+	"github.com/odealidj/pramuka-CAT/backend/pkg/tracer"
 )
 
 type authService struct {
@@ -78,6 +79,9 @@ func (s *authService) Login(ctx context.Context, req domain.LoginRequest) (domai
 		// Log error, namun proses login tetap dilanjutkan
 		log.Printf("Peringatan: Gagal menyimpan sesi ke Redis: %v\n", err)
 	}
+
+	// Track Business Metric: Tambahkan hitungan login
+	tracer.AddLogin(ctx)
 
 	var photoUrl *string
 	if user.PhotoUrl.Valid {

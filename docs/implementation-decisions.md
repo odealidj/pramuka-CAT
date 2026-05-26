@@ -155,6 +155,12 @@ Semua *query* yang melibatkan soal melakukan `JOIN categories c ON q.category_id
 - **`otelecho` middleware** dipasang di Echo untuk menciptakan **span otomatis pada setiap HTTP request** tanpa perlu mengubah satu handler pun. Setiap span berisi: method, URL, status code, latency, dan error.
 - **Jaeger UI** tersedia di `http://localhost:16686` untuk visualisasi dan analisis trace.
 
+### 4.4. Server Monitoring & Metrics — Prometheus + Grafana
+- Untuk *production-readiness*, selain melakukan *distributed tracing* (penelusuran *request*), sistem juga mengimplementasikan pemantauan performa menyeluruh menggunakan **Prometheus** dan **Grafana**.
+- **Prometheus** berperan sebagai *time-series database* yang melakukan *pull/scraping* pada data metrik sistem (seperti CPU, RAM) dan metrik aplikasi bawaan.
+- **Custom Business Metrics:** Backend Go menggunakan *client library* Prometheus untuk memaparkan (*expose*) indikator operasional, seperti jumlah percobaan pengguna untuk *login* (`LoginsTotal`) maupun total peserta yang *online* sedang melangsungkan ujian (*Gauge* `ActiveParticipants`).
+- **Grafana Dashboard** dikonfigurasi menggunakan *Provisioning* yang secara otomatis terhubung dengan *datasource* Prometheus dan menyiapkan sebuah *Dashboard Monitoring* khusus untuk memvisualisasikan data telemetri ini. Dasbor ini bisa diakses pada port `3000`.
+
 ## 5. Struktur Direktori Proyek
 Mengingat frontend dan backend menggunakan teknologi yang berbeda (Next.js dan Go), struktur direktori utama akan memisahkan keduanya secara jelas:
 
