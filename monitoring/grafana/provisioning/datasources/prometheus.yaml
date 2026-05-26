@@ -20,4 +20,7 @@ datasources:
       exemplarTraceIdDestinations:
         - name: trace_id
           datasourceUid: jaeger_datasource
-          urlDisplayLabel: "View in Jaeger"
+          urlDisplayLabel: "🔍 Buka di Jaeger"
+        - name: trace_id
+          url: "http://localhost:16686/trace/$${__value.raw}"
+          urlDisplayLabel: "↗ Langsung ke Jaeger UI"
