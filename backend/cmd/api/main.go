@@ -44,6 +44,7 @@ import (
 	"github.com/odealidj/pramuka-CAT/backend/pkg/validator"
 	"golang.org/x/time/rate"
 	"github.com/hibiken/asynq"
+        "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"fmt"
 )
@@ -251,7 +252,11 @@ func main() {
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// Prometheus Metrics Endpoint
-	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
+	registry := prometheus.DefaultGatherer
+	promHandler := promhttp.HandlerFor(registry, promhttp.HandlerOpts{
+		EnableOpenMetrics: true,
+	})
+	e.GET("/metrics", echo.WrapHandler(promHandler))
 
 	// Pendaftaran Rute API Publik
 	api := e.Group("/api/v1")
