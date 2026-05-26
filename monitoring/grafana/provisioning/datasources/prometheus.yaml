@@ -4,16 +4,20 @@ datasources:
     type: jaeger
     access: proxy
     url: http://jaeger:16686
-    editable: false
+    editable: true
     uid: jaeger_datasource
+    jsonData:
+      nodeGraph:
+        enabled: true
 
   - name: Prometheus
     type: prometheus
     access: proxy
     url: http://prometheus:9090
     isDefault: true
-    editable: false
+    editable: true
     jsonData:
       exemplarTraceIdDestinations:
         - name: trace_id
           datasourceUid: jaeger_datasource
+          urlDisplayLabel: "View in Jaeger"
