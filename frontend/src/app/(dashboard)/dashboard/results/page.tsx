@@ -20,13 +20,15 @@ import {
   FileSpreadsheet,
   FileText,
   Play,
+  Trash2,
 } from 'lucide-react';
 import Spinner from '@/components/ui/Spinner';
 import StatCard from '@/components/ui/StatCard';
 import Pagination from '@/components/ui/Pagination';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { ToastContainer, useToast } from '@/components/ui/Toast';
 import AnswerReviewDrawer from '@/components/results/AnswerReviewDrawer';
-import { listEventsApi, exportEventParticipantsApi, listEventParticipantsApi } from '@/services/event.service';
+import { listEventsApi, exportEventParticipantsApi, listEventParticipantsApi, removeEventParticipantApi } from '@/services/event.service';
 import type { Event, EventParticipant, PaginationMeta } from '@/types/auth';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -63,11 +65,13 @@ function ParticipantRow({
   globalRank,
   passingGrade,
   onReview,
+  onDelete,
 }: {
   participant: EventParticipant;
   globalRank: number | null;
   passingGrade: number;
   onReview: () => void;
+  onDelete: () => void;
 }) {
   const isPending  = participant.status.toLowerCase() === 'pending';
   const isCompleted = participant.is_completed;
@@ -154,15 +158,25 @@ function ParticipantRow({
 
       {/* Aksi */}
       <td className="table-cell-premium text-right">
-        {isCompleted && (
+        <div className="flex items-center justify-end gap-2 ml-auto w-fit">
+          {isCompleted && (
+            <button
+              onClick={onReview}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF7F2]/50 text-[#9C5A22] text-xs font-bold hover:bg-[#9C5A22] hover:text-white transition-all border border-[#E8DCC8] hover:border-[#9C5A22] shadow-sm"
+            >
+              <Eye size={12} />
+              Review
+            </button>
+          )}
           <button
-            onClick={onReview}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF7F2]/50 text-[#9C5A22] text-xs font-bold hover:bg-[#9C5A22] hover:text-white transition-all ml-auto border border-[#E8DCC8] hover:border-[#9C5A22] shadow-sm"
+            onClick={onDelete}
+            title="Hapus hasil ujian peserta"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Eye size={12} />
-            Review
+            <Trash2 size={12} />
+            Hapus
           </button>
-        )}
+        </div>
       </td>
     </tr>
   );
@@ -196,6 +210,57 @@ function EventResultCard({
   const [searchInput, setSearchInput] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [exportingFormat, setExportingFormat] = useState<'excel' | 'pdf' | null>(null);
+
+  // Deletion Dialog State
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    participant: EventParticipant | null;
+    isLoading: boolean;
+  }>({ open: false, participant: null, isLoading: false });
+
+  const { toast } = useToast();
+
+  const handleRemoveClick = (participant: EventParticipant) => {
+    setDeleteDialog({
+      open: true,
+      participant,
+      isLoading: false,
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteDialog.participant) return;
+
+    // Strict double confirmation: prompt asking to type "HAPUS"
+    const confirmation = prompt(
+      `Tindakan ini sangat kritis!\n\n` +
+      `Ketik "HAPUS" (huruf besar semua) untuk menghapus secara permanen peserta "${deleteDialog.participant.full_name}" (@${deleteDialog.participant.username}) dari ujian ini.\n\n` +
+      `Semua data jawaban, nilai, dan kelulusan akan dihapus selamanya dan TIDAK BISA DIBALIKKAN KEMBALI:`
+    );
+
+    if (confirmation !== 'HAPUS') {
+      if (confirmation !== null) {
+        toast('error', 'Konfirmasi gagal. Anda harus mengetik "HAPUS".');
+      }
+      return;
+    }
+
+    setDeleteDialog((d) => ({ ...d, isLoading: true }));
+    try {
+      await removeEventParticipantApi(event.id, deleteDialog.participant.approval_id);
+      
+      toast('success', `Peserta "${deleteDialog.participant.full_name}" berhasil dihapus dari ujian.`);
+      setDeleteDialog({ open: false, participant: null, isLoading: false });
+      
+      // Refresh list
+      fetchParticipants(page, search, statusFilter);
+      setSummary(null); // Recalculate summary next time
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Gagal menghapus hasil ujian peserta.';
+      toast('error', msg);
+      setDeleteDialog((d) => ({ ...d, isLoading: false }));
+    }
+  };
 
   const handleExport = async (e: React.MouseEvent, format: 'excel' | 'pdf') => {
     e.stopPropagation();
@@ -463,6 +528,7 @@ function EventResultCard({
                           globalRank={rank}
                           passingGrade={event.passing_grade}
                           onReview={() => onReviewParticipant(p, event)}
+                          onDelete={() => handleRemoveClick(p)}
                         />
                       );
                     })}
@@ -490,6 +556,16 @@ function EventResultCard({
           )}
         </div>
       )}
+
+      {/* Deletion Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={deleteDialog.open}
+        onClose={() => setDeleteDialog({ open: false, participant: null, isLoading: false })}
+        onConfirm={handleDeleteConfirm}
+        title="Hapus Hasil Ujian"
+        message={`Apakah Anda yakin ingin menghapus peserta "${deleteDialog.participant?.full_name}" (@${deleteDialog.participant?.username}) secara permanen? Seluruh jawaban dan hasil ujian peserta ini akan hilang selamanya dan tindakan ini TIDAK BISA DIBALIKKAN KEMBALI.`}
+        isLoading={deleteDialog.isLoading}
+      />
     </div>
   );
 }
